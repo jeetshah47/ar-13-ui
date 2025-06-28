@@ -7,7 +7,7 @@ const LandingPage = () => {
   return (
     <Box sx={{ height: "100%" }}>
       <Header />
-      <Box sx={{ padding: "28px"}}>
+      <Box sx={{ padding: "28px", height: "80%"}}>
         <Routes>
           {authRoutes.map((route) => (
             <Route
