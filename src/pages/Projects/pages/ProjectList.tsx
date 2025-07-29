@@ -1,16 +1,38 @@
-import { Avatar, Box, Button, SvgIcon, Typography } from "@mui/material";
+import { Box, Button, IconButton,  Modal,  SvgIcon, Typography } from "@mui/material";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import ListViewIcon from "../../../assets/icons/general/list-view.svg?react";
 import CardViewIcon from "../../../assets/icons/general/card-view.svg?react";
 import TimeLineViewIcon from "../../../assets/icons/general/timline-view.svg?react";
+import ListView from "../components/ListView";
+import { useState } from "react";
+import TileView from "../components/TileView";
+import TimelineView from "../components/TimelineView";
+import TaskForm from "../components/TaskForm";
+
+const ViewButtonOptions = [
+  { key: "list", icon: ListViewIcon },
+  { key: "tile", icon: CardViewIcon },
+  { key: "time", icon: TimeLineViewIcon },
+];
 
 const ProjectList = () => {
+  const [currentView, setCurrentView] = useState(ViewButtonOptions[2].key);
+  const [showModal, setShowModal] = useState(true);
+
   const AddButton = (
     <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
       Add Project
     </Button>
   );
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleShowModal = () => {
+    setShowModal(true);
+  };
 
   return (
     <Box sx={{ height: "100%" }}>
@@ -25,7 +47,7 @@ const ProjectList = () => {
       >
         <Box
           sx={{
-            width: "20%",
+            width: "15%",
             background: "#FFFFFF",
             borderRadius: "24px",
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
@@ -66,42 +88,37 @@ const ProjectList = () => {
             </Box>
           </Box>
         </Box>
-        <Box sx={{ width: "80%" }}>
+        <Box sx={{ width: "85%" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Box>
+            <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <Typography sx={{ fontWeight: "bold" }}>Tasks</Typography>
+              <IconButton
+                size="small"
+                onClick={handleShowModal}
+                sx={{
+                  backgroundColor: "#3F8CFF",
+                  ":hover": { backgroundColor: "#3F8CFF" },
+                }}
+              >
+                <PlusIcon />
+              </IconButton>
             </Box>
             <Box sx={{ display: "flex", gap: "16px" }}>
-              <Box
-                sx={{
-                  backgroundColor: "white",
-                  borderRadius: "14px",
-                  padding: "12px",
-                  display: "flex",
-                }}
-              >
-                <SvgIcon component={ListViewIcon} />
-              </Box>
-              <Box
-                sx={{
-                  backgroundColor: "white",
-                  borderRadius: "14px",
-                  padding: "12px",
-                  display: "flex",
-                }}
-              >
-                <SvgIcon component={CardViewIcon} />
-              </Box>
-              <Box
-                sx={{
-                  backgroundColor: "white",
-                  borderRadius: "14px",
-                  padding: "12px",
-                  display: "flex",
-                }}
-              >
-                <SvgIcon component={TimeLineViewIcon} />
-              </Box>
+              {ViewButtonOptions.map((option) => (
+                <Box
+                  key={option.key}
+                  onClick={() => setCurrentView(option.key)}
+                  sx={{
+                    backgroundColor: "white",
+                    borderRadius: "14px",
+                    padding: "12px",
+                    display: "flex",
+                    cursor: "pointer",
+                  }}
+                >
+                  <SvgIcon component={option.icon} />
+                </Box>
+              ))}
             </Box>
             <Box>FilterIcons</Box>
           </Box>
@@ -116,40 +133,16 @@ const ProjectList = () => {
           >
             <Typography sx={{ fontWeight: "bold" }}>Active Task</Typography>
           </Box>
-          <Box>
-            <Box
-              sx={{
-                backgroundColor: "white",
-                padding: "22px 26px",
-                borderRadius: "24px",
-                display: "flex",
-                justifyContent: "space-between"
-              }}
-            >
-                <Box>
-                    <Typography color="secondary">Task Name</Typography>
-                    <Typography>Research</Typography>
-                </Box>
-                <Box>
-                    <Typography color="secondary">Estimate</Typography>
-                    <Typography>2d 4h</Typography>
-                </Box>
-                <Box>
-                    <Typography color="secondary">Spent Time</Typography>
-                    <Typography>1d 2h</Typography>
-                </Box>
-                <Box>
-                    <Typography color="secondary">Assignee</Typography>
-                    <Avatar sx={{width: "24px", height: "24px"}} />
-                </Box>
-                <Box>
-                    <Typography color="secondary">Priority</Typography>
-                    <Typography>Medium</Typography>
-                </Box>
-            </Box>
+          <Box sx={{ paddingTop: "5px" }}>
+            {currentView === "list" && <ListView />}
+            {currentView === "tile" && <TileView />}
+            {currentView === "time" && <TimelineView />}
           </Box>
         </Box>
       </Box>
+        <Modal open={showModal} onClose={handleCloseModal}>
+            <TaskForm />
+        </Modal>
     </Box>
   );
 };
