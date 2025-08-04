@@ -58,7 +58,6 @@ const MainSiderBar = () => {
       sx={{
         backgroundColor: "white",
         height: "100%",
-        position: "fixed",
         width: "200px",
         // paddingBottom: "0px",
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
@@ -76,7 +75,7 @@ const MainSiderBar = () => {
             <SvgIcon component={DashIcon} />
             <Typography color="primary">Dashboard</Typography>
           </Item>
-          <Item onClick={() => handleNavigation("/projects")} elevation={0}>
+          <Item onClick={() => handleNavigation("/app/projects")} elevation={0}>
             <SvgIcon component={ProjectIcon} />
             <Typography color="secondary">Project</Typography>
           </Item>

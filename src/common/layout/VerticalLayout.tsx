@@ -1,20 +1,19 @@
-import { Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import MainSiderBar from "../components/Sidebar/MainSiderBar";
 import LandingPage from "../../pages/Landing/LandingPage";
 
 const VerticalLayout = () => {
   return (
-    <Grid sx={{ padding: "20px" }} container>
-      <Grid
-        size={{ sm: 4, md: 2 }}
-        sx={{ position: "relative", height: "100vh" }}
+    <Box sx={{ display: "flex", width: "100%", position: "relative", height: "auto"}}>
+      <Box
+        sx={{ position: "fixed", height: "100vh", width: "200px", top: 0, padding: "20px" }}
       >
         <MainSiderBar />
-      </Grid>
-      <Grid size={{ sm: 8, md: 10 }}>
+      </Box>
+      <Box sx={{ marginLeft: "230px", overflow: "hidden", width: "100%", minHeight: "100vh"}}>
         <LandingPage />
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 };
 

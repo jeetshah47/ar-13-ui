@@ -6,11 +6,11 @@ import ProjectPage from "../pages/Projects/ProjectPage";
 
 const authRoutes = [
   {
-    path: "/app/dashboard",
+    path: "/dashboard",
     component: <DashboardPage />,
   },
   {
-    path: "/app/projects/*",
+    path: "/projects/*",
     component: <ProjectPage />,
   },
 ];

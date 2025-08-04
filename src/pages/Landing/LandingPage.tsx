@@ -5,9 +5,9 @@ import { authRoutes } from "../../routes";
 
 const LandingPage = () => {
   return (
-    <Box sx={{ height: "100%" }}>
+    <Box sx={{ height: "100%", width: "100%"}}>
       <Header />
-      <Box sx={{ padding: "28px", height: "80%"}}>
+      <Box sx={{ padding: "28px", height: "100%"}}>
         <Routes>
           {authRoutes.map((route) => (
             <Route

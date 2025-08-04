@@ -88,7 +88,7 @@ const ProjectList = () => {
             </Box>
           </Box>
         </Box>
-        <Box sx={{ width: "85%" }}>
+        <Box sx={{ width: "80%" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <Typography sx={{ fontWeight: "bold" }}>Tasks</Typography>
