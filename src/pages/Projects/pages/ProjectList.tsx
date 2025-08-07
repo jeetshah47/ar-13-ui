@@ -1,14 +1,24 @@
-import { Box, Button, IconButton,  Modal,  SvgIcon, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Modal,
+  SvgIcon,
+  Typography,
+} from "@mui/material";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import ListViewIcon from "../../../assets/icons/general/list-view.svg?react";
 import CardViewIcon from "../../../assets/icons/general/card-view.svg?react";
+import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
 import TimeLineViewIcon from "../../../assets/icons/general/timline-view.svg?react";
 import ListView from "../components/ListView";
 import { useState } from "react";
 import TileView from "../components/TileView";
 import TimelineView from "../components/TimelineView";
 import TaskForm from "../components/TaskForm";
+import Filter from "../components/Filter";
+import { useNavigate } from "react-router";
 
 const ViewButtonOptions = [
   { key: "list", icon: ListViewIcon },
@@ -17,8 +27,11 @@ const ViewButtonOptions = [
 ];
 
 const ProjectList = () => {
-  const [currentView, setCurrentView] = useState(ViewButtonOptions[2].key);
-  const [showModal, setShowModal] = useState(true);
+  const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
+  const [showModal, setShowModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  const navigate = useNavigate();
 
   const AddButton = (
     <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
@@ -32,6 +45,18 @@ const ProjectList = () => {
 
   const handleShowModal = () => {
     setShowModal(true);
+  };
+
+  const handleCloseFilterModal = () => {
+    setShowFilterModal(false);
+  };
+
+  const handleShowFilterModal = () => {
+    setShowFilterModal(true);
+  };
+
+  const handleOnClickDetails = () => {
+    navigate("/app/projects/details");
   };
 
   return (
@@ -72,7 +97,7 @@ const ProjectList = () => {
               <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                 New Site Project
               </Typography>
-              <Typography color="primary" sx={{ fontWeight: "600" }}>
+              <Typography onClick={handleOnClickDetails} color="primary" sx={{ fontWeight: "600",cursor: "pointer" }}>
                 View Details
               </Typography>
             </Box>
@@ -89,7 +114,13 @@ const ProjectList = () => {
           </Box>
         </Box>
         <Box sx={{ width: "80%" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <Typography sx={{ fontWeight: "bold" }}>Tasks</Typography>
               <IconButton
@@ -116,11 +147,29 @@ const ProjectList = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <SvgIcon component={option.icon} />
+                  <SvgIcon
+                    component={option.icon}
+                    sx={{
+                      color:
+                        currentView === option.key ? "primary.main" : "black",
+                    }}
+                  />
                 </Box>
               ))}
             </Box>
-            <Box>FilterIcons</Box>
+            <Box
+              onClick={handleShowFilterModal}
+              sx={{
+                background: "#FFFFFF",
+                boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+                borderRadius: "14px",
+                padding: "12px",
+                display: "flex",
+                cursor: "pointer",
+              }}
+            >
+              <SvgIcon component={FilterIcon} />
+            </Box>
           </Box>
           <Box
             sx={{
@@ -140,9 +189,10 @@ const ProjectList = () => {
           </Box>
         </Box>
       </Box>
-        <Modal open={showModal} onClose={handleCloseModal}>
-            <TaskForm />
-        </Modal>
+      <Modal open={showModal} onClose={handleCloseModal}>
+        <TaskForm />
+      </Modal>
+      {showFilterModal && <Filter onClose={handleCloseFilterModal} />}
     </Box>
   );
 };

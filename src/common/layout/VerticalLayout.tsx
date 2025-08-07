@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import MainSiderBar from "../components/Sidebar/MainSiderBar";
 import LandingPage from "../../pages/Landing/LandingPage";
 
@@ -10,7 +10,7 @@ const VerticalLayout = () => {
       >
         <MainSiderBar />
       </Box>
-      <Box sx={{ marginLeft: "230px", overflow: "hidden", width: "100%", minHeight: "100vh"}}>
+      <Box sx={{ marginLeft: "230px", overflow: "hidden", width: "100%", minHeight: "100vh", padding: "20px"}}>
         <LandingPage />
       </Box>
     </Box>

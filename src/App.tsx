@@ -1,7 +1,7 @@
 import { ThemeProvider } from "@emotion/react";
 import defaultTheme from "./theme";
 import VerticalLayout from "./common/layout/VerticalLayout";
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import { publicRoutes } from "./routes";
 
 function App() {
@@ -12,6 +12,7 @@ function App() {
         {publicRoutes.map((route) => (
           <Route path={route.path} element={route.component} />
         ))}
+        <Route path="/" element={<Navigate to={"/app/dashboard"} />} />
       </Routes>
     </ThemeProvider>
   );

@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import DragDropComponent from "./DragnDrop";
+import { blurAnimation } from "../../../common/animation/cssAnimation";
 
 const TileView = () => {
   return (
@@ -8,7 +9,7 @@ const TileView = () => {
         display: "flex",
         flexGrow: 1,
         height: "100%",
-        border: "1px solid blue",
+        ...blurAnimation,
       }}
     >
       {/* <Box

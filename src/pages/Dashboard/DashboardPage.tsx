@@ -7,12 +7,38 @@ import EmployeeCard from "./components/EmployeeCard";
 import EventCard from "./components/EventCard";
 import ProjectCard from "./components/ProjectCard";
 import ActivityCard from "./components/ActivityCard";
+import { useState } from "react";
 
 const DashboardPage = () => {
+  const [calenderState, setCalendarState] = useState<{
+    start_date: Date | null;
+    end_date: Date | null;
+  }>({
+    start_date: new Date(),
+    end_date: new Date(),
+  });
+
+  const handleStartDateChange = (date: Date | null) => {
+    setCalendarState({ ...calenderState, start_date: date });
+  };
+  const handleEndDateChange = (date: Date | null) => {
+    setCalendarState({ ...calenderState, end_date: date });
+  };
+
   return (
     <Box>
       <Typography color="secondary">Welcome back, Jeet</Typography>
-      <PageHeader title="Dashboard" endElement={<RangeSelector />} />
+      <PageHeader
+        title="Dashboard"
+        endElement={
+          <RangeSelector
+            startDate={calenderState.start_date}
+            endDate={calenderState.end_date}
+            setEndDate={handleEndDateChange}
+            setStartDate={handleStartDateChange}
+          />
+        }
+      />
       <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px" }}>
         <Box sx={{ width: "70%" }}>
           <CustomCard>
@@ -30,7 +56,7 @@ const DashboardPage = () => {
               <EmployeeCard />
             </Box>
           </CustomCard>
-          <Box sx={{paddingTop: "36px"}}>
+          <Box sx={{ paddingTop: "36px" }}>
             <CardHeader title="Projects" link="/#" />
             <ProjectCard />
             <ProjectCard />
@@ -43,7 +69,7 @@ const DashboardPage = () => {
             <EventCard />
             <EventCard />
           </CustomCard>
-          <Box>
+          <Box sx={{ pt: "10px" }}>
             <ActivityCard />
           </Box>
         </Box>

@@ -252,10 +252,10 @@ const HorizontalDragDropComponent: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 1, border: "1px solid blue", width: "100%" }}>
+    <Box sx={{ p: 1, width: "100%" }}>
       <Grid
         container
-        sx={{ backgroundColor: "#F4F9FD", width: "100%", border: "1px solid red" }}
+        sx={{ backgroundColor: "#F4F9FD", width: "100%", }}
         spacing={2}
       >
         {columns.map((column) => (
@@ -268,7 +268,7 @@ const HorizontalDragDropComponent: React.FC = () => {
               onDrop={(e) => handleDrop(e, column.id)}
               sx={{
                 backgroundColor: "transparent",
-                minHeight: "500px",
+                minHeight: "100%",
                 border:
                   dragOverColumn === column.id
                     ? "2px dashed #1976d2"
@@ -311,6 +311,7 @@ const HorizontalDragDropComponent: React.FC = () => {
                       onDragEnd={handleDragEnd}
                       sx={{
                         background: "#F4F9FD",
+                        marginTop: "10px",
                         borderRadius: "8px",
                         cursor: "grab",
                         transform:

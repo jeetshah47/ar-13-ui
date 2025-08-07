@@ -13,12 +13,26 @@ const EventCard = () => {
           borderRadius: "2px",
         }}
       />
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: "column",
+          flex: 1,
+          gap: 2,
+        }}
+      >
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography>Presentation of the new department</Typography>
           <SvgIcon component={YellowArrow} />
         </Box>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography color="secondary">Today | 5:00 PM</Typography>
           <Box
             sx={{
@@ -28,7 +42,7 @@ const EventCard = () => {
               justifyContent: "center",
               alignContent: "center",
               gap: "6px",
-              borderRadius: "8px"
+              borderRadius: "8px",
             }}
           >
             <SvgIcon component={ClockIcon} />

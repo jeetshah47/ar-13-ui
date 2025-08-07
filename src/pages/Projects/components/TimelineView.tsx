@@ -8,6 +8,7 @@ import {
   Typography,
   type TooltipProps,
 } from "@mui/material";
+import { blurAnimation } from "../../../common/animation/cssAnimation";
 
 const tasks = [
   {
@@ -119,7 +120,7 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
 }));
 
 const TaskTimelineFlex: React.FC = () => (
-  <Box sx={{ p: 3 }}>
+  <Box sx={{ p: 3, ...blurAnimation, }}>
     <Typography variant="h6" gutterBottom>
       Tasks
     </Typography>

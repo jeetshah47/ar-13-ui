@@ -1,20 +1,27 @@
-import { Box, SvgIcon, Typography } from "@mui/material";
-import CalenderIcon from "../../../assets/icons/general/calendar.svg?react";
+import { Box } from "@mui/material";
+import { DateRangePicker } from "../../../common/components/DateRangePicker/DateRangePicker";
 
-const RangeSelector = () => {
+type RangeSelectorProps = {
+  endDate: Date | null;
+  startDate: Date | null;
+  setEndDate: (endDate: Date | null) => void;
+  setStartDate: (startDate: Date | null) => void;
+};
+
+const RangeSelector = ({
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+}: RangeSelectorProps) => {
   return (
-    <Box
-      sx={{
-        background: "#E6EDF5",
-        borderRadius: "14px",
-        padding: "12px 14px",
-        display: "flex",
-        gap: "14px",
-        alignItems: "center",
-      }}
-    >
-      <SvgIcon component={CalenderIcon} />
-      <Typography>Nov 16, 2020 - Dec 16, 2020</Typography>
+    <Box>
+      <DateRangePicker
+        endDate={endDate}
+        startDate={startDate}
+        setEndDate={setEndDate}
+        setStartDate={setStartDate}
+      />
     </Box>
   );
 };
