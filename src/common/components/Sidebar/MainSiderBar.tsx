@@ -79,7 +79,7 @@ const MainSiderBar = () => {
             <SvgIcon component={ProjectIcon} />
             <Typography color="secondary">Project</Typography>
           </Item>
-          <Item elevation={0}>
+          <Item onClick={() => handleNavigation("/app/calendar")} elevation={0}>
             <SvgIcon component={CalenderIcon} />
             <Typography color="secondary">Calender</Typography>
           </Item>

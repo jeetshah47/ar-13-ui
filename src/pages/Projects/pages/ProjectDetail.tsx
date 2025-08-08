@@ -2,11 +2,7 @@ import {
   Avatar,
   AvatarGroup,
   Box,
-  FormControl,
-  InputLabel,
   Link,
-  MenuItem,
-  Select,
   SvgIcon,
   Typography,
 } from "@mui/material";
@@ -16,8 +12,13 @@ import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
+import UploadIcon from "../../../assets/icons/general/upload.svg?react";
+import Chips from "../../../common/components/Chips/Chips";
+import { useState } from "react";
+import defaultTheme from "../../../theme";
 
 const ProjectDetail = () => {
+  const [currentStatus, setCurrentStatus] = useState("pending");
   return (
     <Box sx={{ height: "100%" }}>
       <Link sx={{ alignItems: "center", display: "flex" }}>
@@ -172,7 +173,7 @@ const ProjectDetail = () => {
           <Box
             sx={{
               backgroundColor: "#fff",
-              height: "-webkit-fill-available",
+              height: "100%",
               borderRadius: "24px",
               padding: "30px",
             }}
@@ -180,7 +181,7 @@ const ProjectDetail = () => {
             <Typography color="secondary.main">PN00000125</Typography>
             <Box
               sx={{
-                paddingTop: "10px",
+                paddingTop: "4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -189,23 +190,250 @@ const ProjectDetail = () => {
               <Typography variant="h6" fontWeight={"700"}>
                 UX Login + Registration
               </Typography>
-                <Select
+              <Box sx={{}}>
+                <Chips
+                  selected={currentStatus}
+                  onChange={(status) => setCurrentStatus(status)}
+                />
+              </Box>
+            </Box>
+            <Box sx={{ paddingTop: "16px" }}>
+              <Typography>
+                Think over UX for Login and Registration, create a flow using
+                wireframes. Upon completion, show the team and discuss. Attach
+                the source to the task.
+              </Typography>
+              <Typography color="secondary.main" fontWeight={"700"}>
+                Task Attachment
+              </Typography>
+              <Box
+                sx={{
+                  paddingTop: "8px",
+                  display: "flex",
+                  alignContent: "center",
+                  gap: "16px",
+                }}
+              >
+                <Box
                   sx={{
-                    outline: "none",
-                    border: "none",
+                    width: "156px",
+                    height: "144px",
+                    backgroundImage: "url(/src/assets/attachment/image.png)",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "cover",
+                    borderRadius: "14px",
                   }}
-                  value={20}
-                  displayEmpty
-                  label="Age"
                 >
-                  <MenuItem value={10}>Ten</MenuItem>
-                  <MenuItem value={20}>Twenty</MenuItem>
-                  <MenuItem value={30}>Thirty</MenuItem>
-                </Select>
+                  <Box
+                    sx={{
+                      backgroundColor: "#2155A316",
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      position: "relative",
+                      borderRadius: "14px",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        backgroundColor: "#F5F8FC",
+                        padding: "10px",
+                        borderRadius: "14px",
+                        display: "flex",
+                        position: "absolute",
+                        margin: "5px",
+                        top: 0,
+                        right: 0,
+                      }}
+                    >
+                      <SvgIcon component={AttachmentIcon} />
+                    </Box>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: "1px",
+                        left: 0,
+                        backgroundColor: "#fff",
+                        borderRadius: "12px",
+                        width: "100%",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography fontSize={"12px"} fontWeight={"700"}>
+                        wireframes.png
+                      </Typography>
+                      <Typography fontSize={"12px"} color="secondary.main">
+                        Sep 22, 2020 | 10:52 AM
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    width: "156px",
+                    height: "144px",
+                    backgroundImage: "url(/src/assets/attachment/image-2.png)",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "cover",
+                    borderRadius: "14px",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: "#2155A316",
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      position: "relative",
+                      borderRadius: "14px",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        backgroundColor: "#F5F8FC",
+                        padding: "10px",
+                        borderRadius: "14px",
+                        display: "flex",
+                        position: "absolute",
+                        margin: "5px",
+                        top: 0,
+                        right: 0,
+                      }}
+                    >
+                      <SvgIcon component={AttachmentIcon} />
+                    </Box>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: "1px",
+                        left: 0,
+                        backgroundColor: "#fff",
+                        borderRadius: "12px",
+                        width: "100%",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography fontSize={"12px"} fontWeight={"700"}>
+                        site screens.png
+                      </Typography>
+                      <Typography fontSize={"12px"} color="secondary.main">
+                        Sep 19, 2020 | 10:52 AM
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                borderTop: "1px solid #E4E6E8",
+                marginTop: "16px",
+                paddingTop: "28px",
+              }}
+            >
+              <Typography fontWeight={700}>Recent Activity</Typography>
+              <Box>
+                <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
+                  <Avatar sx={{ width: "50px", height: "50px" }} />
+                  <Box>
+                    <Typography fontWeight={700}>Oscar Holloway</Typography>
+                    <Typography color="secondary.main">
+                      UI/UX Designer
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    background: "#F4F9FD",
+                    borderRadius: "14px",
+                    padding: "15px 20px",
+                    width: "fit-content",
+                    display: "flex",
+                    marginTop: "12px",
+                  }}
+                >
+                  <SvgIcon component={UploadIcon} />
+                  <Typography>
+                    Updated the status of Mind Map task to{" "}
+                    <span
+                      style={{
+                        color: defaultTheme.palette.primary.main,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {" "}
+                      In Progress
+                    </span>
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    background: "#F4F9FD",
+                    borderRadius: "14px",
+                    padding: "15px 20px",
+                    width: "fit-content",
+                    display: "flex",
+                    marginTop: "12px",
+                  }}
+                >
+                  <SvgIcon component={AttachmentIcon} />
+                  <Typography>Attach Files To Mind Map task to </Typography>
+                </Box>
+              </Box>
+              <Box>
+                <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
+                  <Avatar sx={{ width: "50px", height: "50px" }} />
+                  <Box>
+                    <Typography fontWeight={700}>Emily Tyler</Typography>
+                    <Typography color="secondary.main">
+                      UI/UX Designer
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    background: "#F4F9FD",
+                    borderRadius: "14px",
+                    padding: "15px 20px",
+                    width: "fit-content",
+                    display: "flex",
+                    marginTop: "12px",
+                  }}
+                >
+                  <SvgIcon component={UploadIcon} />
+                  <Typography>
+                    Updated the status of Mind Map task to{" "}
+                    <span
+                      style={{
+                        color: defaultTheme.palette.primary.main,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {" "}
+                      In Progress
+                    </span>
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    background: "#F4F9FD",
+                    borderRadius: "14px",
+                    padding: "15px 20px",
+                    width: "fit-content",
+                    display: "flex",
+                    marginTop: "12px",
+                  }}
+                >
+                  <SvgIcon component={AttachmentIcon} />
+                  <Typography>Attach Files To Mind Map task to </Typography>
+                </Box>
+              </Box>
             </Box>
           </Box>
         </Box>
-        <Box
+        {/* <Box
           sx={{
             width: "265px",
             background: "#FFFFFF",
@@ -213,7 +441,7 @@ const ProjectDetail = () => {
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
             height: "100%",
           }}
-        ></Box>
+        ></Box> */}
       </Box>
     </Box>
   );
