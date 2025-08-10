@@ -13,7 +13,7 @@ import ProjectIcon from "../../../assets/icons/sidebar/projects/inactive.svg?rea
 import CalenderIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import VacationsIcon from "../../../assets/icons/sidebar/vacations/inactive.svg?react";
 import InfoPortalIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 interface ItemProps {
   active?: boolean;
@@ -48,9 +48,14 @@ const MainSiderBar = () => {
   }));
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const checkActiveStatus = (path: string) => {
+    return location.pathname.includes(path);
   };
 
   return (
@@ -71,25 +76,53 @@ const MainSiderBar = () => {
       </Box>
       <Box>
         <Stack>
-          <Item active elevation={0}>
+          <Item active={checkActiveStatus("dashboard")} elevation={0}>
             <SvgIcon component={DashIcon} />
-            <Typography color="primary">Dashboard</Typography>
+            <Typography
+              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+            >
+              Dashboard
+            </Typography>
           </Item>
-          <Item onClick={() => handleNavigation("/app/projects")} elevation={0}>
+          <Item
+            active={checkActiveStatus("projects")}
+            onClick={() => handleNavigation("/app/projects")}
+            elevation={0}
+          >
             <SvgIcon component={ProjectIcon} />
-            <Typography color="secondary">Project</Typography>
+            <Typography
+              color={checkActiveStatus("projects") ? "primary" : "secondary"}
+            >
+              Project
+            </Typography>
           </Item>
-          <Item onClick={() => handleNavigation("/app/calendar")} elevation={0}>
+          <Item
+            active={checkActiveStatus("calender")}
+            onClick={() => handleNavigation("/app/calendar")}
+            elevation={0}
+          >
             <SvgIcon component={CalenderIcon} />
-            <Typography color="secondary">Calender</Typography>
+            <Typography
+              color={checkActiveStatus("calender") ? "primary" : "secondary"}
+            >
+              Calender
+            </Typography>
           </Item>
-          <Item elevation={0}>
+          <Item active={checkActiveStatus("vacations")} elevation={0}>
             <SvgIcon component={VacationsIcon} />
-            <Typography color="secondary">Vacations</Typography>
+            <Typography
+              color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+            >
+              Vacations
+            </Typography>
           </Item>
-          <Item elevation={0}>
+          <Item active={checkActiveStatus("info-portal")} elevation={0}>
             <SvgIcon component={InfoPortalIcon} />
-            <Typography color="secondary">Info Portal</Typography>
+            <Typography
+              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
+            >
+              Info Portal
+            </Typography>
           </Item>
         </Stack>
       </Box>

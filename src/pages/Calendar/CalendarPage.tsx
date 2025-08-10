@@ -1,12 +1,17 @@
-import { Box, Button, SvgIcon } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
+import { useState } from "react";
+import LeftIcon from "../../assets/icons/general/left.svg?react";
+import RightIcon from "../../assets/icons/general/calendar-14.svg?react";
 
 const CalendarPage = () => {
+  const [dateState, setDateState] = useState(new Date());
+
   const AddButton = (
     <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
-      Add Project
+      Add Events
     </Button>
   );
 
@@ -18,18 +23,49 @@ const CalendarPage = () => {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
+    const lastMonth = month - 1;
+    const lastMonthTotalDays = new Date(year, lastMonth + 1, 0).getDate();
+    const diffFromDays = lastMonthTotalDays - startingDayOfWeek + 1;
+
+    const nextMonth = month + 1;
+    const lastDayMonth = lastDay.getDay();
+    const additiondays = 6 - lastDayMonth;
+    console.log("d", nextMonth, additiondays, lastDayMonth);
+
     const days: (Date | null)[] = [];
 
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
+    // for (let i = diffFromDays; i <= lastMonthTotalDays; i++) {
+    //   days.push(new Date(year, lastMonth, i));
+    // }
 
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
 
+    // for (let i = 1; i <= additiondays; i++) {
+    //   days.push(new Date(year, nextMonth, i));
+    // }
+
     return days;
   };
+
+  const handleOnClikPrev = () => {
+    dateState.setMonth(dateState.getMonth() - 1);
+    console.log("change date", dateState);
+    const changedate = new Date(dateState);
+    setDateState(changedate);
+  };
+
+  const handleOnClikNext = () => {
+    dateState.setMonth(dateState.getMonth() + 1);
+    const changedate = new Date(dateState);
+    setDateState(changedate);
+  };
+
+  const currentMonthandYear = () =>
+    `${dateState.toDateString().split(" ")[1]} ${
+      dateState.toDateString().split(" ")[3]
+    }`;
 
   const getWeekDayString = (date: Date | null) =>
     date?.toDateString().split(" ")[0] ?? "";
@@ -54,15 +90,31 @@ const CalendarPage = () => {
             height: "100%",
           }}
         >
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
-            {getDaysInMonth(new Date()).map((date) => (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "24px",
+              paddingY: "20px",
+            }}
+          >
+            <SvgIcon onClick={handleOnClikPrev} component={LeftIcon} />
+            <Typography variant="h6" fontWeight={700}>
+              {currentMonthandYear()}
+            </Typography>
+            <SvgIcon onClick={handleOnClikNext} component={RightIcon} />
+          </Box>
+          <Grid container>
+            {getDaysInMonth(dateState).map((date, index) => (
+              <Grid
               <Cell
-                key={date?.getDate()}
+                key={index}
                 date={date?.getDate()}
-                weekDay={getWeekDayString(date)}
+                weekDay={index < 7 ? getWeekDayString(date) : ""}
               />
             ))}
-          </Box>
+          </Grid>
         </Box>
       </Box>
     </Box>
