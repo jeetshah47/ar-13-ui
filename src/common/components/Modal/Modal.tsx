@@ -3,25 +3,27 @@ import { Box } from "@mui/material";
 type ModalProps = {
   show: boolean;
   onClose: () => void;
+  children: React.ReactNode;
 };
 
-const Modal = ({ onClose, show }: ModalProps) => {
+const Modal = ({ onClose, show, children }: ModalProps) => {
   return (
     <Box
       sx={{
         backgroundColor: "rgba(33, 85, 163, 0.16)",
-        position: "absolute",
+        position: "fixed",
         top: 0,
         left: 0,
         width: "100%",
         height: "100%",
-        justifyItems: "center",
+        justifyContent: "center",
         alignItems: "center",
-        display: show ? "block" : "none",
+        display: show ? "flex" : "none",
+        zIndex: 10
       }}
       onClick={onClose}
     >
-      Modal
+      {children}
     </Box>
   );
 };

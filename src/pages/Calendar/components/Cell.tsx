@@ -16,8 +16,8 @@ const Cell = ({ date, weekDay }: CellProps) => {
         // width: "230px",
         height: "128px",
         // textAlign: "end",
-        justifyContent: "space-between",
-        alignItems: "start",
+        flexDirection: "column",
+        alignItems: "center",
         padding: "8px",
         ":hover": {
           cursor: "pointer",
@@ -32,13 +32,14 @@ const Cell = ({ date, weekDay }: CellProps) => {
             padding: "4px 8px",
             color: "#7D8592",
             borderRadius: "8px",
+            fontSize: "12px",
           }}
         >
           {weekDay}
         </Box>
       )}
-      <Event />
-      <Typography>{date}</Typography>
+      <Typography fontSize={"14px"}>{date}</Typography>
+      {/* <Event /> */}
     </Box>
   );
 };

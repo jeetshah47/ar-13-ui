@@ -5,6 +5,8 @@ import Cell from "./components/Cell";
 import { useState } from "react";
 import LeftIcon from "../../assets/icons/general/left.svg?react";
 import RightIcon from "../../assets/icons/general/calendar-14.svg?react";
+import Modal from "../../common/components/Modal/Modal";
+import EventForm from "./components/EventForm";
 
 const CalendarPage = () => {
   const [dateState, setDateState] = useState(new Date());
@@ -34,17 +36,17 @@ const CalendarPage = () => {
 
     const days: (Date | null)[] = [];
 
-    // for (let i = diffFromDays; i <= lastMonthTotalDays; i++) {
-    //   days.push(new Date(year, lastMonth, i));
-    // }
+    for (let i = diffFromDays; i <= lastMonthTotalDays; i++) {
+      days.push(new Date(year, lastMonth, i));
+    }
 
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
 
-    // for (let i = 1; i <= additiondays; i++) {
-    //   days.push(new Date(year, nextMonth, i));
-    // }
+    for (let i = 1; i <= additiondays; i++) {
+      days.push(new Date(year, nextMonth, i));
+    }
 
     return days;
   };
@@ -69,6 +71,8 @@ const CalendarPage = () => {
 
   const getWeekDayString = (date: Date | null) =>
     date?.toDateString().split(" ")[0] ?? "";
+
+  const handleOnCellClick = () => {};
 
   return (
     <Box sx={{ height: "100%" }}>
@@ -105,17 +109,21 @@ const CalendarPage = () => {
             </Typography>
             <SvgIcon onClick={handleOnClikNext} component={RightIcon} />
           </Box>
-          <Grid container>
+          <Grid container columns={7}>
             {getDaysInMonth(dateState).map((date, index) => (
-              <Grid
-              <Cell
-                key={index}
-                date={date?.getDate()}
-                weekDay={index < 7 ? getWeekDayString(date) : ""}
-              />
+              <Grid size={1}>
+                <Cell
+                  key={index}
+                  date={date?.getDate()}
+                  weekDay={index < 7 ? getWeekDayString(date) : ""}
+                />
+              </Grid>
             ))}
           </Grid>
         </Box>
+        <Modal show onClose={() => {}}>
+          <EventForm />
+        </Modal>
       </Box>
     </Box>
   );
