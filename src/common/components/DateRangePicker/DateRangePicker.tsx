@@ -48,6 +48,7 @@ type DateRangePickerProps = {
   setStartDate: (startDate: Date | null) => void;
   endDate: Date | null;
   setEndDate: (endDate: Date | null) => void;
+  calenderView?: boolean;
 };
 
 export const DateRangePicker = ({
@@ -56,8 +57,9 @@ export const DateRangePicker = ({
   setEndDate,
   endDate,
   startDate,
+  calenderView,
 }: DateRangePickerProps) => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(calenderView ? true : false);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectingEnd, setSelectingEnd] = useState<boolean>(false);
@@ -363,10 +365,10 @@ export const DateRangePicker = ({
   return (
     <Container ref={pickerRef}>
       {/* Trigger Button */}
-      <TriggerButton onClick={() => setIsOpen(!isOpen)}>
+      <TriggerButton onClick={() => setIsOpen(!isOpen)} hidden={calenderView}>
         <TriggerContent>
           {/* <TriggerIcon /> */}
-                <SvgIcon component={CalenderIcon} />
+          <SvgIcon component={CalenderIcon} />
           <TriggerText hasDate={!!startDate}>{displayText()}</TriggerText>
         </TriggerContent>
         {(startDate || endDate) && (

@@ -1,6 +1,32 @@
 import { Box } from "@mui/material";
 
-const Tab = () => {
+type TabProps = {
+  tabList: string[];
+  currentTab: string;
+  onChangeTab: (tab: string) => void;
+};
+
+const activeStyle = {
+  borderRadius: "20px",
+  backgroundColor: "primary.main",
+  color: "#fff",
+  fontWeight: 700,
+  textAlign: "center",
+  padding: "8px",
+  transition: "0.3s",
+  cursor: "pointer",
+  width: "100%"
+};
+
+const inActiveStyle = {
+  textAlign: "center",
+  padding: "8px",
+  transition: "0.3s",
+  cursor: "pointer",
+  width: "100%"
+};
+
+const Tab = ({ tabList, currentTab, onChangeTab }: TabProps) => {
   return (
     <Box
       sx={{
@@ -9,33 +35,17 @@ const Tab = () => {
         padding: "4px",
         display: "flex",
         alignItems: "center",
-        minWidth: "400px",
+        width: "100%",
       }}
     >
-      <Box
-        sx={{
-          borderRadius: "20px",
-          backgroundColor: "primary.main",
-          color: "#fff",
-          fontWeight: 700,
-          textAlign: "center",
-          padding: "8px",
-          width: "100%",
-          transition: "0.3s",
-        }}
-      >
-        Employees’ vacations
-      </Box>
-      <Box
-        sx={{
-          textAlign: "center",
-          padding: "8px",
-          width: "100%",
-          transition: "0.3s",
-        }}
-      >
-        Calendar
-      </Box>
+      {tabList.map((tab) => (
+        <Box
+          sx={tab === currentTab ? activeStyle : inActiveStyle}
+          onClick={() => onChangeTab(tab)}
+        >
+          {tab}
+        </Box>
+      ))}
     </Box>
   );
 };

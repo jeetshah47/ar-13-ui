@@ -76,8 +76,15 @@ const MainSiderBar = () => {
       </Box>
       <Box>
         <Stack>
-          <Item active={checkActiveStatus("dashboard")} elevation={0}>
-            <SvgIcon component={DashIcon} />
+          <Item
+            onClick={() => handleNavigation("/app/dashboard")}
+            active={checkActiveStatus("dashboard")}
+            elevation={0}
+          >
+            <SvgIcon
+              component={DashIcon}
+              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+            />
             <Typography
               color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
             >
@@ -89,7 +96,10 @@ const MainSiderBar = () => {
             onClick={() => handleNavigation("/app/projects")}
             elevation={0}
           >
-            <SvgIcon component={ProjectIcon} />
+            <SvgIcon
+              component={ProjectIcon}
+              color={checkActiveStatus("projects") ? "primary" : "secondary"}
+            />
             <Typography
               color={checkActiveStatus("projects") ? "primary" : "secondary"}
             >
@@ -97,31 +107,48 @@ const MainSiderBar = () => {
             </Typography>
           </Item>
           <Item
-            active={checkActiveStatus("calender")}
+            active={checkActiveStatus("calendar")}
             onClick={() => handleNavigation("/app/calendar")}
             elevation={0}
           >
-            <SvgIcon component={CalenderIcon} />
+            <SvgIcon
+              component={CalenderIcon}
+              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+            />
             <Typography
-              color={checkActiveStatus("calender") ? "primary" : "secondary"}
+              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
             >
               Calender
             </Typography>
           </Item>
-          <Item active={checkActiveStatus("vacations")} elevation={0}>
-            <SvgIcon component={VacationsIcon} />
+          <Item
+            onClick={() => handleNavigation("/app/employees")}
+            active={checkActiveStatus("employees")}
+            elevation={0}
+          >
+            <SvgIcon
+              component={InfoPortalIcon}
+              color={checkActiveStatus("employees") ? "primary" : "secondary"}
+            />
+            <Typography
+              color={checkActiveStatus("employees") ? "primary" : "secondary"}
+            >
+              Employees
+            </Typography>
+          </Item>
+          <Item
+            onClick={() => handleNavigation("/app/vacations")}
+            active={checkActiveStatus("vacations")}
+            elevation={0}
+          >
+            <SvgIcon
+              component={VacationsIcon}
+              color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+            />
             <Typography
               color={checkActiveStatus("vacations") ? "primary" : "secondary"}
             >
               Vacations
-            </Typography>
-          </Item>
-          <Item active={checkActiveStatus("info-portal")} elevation={0}>
-            <SvgIcon component={InfoPortalIcon} />
-            <Typography
-              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
-            >
-              Info Portal
             </Typography>
           </Item>
         </Stack>

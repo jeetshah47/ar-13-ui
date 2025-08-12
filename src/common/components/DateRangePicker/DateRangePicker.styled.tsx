@@ -291,7 +291,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ children, ...pro
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: '1.5rem',
+      marginBottom: '1rem',
       '@media (max-width: 1280px)': {
         marginBottom: '0.825rem'
       }
@@ -458,7 +458,7 @@ export const DayHeaders: React.FC<DayHeadersProps> = ({ children, ...props }) =>
       display: 'grid',
       gridTemplateColumns: 'repeat(7, 1fr)',
       gap: '0.25rem',
-      marginBottom: '0.5rem'
+      marginBottom: '0.2rem'
     }}
     {...props}
   >
@@ -508,7 +508,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ children, ...props }
     sx={{
       display: 'grid',
       gridTemplateColumns: 'repeat(7, 1fr)',
-      gap: '0.25rem',
+      gap: '0.15rem',
       marginBottom: '1.5rem'
     }}
     {...props}
@@ -525,7 +525,7 @@ export const DayCell: React.FC<DayCellProps> = ({ children, ...props }) => (
       height: '2.5rem',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
     }}
     {...props}
   >
@@ -587,7 +587,7 @@ export const DayButton: React.FC<DayButtonProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '1rem',
+        fontSize: '0.875rem',
         fontWeight: 500,
         cursor: 'pointer',
         transition: 'all 0.2s ease',

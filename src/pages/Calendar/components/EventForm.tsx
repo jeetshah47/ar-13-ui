@@ -15,6 +15,8 @@ const EventForm = ({ date, onClose }: EventFormProps) => {
         borderRadius: "24px",
         padding: "28px",
         width: "500px",
+        height: "inherit",
+        overflow: "auto"
       }}
     >
       <Box
@@ -22,7 +24,7 @@ const EventForm = ({ date, onClose }: EventFormProps) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          // padding: "30px",
+          paddingY: "30px",
         }}
       >
         <Typography fontWeight={"bold"} variant="h6">
@@ -296,7 +298,7 @@ const EventForm = ({ date, onClose }: EventFormProps) => {
           display: "flex",
           flex: 1,
           justifyContent: "end",
-          paddingTop: "12px",
+          paddingY: "12px",
           alignItems: "center",
         }}
       >
