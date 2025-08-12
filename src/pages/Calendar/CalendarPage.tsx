@@ -10,6 +10,8 @@ import EventForm from "./components/EventForm";
 
 const CalendarPage = () => {
   const [dateState, setDateState] = useState(new Date());
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [selectedCellDate, setSelectedCellDate] = useState<Date | null>(null);
 
   const AddButton = (
     <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
@@ -72,7 +74,14 @@ const CalendarPage = () => {
   const getWeekDayString = (date: Date | null) =>
     date?.toDateString().split(" ")[0] ?? "";
 
-  const handleOnCellClick = () => {};
+  const handleOnCellClick = (date: Date | null) => {
+    setSelectedCellDate(date);
+    setShowDateModal(true);
+  };
+  const handleOnCrossClick = () => {
+    setSelectedCellDate(null);
+    setShowDateModal(false);
+  };
 
   return (
     <Box sx={{ height: "100%" }}>
@@ -114,15 +123,16 @@ const CalendarPage = () => {
               <Grid size={1}>
                 <Cell
                   key={index}
-                  date={date?.getDate()}
+                  date={date}
+                  onClickCell={handleOnCellClick}
                   weekDay={index < 7 ? getWeekDayString(date) : ""}
                 />
               </Grid>
             ))}
           </Grid>
         </Box>
-        <Modal show onClose={() => {}}>
-          <EventForm />
+        <Modal show={showDateModal} onClose={handleOnCrossClick}>
+          <EventForm onClose={handleOnCrossClick} date={selectedCellDate} />
         </Modal>
       </Box>
     </Box>

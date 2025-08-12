@@ -6,7 +6,7 @@ type ModalProps = {
   children: React.ReactNode;
 };
 
-const Modal = ({ onClose, show, children }: ModalProps) => {
+const Modal = ({ show, children }: ModalProps) => {
   return (
     <Box
       sx={{
@@ -19,9 +19,8 @@ const Modal = ({ onClose, show, children }: ModalProps) => {
         justifyContent: "center",
         alignItems: "center",
         display: show ? "flex" : "none",
-        zIndex: 10
+        zIndex: 10,
       }}
-      onClick={onClose}
     >
       {children}
     </Box>

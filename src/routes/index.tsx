@@ -4,6 +4,7 @@ import SignUp from "../pages/Auth/SignUp";
 import CalendarPage from "../pages/Calendar/CalendarPage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ProjectPage from "../pages/Projects/ProjectPage";
+import VacationPage from "../pages/Vacations/VacationPage";
 
 const authRoutes = [
   {
@@ -17,6 +18,10 @@ const authRoutes = [
   {
     path: "/calendar/*",
     component: <CalendarPage />,
+  },
+  {
+    path: "/vacations/*",
+    component: <VacationPage />,
   },
 ];
 

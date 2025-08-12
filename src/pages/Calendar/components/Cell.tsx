@@ -1,14 +1,15 @@
 import { Box, Typography } from "@mui/material";
-import Event from "./Event";
 
 type CellProps = {
-  date: number | undefined;
+  date: Date | null;
   weekDay: string;
+  onClickCell: (date: Date | null) => void;
 };
 
-const Cell = ({ date, weekDay }: CellProps) => {
+const Cell = ({ date, weekDay, onClickCell }: CellProps) => {
   return (
     <Box
+      onClick={() => onClickCell(date)}
       sx={{
         border: "1px solid #E6EBF5",
         // flex: 1,
@@ -19,9 +20,10 @@ const Cell = ({ date, weekDay }: CellProps) => {
         flexDirection: "column",
         alignItems: "center",
         padding: "8px",
+        cursor: "pointer",
         ":hover": {
-          cursor: "pointer",
-        },
+          backgroundColor: "#F4F9FD"
+        }
       }}
     >
       {weekDay && (
@@ -38,7 +40,7 @@ const Cell = ({ date, weekDay }: CellProps) => {
           {weekDay}
         </Box>
       )}
-      <Typography fontSize={"14px"}>{date}</Typography>
+      <Typography fontSize={"14px"}>{date?.getDate()}</Typography>
       {/* <Event /> */}
     </Box>
   );
