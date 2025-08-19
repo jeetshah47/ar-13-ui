@@ -3,12 +3,21 @@ import defaultTheme from "./theme";
 import VerticalLayout from "./common/layout/VerticalLayout";
 import { Navigate, Route, Routes } from "react-router";
 import { publicRoutes } from "./routes";
+import ProtectedRoute from "./common/ProtectedRoute/ProtectedRoute";
 
 function App() {
   return (
     <ThemeProvider theme={defaultTheme}>
       <Routes>
-        <Route path="/app/*" element={<VerticalLayout />} />
+        <Route
+          path="/app/*"
+          element={
+            <ProtectedRoute>
+              {" "}
+              <VerticalLayout />
+            </ProtectedRoute>
+          }
+        />
         {publicRoutes.map((route) => (
           <Route path={route.path} element={route.component} />
         ))}

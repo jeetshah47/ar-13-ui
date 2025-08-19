@@ -3,6 +3,7 @@ import defaultTheme from "../../theme";
 import { useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_APP_API_KEY,
@@ -17,6 +18,7 @@ const auth = getAuth(app);
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     try {
@@ -28,7 +30,8 @@ const SignIn = () => {
       const user = userCredential.user;
       // Get ID token
       const token = await user.getIdToken();
-      localStorage.setItem("token", token);
+      localStorage.setItem("authToken", token);
+      navigate("/app/dashboard");
     } catch (err) {
       console.log(err);
     }

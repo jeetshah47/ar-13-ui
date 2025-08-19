@@ -10,12 +10,12 @@ interface LoginResponse {
   token: string;
   user: User;
 }
-
+export type UserRoles = "Standard" | "Admin";
 export interface SingUpRequest {
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
   password: string;
+  role: UserRoles;
 }
 
 export async function loginApi(
@@ -32,7 +32,7 @@ export async function loginApi(
         email: "user",
         first_name: "John Doe",
         last_name: "wqd",
-        password: ""
+        password: "",
       },
     };
   } else {
@@ -48,9 +48,19 @@ export async function logoutApi(): Promise<boolean> {
 export async function signupApi(
   body: SingUpRequest
 ): Promise<{ message: string }> {
-  const url = `http://localhost:80/apis/sign-up`;
-  const result = await axios.post(url, {
-    ...body,
-  });
+  const url = `http://localhost:3000/api/users/add`;
+  const token = localStorage.getItem("authToken");
+  const result = await axios.post(
+    url,
+    {
+      ...body,
+    },
+    {
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return result.data;
 }

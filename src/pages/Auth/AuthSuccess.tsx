@@ -1,8 +1,6 @@
 import { Box, Button, Typography } from "@mui/material";
-import { useAuthStore } from "../../store/hooks/useAuthAction";
 
 const AuthSuccess = () => {
-  const isUserRegisted = useAuthStore((state) => state.isAuthenticated);
   return (
     <Box
       sx={{
@@ -12,7 +10,7 @@ const AuthSuccess = () => {
         height: "100%",
       }}
     >
-      {isUserRegisted && (
+      {
         <Box>
           <img src="/illustration/workspace.svg" />
           <Typography textAlign={"center"} fontWeight={"600"}>
@@ -22,8 +20,8 @@ const AuthSuccess = () => {
             <Button variant="contained">Lets Start</Button>
           </Box>
         </Box>
-      )}
-      {!isUserRegisted && <Typography>Something is wrong</Typography>}
+      }
+      {/* {!isUserRegisted && <Typography>Something is wrong</Typography>} */}
     </Box>
   );
 };

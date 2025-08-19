@@ -21,8 +21,8 @@ import {
   Info,
 } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useAuthStore } from "../../store/hooks/useAuthAction";
 import { useNavigate } from "react-router";
+import { signupApi } from "../../store/apis/authApis";
 
 // Custom theme to match the design
 const theme = createTheme({
@@ -66,7 +66,6 @@ export default function PhoneValidationUI() {
   const [showPassword, setShowPassword] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
 
-  const singup = useAuthStore((state) => state.signup);
   const navigate = useNavigate();
   const handleSmsCodeChange = (index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -78,15 +77,13 @@ export default function PhoneValidationUI() {
 
   const handleSubmit = async () => {
     try {
-      singup(
-        {
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          password: password,
-        },
-        () => navigate("/auth/get-started")
-      );
+      await signupApi({
+        email: email,
+        name: `${firstName} ${lastName}`,
+        password: password,
+        role: "Standard",
+      });
+      navigate("/auth/login");
     } catch (err) {
       console.log(err);
     }
