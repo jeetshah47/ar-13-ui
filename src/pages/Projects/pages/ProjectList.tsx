@@ -19,6 +19,12 @@ import TimelineView from "../components/TimelineView";
 import TaskForm from "../components/TaskForm";
 import Filter from "../components/Filter";
 import { useNavigate } from "react-router";
+import {
+  useAppDispatch,
+  useAppSelector,
+  type RootState,
+} from "../../../store/store";
+import { updateSelectedProjectId } from "../../../store/features/projects/projectSlice";
 
 const ViewButtonOptions = [
   { key: "list", icon: ListViewIcon },
@@ -26,10 +32,21 @@ const ViewButtonOptions = [
   { key: "time", icon: TimeLineViewIcon },
 ];
 
+const activeCardStyles = {
+  borderRight: "4px solid #3F8CFF",
+  borderRadius: "2px",
+  background: "#F4F9FD",
+  padding: "8px",
+};
+
 const ProjectList = () => {
   const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const projectListState = useAppSelector(
+    (state: RootState) => state.projectListReducer
+  );
+  const dispatch = useAppDispatch();
 
   const navigate = useNavigate();
 
@@ -59,6 +76,10 @@ const ProjectList = () => {
     navigate("/app/projects/details");
   };
 
+  const handleSelectCurrentProjectId = (projectId: string) => {
+    dispatch(updateSelectedProjectId(projectId));
+  };
+
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Projects" endElement={AddButton} />
@@ -76,7 +97,15 @@ const ProjectList = () => {
             background: "#FFFFFF",
             borderRadius: "24px",
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-            height: "100%",
+            overflow: "scroll",
+            "::-webkit-scrollbar": {
+              width: "3px",
+            },
+            "::-webkit-scrollbar-thumb": {
+              background: "#e1dcdc",
+              borderRadius: "10px"
+            },
+            cursor: "pointer"
           }}
         >
           <Box sx={{ padding: "20px 22px", borderBottom: "1px solid #E4E6E8" }}>
@@ -85,32 +114,29 @@ const ProjectList = () => {
             </Typography>
           </Box>
           <Box>
-            <Box
-              sx={{
-                padding: "8px",
-                borderRight: "4px solid #3F8CFF",
-                borderRadius: "2px",
-                background: "#F4F9FD",
-              }}
-            >
-              <Typography color="secondary">PN0001245</Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                New Site Project
-              </Typography>
-              <Typography onClick={handleOnClickDetails} color="primary" sx={{ fontWeight: "600",cursor: "pointer" }}>
-                View Details
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                padding: "8px",
-              }}
-            >
-              <Typography color="secondary">PN0001245</Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                New Site Project
-              </Typography>
-            </Box>
+            {projectListState.api.data.projects.map((project) => (
+              <Box
+                onClick={() => handleSelectCurrentProjectId(project.id)}
+                key={project.id}
+                sx={
+                  projectListState.common.selectedProjectId === project.id
+                    ? activeCardStyles
+                    : { padding: "8px" }
+                }
+              >
+                <Typography color="secondary">PN0001245</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  {project.title}
+                </Typography>
+                <Typography
+                  onClick={handleOnClickDetails}
+                  color="primary"
+                  sx={{ fontWeight: "600", cursor: "pointer" }}
+                >
+                  View Details
+                </Typography>
+              </Box>
+            ))}
           </Box>
         </Box>
         <Box sx={{ width: "80%" }}>

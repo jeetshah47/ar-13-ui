@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { AuthState } from "./authTypes";
-import type { AuthResponse } from "../../types/AuthResponse";
-import type { AuthError } from "../../types/AuthError";
+import type { AuthResponse } from "../../types/Auth/AuthResponse";
+import type { AuthError } from "../../types/Auth/AuthError";
 
 const checkAuthFromToken = (): AuthState => {
   const token = localStorage.getItem("authToken");
@@ -46,12 +46,12 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = "";
     },
-    authSignInFailed(state, action: PayloadAction<AuthError>) {
+    authSignInFailed(state, action: PayloadAction<string>) {
       state.api.token = "";
       state.api.uid = "";
       state.common.isLogin = false;
       state.loading = false;
-      state.error = action.payload.error;
+      state.error = action.payload;
     },
     authLogout(state) {
       localStorage.removeItem("authToken");

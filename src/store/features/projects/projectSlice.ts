@@ -1,90 +1,57 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { AuthState } from "./projectTypes";
-import type { AuthResponse } from "../../types/AuthResponse";
-import type { AuthError } from "../../types/AuthError";
+import type { ProjectState } from "./projectTypes";
+import type { ProjectResponse } from "../../types/Project/ProjectResponse";
+import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 
-const checkAuthFromToken = (): AuthState => {
-  const token = localStorage.getItem("authToken");
-  const uid = localStorage.getItem("uid");
-  const state = {
-    api: {
-      token: "",
-      uid: "",
-    },
-    common: {
-      isLogin: false,
+const initialState: ProjectState = {
+  api: {
+    data: {
+      projects: [],
     },
     error: "",
     loading: false,
-  };
-  if (token && uid) {
-    state.api.token = token;
-    state.api.uid = uid;
-    state.common.isLogin = true;
-  }
-
-  return state;
+  },
+  common: {
+    selectedProjectId: "",
+  },
 };
 
-const initialState: AuthState = checkAuthFromToken();
-
-const authSlice = createSlice({
+const projectListSlice = createSlice({
   name: "common/auth",
   initialState,
   reducers: {
-    authSignInRequest(state) {
-      state.api.token = "";
-      state.api.uid = "";
-      state.common.isLogin = false;
-      state.loading = true;
-      state.error = "";
+    getProjectListRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+      state.api.data.projects = [];
+      state.common.selectedProjectId = "";
     },
-    authSignInSuccess(state, action: PayloadAction<AuthResponse>) {
-      state.api.token = action.payload.token;
-      state.api.uid = action.payload.uid;
-      state.common.isLogin = true;
-      state.loading = false;
-      state.error = "";
+    getProjectListSuccess(
+      state,
+      action: PayloadAction<{ projects: ProjectResponse[] }>
+    ) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.projects = action.payload.projects;
+      state.common.selectedProjectId = "";
     },
-    authSignInFailed(state, action: PayloadAction<AuthError>) {
-      state.api.token = "";
-      state.api.uid = "";
-      state.common.isLogin = false;
-      state.loading = false;
-      state.error = action.payload.error;
+    getProjectListFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+      state.api.data.projects = [];
+      state.common.selectedProjectId = "";
     },
-    authLogout(state) {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("uid");
-      state.api.token = "";
-      state.api.uid = "";
-      state.common.isLogin = false;
-      state.loading = false;
-      state.error = "";
-    },
-    authSignUpRequest(state) {
-      state.loading = true;
-      state.error = "";
-    },
-    authSignUpSuccess(state) {
-      state.loading = false;
-      state.error = "";
-    },
-    authSignUpFailed(state, action: PayloadAction<AuthError>) {
-      state.loading = false;
-      state.error = action.payload.error;
+    updateSelectedProjectId(state, action: PayloadAction<string>) {
+      state.common.selectedProjectId = action.payload;
     },
   },
 });
 
 export const {
-  authSignInRequest,
-  authSignInSuccess,
-  authSignInFailed,
-  authLogout,
-  authSignUpRequest,
-  authSignUpSuccess,
-  authSignUpFailed,
-} = authSlice.actions;
+  getProjectListRequest,
+  getProjectListSuccess,
+  getProjectListFailed,
+  updateSelectedProjectId
+} = projectListSlice.actions;
 
-export const authReducer = authSlice.reducer;
+export const projectListReducer = projectListSlice.reducer;

@@ -10,7 +10,7 @@ const VerticalLayout = () => {
       >
         <MainSiderBar />
       </Box>
-      <Box sx={{ marginLeft: "230px", overflow: "hidden", width: "100%", minHeight: "100vh", padding: "20px"}}>
+      <Box sx={{ marginLeft: "230px", overflow: "hidden", width: "100%", maxHeight: "100vh", padding: "20px"}}>
         <LandingPage />
       </Box>
     </Box>

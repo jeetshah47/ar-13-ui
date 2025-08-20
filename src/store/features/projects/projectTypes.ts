@@ -1,11 +1,12 @@
-export interface AuthState {
-  loading: boolean;
-  error: string;
+import type { ProjectResponse } from "../../types/Project/ProjectResponse";
+
+export interface ProjectState {
   api: {
-    token: string;
-    uid: string;
+    data: { projects: ProjectResponse[] };
+    loading: boolean;
+    error: string;
   };
   common: {
-    isLogin: boolean;
+    selectedProjectId: string;
   };
 }

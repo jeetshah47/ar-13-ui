@@ -10,9 +10,10 @@ import {
   authSignUpSuccess,
 } from "./authSlice";
 import type { AxiosError } from "axios";
-import type { AuthError } from "../../types/AuthError";
+import type { AuthError } from "../../types/Auth/AuthError";
 import toast from "react-hot-toast";
 import { signupApi, type SingUpRequest } from "../../apis/authApis";
+import type { FirebaseError } from "firebase/app";
 
 export const authSignInActions =
   (email: string, password: string, cb?: () => void) =>
@@ -27,18 +28,17 @@ export const authSignInActions =
           localStorage.setItem("authToken", token);
           localStorage.setItem("uid", uid);
           dispatch(authSignInSuccess({ token, uid }));
-          console.log("statesss", token, uid);
           if (cb) cb();
         })
-        .catch((error: AxiosError<AuthError>) => {
-          if (error?.response?.data) {
-            dispatch(authSignInFailed(error?.response?.data));
-            toast.success("Login Failed: " + error?.response?.data?.error);
+        .catch((error: FirebaseError) => {
+          if (error?.message) {
+            dispatch(authSignInFailed(error?.message));
+            toast.error(error?.message);
           }
         });
     } catch {
-      dispatch(authSignInFailed({ error: "Unkown Error" }));
-      toast.success("Login Failed");
+      dispatch(authSignInFailed("Unkown Error"));
+      toast.error("Login Failed");
     }
   };
 
