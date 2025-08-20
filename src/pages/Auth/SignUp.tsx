@@ -7,22 +7,22 @@ import {
   Button,
   InputAdornment,
   IconButton,
-  Select,
-  MenuItem,
-  FormControl,
   Grid,
   Paper,
-  Alert,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  ArrowForward,
-  Info,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowForward } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router";
-import { signupApi } from "../../store/apis/authApis";
+import { useFormik } from "formik";
+import { authSignUpActions } from "../../store/features/auth/authAction";
+import { useAppDispatch } from "../../store/store";
+
+type UserData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
 
 // Custom theme to match the design
 const theme = createTheme({
@@ -57,36 +57,45 @@ const theme = createTheme({
 });
 
 export default function PhoneValidationUI() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [smsCode, setSmsCode] = useState(["", "", "", ""]);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCode, setCountryCode] = useState("+91");
+  const formik = useFormik({
+    initialValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+    },
+    onSubmit: (values) => {
+      handleSubmit(values);
+    },
+  });
+  const dispatch = useAppDispatch();
+  // const [countryCode, setCountryCode] = useState("+91");
 
   const navigate = useNavigate();
-  const handleSmsCodeChange = (index: number, value: string) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newCode = [...smsCode];
-      newCode[index] = value;
-      setSmsCode(newCode);
-    }
-  };
+  // const handleSmsCodeChange = (index: number, value: string) => {
+  //   if (value.length <= 1 && /^\d*$/.test(value)) {
+  //     const newCode = [...smsCode];
+  //     newCode[index] = value;
+  //     setSmsCode(newCode);
+  //   }
+  // };
 
-  const handleSubmit = async () => {
-    try {
-      await signupApi({
-        email: email,
-        name: `${firstName} ${lastName}`,
-        password: password,
-        role: "Standard",
-      });
-      navigate("/auth/login");
-    } catch (err) {
-      console.log(err);
-    }
+  const handleSubmit = async (values: UserData) => {
+    dispatch(
+      authSignUpActions(
+        {
+          name:
+            values.firstName && values.lastName
+              ? `${values.firstName} ${values.lastName}`
+              : "",
+          email: values.email,
+          password: values.password,
+          role: "Standard",
+        },
+        () => navigate("/auth/login")
+      )
+    );
   };
 
   const steps = ["Valid your information"];
@@ -213,33 +222,37 @@ export default function PhoneValidationUI() {
             </Box>
 
             <Paper elevation={0} sx={{ p: 0 }}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {/* Name Fields */}
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="First Name"
-                      placeholder="First Name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      variant="outlined"
-                    />
+              <form onSubmit={formik.handleSubmit}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Name Fields */}
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 6 }}>
+                      <TextField
+                        fullWidth
+                        label="First Name"
+                        placeholder="First Name"
+                        name="firstName"
+                        value={formik.values.firstName}
+                        required
+                        onChange={formik.handleChange}
+                        variant="outlined"
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <TextField
+                        fullWidth
+                        label="Last Name"
+                        name="lastName"
+                        placeholder="Last Name"
+                        required
+                        value={formik.values.lastName}
+                        onChange={formik.handleChange}
+                        variant="outlined"
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="Last Name"
-                      placeholder="Last Name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      variant="outlined"
-                    />
-                  </Grid>
-                </Grid>
 
-                {/* Mobile Number */}
-                <Box>
+                  {/* <Box>
                   <Typography
                     variant="body2"
                     sx={{ mb: 1, fontWeight: 500, color: "text.secondary" }}
@@ -283,7 +296,6 @@ export default function PhoneValidationUI() {
                   </Box>
                 </Box>
 
-                {/* SMS Code */}
                 <Box>
                   <Typography
                     variant="body2"
@@ -337,57 +349,64 @@ export default function PhoneValidationUI() {
                       It will be valid for 01:25
                     </Typography>
                   </Alert>
+                </Box> */}
+
+                  {/* Email */}
+                  <TextField
+                    fullWidth
+                    label="Email Address"
+                    type="email"
+                    name="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    variant="outlined"
+                    required
+                  />
+
+                  {/* Password */}
+                  <TextField
+                    fullWidth
+                    label="Create Password"
+                    type={showPassword ? "text" : "password"}
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    name={"password"}
+                    placeholder="••••••••"
+                    required
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
                 </Box>
 
-                {/* Email */}
-                <TextField
-                  fullWidth
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  variant="outlined"
-                />
-
-                {/* Password */}
-                <TextField
-                  fullWidth
-                  label="Create Password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
-
-              {/* Next Button */}
-              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 6 }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  endIcon={<ArrowForward />}
-                  onClick={handleSubmit}
-                  sx={{
-                    px: 4,
-                    py: 1.5,
-                    fontSize: "0.875rem",
-                  }}
+                {/* Next Button */}
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", mt: 6 }}
                 >
-                  Submit
-                </Button>
-              </Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    type="submit"
+                    endIcon={<ArrowForward />}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Submit
+                  </Button>
+                </Box>
+              </form>
             </Paper>
           </Container>
         </Box>

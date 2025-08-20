@@ -355,19 +355,19 @@ const VacationssCalender: React.FC = () => {
   const getDaysInMonth = (date: Date): (Date | null)[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
+    // const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    // const startingDayOfWeek = firstDay.getDay();
 
-    const lastMonth = month - 1;
-    const lastMonthTotalDays = new Date(year, lastMonth + 1, 0).getDate();
-    const diffFromDays = lastMonthTotalDays - startingDayOfWeek + 1;
+    // const lastMonth = month - 1;
+    // const lastMonthTotalDays = new Date(year, lastMonth + 1, 0).getDate();
+    // const diffFromDays = lastMonthTotalDays - startingDayOfWeek + 1;
 
-    const nextMonth = month + 1;
-    const lastDayMonth = lastDay.getDay();
-    const additiondays = 6 - lastDayMonth;
-    console.log("d", nextMonth, additiondays, lastDayMonth);
+    // const nextMonth = month + 1;
+    // const lastDayMonth = lastDay.getDay();
+    // const additiondays = 6 - lastDayMonth;
+    // console.log("d", nextMonth, additiondays, lastDayMonth);
 
     const days: (Date | null)[] = [];
 

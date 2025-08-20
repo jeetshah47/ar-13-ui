@@ -1,41 +1,53 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import defaultTheme from "../../theme";
-import { useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_APP_API_KEY,
-  authDomain: import.meta.env.VITE_APP_AUTHDOMAIN,
-  projectId: import.meta.env.VITE_APP_PROJECTID,
-  // ... other config fields as needed
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { authSignInActions } from "../../store/features/auth/authAction";
+import {
+  useAppDispatch,
+  useAppSelector,
+  type RootState,
+} from "../../store/store";
+import { FacebookCircularProgress } from "../../common/components/Progress/Progress";
+import { useEffect } from "react";
 
 const SignIn = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema: Yup.object({
+      email: Yup.string().email("Invalid email").required("Email is required"),
+      password: Yup.string().required("Email is required"),
+    }),
+    onSubmit: (values) => {
+      handleSubmit(values.email, values.password);
+    },
+  });
 
-  const handleSubmit = async () => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      // Get ID token
-      const token = await user.getIdToken();
-      localStorage.setItem("authToken", token);
-      navigate("/app/dashboard");
-    } catch (err) {
-      console.log(err);
-    }
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const authLoadingState = useAppSelector(
+    (state: RootState) => state.authReducer.loading
+  );
+  const authState = useAppSelector(
+    (state: RootState) => state.authReducer.common.isLogin
+  );
+
+  const handleSubmit = (email: string, password: string) => {
+    dispatch(
+      authSignInActions(email, password, () => navigate("/app/dashboard"))
+    );
   };
+
+  useEffect(() => {
+    if (authState) {
+      navigate("/app/dashboard");
+    }
+  }, [navigate, authState]);
 
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
@@ -45,7 +57,6 @@ const SignIn = () => {
           backgroundColor: defaultTheme.palette.primary.main,
           p: 6,
           display: "flex",
-          //   alignItems: "center",
           flexDirection: "column",
         }}
       >
@@ -66,29 +77,41 @@ const SignIn = () => {
         <Typography variant="h6" fontWeight={"bold"}>
           Sign in to woorkroom
         </Typography>
-        <Box sx={{ py: 2, width: "50%" }}>
-          <TextField
-            fullWidth
-            label="First Name"
-            placeholder="First Name"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            variant="outlined"
-          />
-          <Box sx={{ py: 2 }} />
-          <TextField
-            fullWidth
-            label="Password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            variant="outlined"
-          />
-          <Box sx={{ py: 2 }} />
-          <Button variant="contained" onClick={handleSubmit}>
-            Login
-          </Button>
-        </Box>
+        <form
+          style={{ width: "100%", display: "flex", justifyContent: "center" }}
+          onReset={formik.handleReset}
+          onSubmit={formik.handleSubmit}
+        >
+          <Box sx={{ py: 2, width: "50%" }}>
+            <TextField
+              fullWidth
+              label="Email"
+              placeholder="Email"
+              name="email"
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              variant="outlined"
+            />
+            <Box sx={{ py: 2 }} />
+            <TextField
+              fullWidth
+              label="Password"
+              placeholder="Password"
+              name="password"
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              variant="outlined"
+            />
+            <Box sx={{ py: 2 }} />
+            <Button variant="contained" type="submit">
+              {authLoadingState ? (
+                <FacebookCircularProgress size={"28px"} />
+              ) : (
+                "Login"
+              )}
+            </Button>
+          </Box>
+        </form>
       </Box>
     </Box>
   );

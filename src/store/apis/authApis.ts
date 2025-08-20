@@ -48,7 +48,7 @@ export async function logoutApi(): Promise<boolean> {
 export async function signupApi(
   body: SingUpRequest
 ): Promise<{ message: string }> {
-  const url = `http://localhost:3000/api/users/add`;
+  const url = `http://localhost:3000/api/auth/register`;
   const token = localStorage.getItem("authToken");
   const result = await axios.post(
     url,

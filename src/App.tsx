@@ -4,6 +4,7 @@ import VerticalLayout from "./common/layout/VerticalLayout";
 import { Navigate, Route, Routes } from "react-router";
 import { publicRoutes } from "./routes";
 import ProtectedRoute from "./common/ProtectedRoute/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         ))}
         <Route path="/" element={<Navigate to={"/app/dashboard"} />} />
       </Routes>
+      <Toaster />
     </ThemeProvider>
   );
 }

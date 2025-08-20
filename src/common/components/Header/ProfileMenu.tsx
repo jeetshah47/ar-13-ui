@@ -2,7 +2,6 @@ import {
   alpha,
   Avatar,
   Button,
-  Divider,
   Menu,
   MenuItem,
   styled,
@@ -11,14 +10,32 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useState, type MouseEvent } from "react";
 import defaultTheme from "../../../theme";
+import { useAppDispatch } from "../../../store/store";
+import { authLogout } from "../../../store/features/auth/authSlice";
+import { useNavigate } from "react-router";
 const ProfileMenu = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   const open = Boolean(anchorEl);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(authLogout());
+    setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    setAnchorEl(null);
+    navigate("/app/profile");
   };
 
   const StyledMenu = styled((props: MenuProps) => (
@@ -100,18 +117,11 @@ const ProfileMenu = () => {
         open={open}
         onClose={handleClose}
       >
-        <MenuItem onClick={handleClose} disableRipple>
-          Edit
+        <MenuItem onClick={handleProfileClick} disableRipple>
+          Profile
         </MenuItem>
-        <MenuItem onClick={handleClose} disableRipple>
-          Duplicate
-        </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem onClick={handleClose} disableRipple>
-          Archive
-        </MenuItem>
-        <MenuItem onClick={handleClose} disableRipple>
-          More
+        <MenuItem onClick={handleLogout} disableRipple>
+          Logout
         </MenuItem>
       </StyledMenu>
     </div>

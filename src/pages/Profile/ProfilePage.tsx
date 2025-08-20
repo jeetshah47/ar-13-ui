@@ -2,7 +2,6 @@ import {
   Avatar,
   Box,
   Button,
-  SvgIcon,
   TextField,
   Typography,
 } from "@mui/material";
@@ -21,7 +20,7 @@ const tabList = ["Projects", "Team", "My Vacations"];
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("Projects");
   const [showModal, setShowModal] = useState(false);
-  const [showSetting, setShowSetting] = useState(false);
+  const [showSetting, ] = useState(false);
 
   const handleOnCloseModal = () => {
     setShowModal(false);
@@ -30,10 +29,10 @@ const ProfilePage = () => {
     setShowModal(true);
   };
 
-  const handleShowSetting = () => {
-    setShowSetting(true);
-    setCurrentTab("");
-  };
+  // const handleShowSetting = () => {
+  //   setShowSetting(true);
+  //   setCurrentTab("");
+  // };
 
   return (
     <Box sx={{ height: "100%" }}>
