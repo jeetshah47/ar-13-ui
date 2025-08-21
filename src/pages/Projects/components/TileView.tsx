@@ -1,18 +1,30 @@
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import DragDropComponent from "./DragnDrop";
 import { blurAnimation } from "../../../common/animation/cssAnimation";
 
 const TileView = () => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexGrow: 1,
-        height: "100%",
-        ...blurAnimation,
-      }}
-    >
-      {/* <Box
+    <>
+      <Box
+        sx={{
+          background: "#E6EDF5",
+          borderRadius: "14px",
+          padding: "10px",
+          textAlign: "center",
+          marginTop: "12px",
+        }}
+      >
+        <Typography sx={{ fontWeight: "bold" }}>Active Task</Typography>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexGrow: 1,
+          height: "100%",
+          ...blurAnimation,
+        }}
+      >
+        {/* <Box
         sx={{
           backgroundColor: "white",
           boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
@@ -39,8 +51,9 @@ const TileView = () => {
           <Avatar sx={{ width: "24px", height: "24px" }} />
         </Box>
       </Box> */}
-      <DragDropComponent />
-    </Box>
+        <DragDropComponent />
+      </Box>
+    </>
   );
 };
 

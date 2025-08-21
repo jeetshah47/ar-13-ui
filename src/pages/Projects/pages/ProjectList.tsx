@@ -1,19 +1,9 @@
-import {
-  Box,
-  Button,
-  IconButton,
-  Modal,
-  SvgIcon,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Modal, SvgIcon, Typography } from "@mui/material";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
-import ListViewIcon from "../../../assets/icons/general/list-view.svg?react";
-import CardViewIcon from "../../../assets/icons/general/card-view.svg?react";
-import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
-import TimeLineViewIcon from "../../../assets/icons/general/timline-view.svg?react";
+
 import ListView from "../components/ListView";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TileView from "../components/TileView";
 import TimelineView from "../components/TimelineView";
 import TaskForm from "../components/TaskForm";
@@ -25,12 +15,9 @@ import {
   type RootState,
 } from "../../../store/store";
 import { updateSelectedProjectId } from "../../../store/features/projects/projectSlice";
-
-const ViewButtonOptions = [
-  { key: "list", icon: ListViewIcon },
-  { key: "tile", icon: CardViewIcon },
-  { key: "time", icon: TimeLineViewIcon },
-];
+import { ViewButtonOptions } from "../constants/project.contants";
+import TaskHeader from "../components/TaskHeader";
+import { getTaskListAction } from "../../../store/features/task/projectAction";
 
 const activeCardStyles = {
   borderRight: "4px solid #3F8CFF",
@@ -43,9 +30,15 @@ const ProjectList = () => {
   const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+
   const projectListState = useAppSelector(
     (state: RootState) => state.projectListReducer
   );
+
+  const taskListState = useAppSelector(
+    (state: RootState) => state.taskListReducer.api
+  );
+
   const dispatch = useAppDispatch();
 
   const navigate = useNavigate();
@@ -80,6 +73,15 @@ const ProjectList = () => {
     dispatch(updateSelectedProjectId(projectId));
   };
 
+  console.log("tttttttttt",taskListState)
+
+  useEffect(() => {
+    const project_id = projectListState.common.selectedProjectId;
+    if (project_id) {
+      dispatch(getTaskListAction(project_id));
+    }
+  }, [dispatch, projectListState.common.selectedProjectId]);
+
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Projects" endElement={AddButton} />
@@ -103,9 +105,9 @@ const ProjectList = () => {
             },
             "::-webkit-scrollbar-thumb": {
               background: "#e1dcdc",
-              borderRadius: "10px"
+              borderRadius: "10px",
             },
-            cursor: "pointer"
+            cursor: "pointer",
           }}
         >
           <Box sx={{ padding: "20px 22px", borderBottom: "1px solid #E4E6E8" }}>
@@ -131,7 +133,12 @@ const ProjectList = () => {
                 <Typography
                   onClick={handleOnClickDetails}
                   color="primary"
-                  sx={{ fontWeight: "600", cursor: "pointer" }}
+                  sx={{
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    width: "fit-content",
+                    ":hover": { textDecoration: "underline" },
+                  }}
                 >
                   View Details
                 </Typography>
@@ -140,79 +147,21 @@ const ProjectList = () => {
           </Box>
         </Box>
         <Box sx={{ width: "80%" }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              <Typography sx={{ fontWeight: "bold" }}>Tasks</Typography>
-              <IconButton
-                size="small"
-                onClick={handleShowModal}
-                sx={{
-                  backgroundColor: "#3F8CFF",
-                  ":hover": { backgroundColor: "#3F8CFF" },
-                }}
-              >
-                <PlusIcon />
-              </IconButton>
+          <>
+            <TaskHeader
+              currentViewOption={currentView}
+              onChangeViewOptions={(view) => setCurrentView(view)}
+              onClickAddButton={handleShowModal}
+              onClickFilterShow={handleShowFilterModal}
+            />
+            <Box sx={{ paddingTop: "5px" }}>
+              {currentView === "list" && (
+                <ListView tasks={taskListState?.data?.tasks} />
+              )}
+              {currentView === "tile" && <TileView />}
+              {currentView === "time" && <TimelineView />}
             </Box>
-            <Box sx={{ display: "flex", gap: "16px" }}>
-              {ViewButtonOptions.map((option) => (
-                <Box
-                  key={option.key}
-                  onClick={() => setCurrentView(option.key)}
-                  sx={{
-                    backgroundColor: "white",
-                    borderRadius: "14px",
-                    padding: "12px",
-                    display: "flex",
-                    cursor: "pointer",
-                  }}
-                >
-                  <SvgIcon
-                    component={option.icon}
-                    sx={{
-                      color:
-                        currentView === option.key ? "primary.main" : "black",
-                    }}
-                  />
-                </Box>
-              ))}
-            </Box>
-            <Box
-              onClick={handleShowFilterModal}
-              sx={{
-                background: "#FFFFFF",
-                boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-                borderRadius: "14px",
-                padding: "12px",
-                display: "flex",
-                cursor: "pointer",
-              }}
-            >
-              <SvgIcon component={FilterIcon} />
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              background: "#E6EDF5",
-              borderRadius: "14px",
-              padding: "10px",
-              textAlign: "center",
-              marginTop: "12px",
-            }}
-          >
-            <Typography sx={{ fontWeight: "bold" }}>Active Task</Typography>
-          </Box>
-          <Box sx={{ paddingTop: "5px" }}>
-            {currentView === "list" && <ListView />}
-            {currentView === "tile" && <TileView />}
-            {currentView === "time" && <TimelineView />}
-          </Box>
+          </>
         </Box>
       </Box>
       <Modal open={showModal} onClose={handleCloseModal}>

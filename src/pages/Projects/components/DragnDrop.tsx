@@ -255,7 +255,7 @@ const HorizontalDragDropComponent: React.FC = () => {
     <Box sx={{ p: 1, width: "100%" }}>
       <Grid
         container
-        sx={{ backgroundColor: "#F4F9FD", width: "100%", }}
+        sx={{ backgroundColor: "#F4F9FD", width: "100%" }}
         spacing={2}
       >
         {columns.map((column) => (
@@ -307,10 +307,11 @@ const HorizontalDragDropComponent: React.FC = () => {
                     <Card
                       key={item.id}
                       draggable
+                      elevation={0}
                       onDragStart={(e) => handleDragStart(e, item, column.id)}
                       onDragEnd={handleDragEnd}
                       sx={{
-                        background: "#F4F9FD",
+                        background: "#fff",
                         marginTop: "10px",
                         borderRadius: "8px",
                         cursor: "grab",
@@ -318,8 +319,9 @@ const HorizontalDragDropComponent: React.FC = () => {
                           draggedItem?.id === item.id ? "rotate(5deg)" : "none",
                         opacity: draggedItem?.id === item.id ? 0.8 : 1,
                         transition: "all 0.2s ease",
+                        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
                         "&:hover": {
-                          boxShadow: 3,
+                          // boxShadow: 1,
                           transform: "translateY(-2px)",
                         },
                         "&:active": {

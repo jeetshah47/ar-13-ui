@@ -14,7 +14,6 @@ function App() {
           path="/app/*"
           element={
             <ProtectedRoute>
-              {" "}
               <VerticalLayout />
             </ProtectedRoute>
           }

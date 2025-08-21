@@ -1,18 +1,13 @@
-import axios from "axios";
 import type { ProjectResponse } from "../types/Project/ProjectResponse";
+import { http } from "../../config/http";
 
-const token = localStorage.getItem("authToken");
-axios.interceptors.request.use((req) => {
-  req.headers.Authorization = `Bearer ${token}`;
-  return req;
-});
 
 export async function getAllProjects(): Promise<{
   projects: ProjectResponse[];
 }> {
   const url = `http://localhost:3000/api/project/all`;
   //   const token = localStorage.getItem("authToken");
-  const result = await axios.get(url);
+  const result = await http.get(url);
   console.log("resul", result.data);
   return result.data;
 }
