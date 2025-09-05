@@ -8,7 +8,7 @@ const EmployeeCard = () => {
         borderRadius: "24px",
         paddingY: "18px",
         paddingX: "36px",
-        width: "50%",
+        maxWidth: "175px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

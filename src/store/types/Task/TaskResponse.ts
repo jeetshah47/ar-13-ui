@@ -7,13 +7,13 @@ export interface TaskResponse {
   duration: string;
   priority: string;
   assignTo: string[];
-  assignDetails: UserResponse[]
+  assignDetails: UserResponse[];
   projectId: string;
   id: string;
   created: Created;
 }
 
-interface Created {
+export interface Created {
   _seconds: number;
   _nanoseconds: number;
 }

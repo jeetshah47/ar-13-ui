@@ -7,7 +7,10 @@ import {
 } from "@mui/material";
 import StatusTag from "../../../common/components/StatusTag/StatusTag";
 import { blurAnimation } from "../../../common/animation/cssAnimation";
-import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
+import type {
+  Created,
+  TaskResponse,
+} from "../../../store/types/Task/TaskResponse";
 
 type ListViewProps = {
   tasks: TaskResponse[];
@@ -21,6 +24,21 @@ const ListView = ({ tasks }: ListViewProps) => {
     const date2 = new Date();
     const diffMs = Math.abs(date1.getTime() - date2.getTime());
 
+    // Calculate days and hours
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(
+      (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+
+    // Format as "2d 4h"
+    return `${diffDays}d ${diffHours}h`;
+  };
+
+  const spentTime = ({ _nanoseconds, _seconds }: Created) => {
+    const milliseconds = _seconds * 1000 + _nanoseconds / 1000000;
+    const date1 = new Date(milliseconds);
+    const date2 = new Date();
+    const diffMs = Math.abs(date2.getTime() - date1.getTime());
     // Calculate days and hours
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor(
@@ -53,7 +71,7 @@ const ListView = ({ tasks }: ListViewProps) => {
       </Box>
       <Box>
         <Typography color="secondary">Spent Time</Typography>
-        <Typography>1d 2h {task.created._seconds}</Typography>
+        <Typography>{spentTime(task.created)}</Typography>
       </Box>
       <Box>
         <Typography color="secondary">Assignee</Typography>

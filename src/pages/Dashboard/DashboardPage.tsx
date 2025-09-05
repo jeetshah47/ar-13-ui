@@ -7,7 +7,13 @@ import EmployeeCard from "./components/EmployeeCard";
 import EventCard from "./components/EventCard";
 import ProjectCard from "./components/ProjectCard";
 import ActivityCard from "./components/ActivityCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  useAppDispatch,
+  useAppSelector,
+  type RootState,
+} from "../../store/store";
+import { getDashboardActions } from "../../store/features/dashboard/dashboardAction";
 
 const DashboardPage = () => {
   const [calenderState, setCalendarState] = useState<{
@@ -18,12 +24,25 @@ const DashboardPage = () => {
     end_date: new Date(),
   });
 
+  const dashboardData = useAppSelector(
+    (state: RootState) => state.dashboardReducer.api
+  );
+
+  const dispatch = useAppDispatch();
+
   const handleStartDateChange = (date: Date | null) => {
     setCalendarState({ ...calenderState, start_date: date });
   };
   const handleEndDateChange = (date: Date | null) => {
     setCalendarState({ ...calenderState, end_date: date });
   };
+
+  const { employees, projects } = dashboardData.data.datas;
+  console.log("datas", dashboardData);
+
+  useEffect(() => {
+    dispatch(getDashboardActions("10", "5"));
+  }, [dispatch]);
 
   return (
     <Box>
@@ -43,24 +62,24 @@ const DashboardPage = () => {
         <Box sx={{ width: "70%" }}>
           <CustomCard>
             <CardHeader title="Workload" link="/#" />
-            <Box sx={{ display: "flex", gap: "16px", paddingTop: "16px" }}>
-              <EmployeeCard />
-              <EmployeeCard />
-              <EmployeeCard />
-              <EmployeeCard />
-            </Box>
-            <Box sx={{ display: "flex", gap: "16px", paddingTop: "16px" }}>
-              <EmployeeCard />
-              <EmployeeCard />
-              <EmployeeCard />
-              <EmployeeCard />
+            <Box
+              sx={{
+                display: "flex",
+                gap: "16px",
+                paddingTop: "16px",
+                flexWrap: "wrap",
+              }}
+            >
+              {employees.map((emp) => (
+                <EmployeeCard key={emp.id} />
+              ))}
             </Box>
           </CustomCard>
           <Box sx={{ paddingTop: "36px" }}>
             <CardHeader title="Projects" link="/#" />
-            <ProjectCard />
-            <ProjectCard />
-            <ProjectCard />
+            {projects.map((project) => (
+              <ProjectCard key={project.id} />
+            ))}
           </Box>
         </Box>
         <Box sx={{ width: "30%" }}>

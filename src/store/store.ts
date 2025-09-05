@@ -4,9 +4,15 @@ import { useDispatch, type TypedUseSelectorHook } from "react-redux";
 import { useSelector } from "react-redux";
 import { projectListReducer } from "./features/projects/projectSlice";
 import { taskListReducer } from "./features/task/taskSlice";
+import { dashboardReducer } from "./features/dashboard/dashboardSlice";
 
 export const store = configureStore({
-  reducer: { authReducer, projectListReducer, taskListReducer },
+  reducer: {
+    authReducer,
+    projectListReducer,
+    taskListReducer,
+    dashboardReducer,
+  },
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
