@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { projectListReducer } from "./features/projects/projectSlice";
 import { taskListReducer } from "./features/task/taskSlice";
 import { dashboardReducer } from "./features/dashboard/dashboardSlice";
+import { userReducer } from "./features/user/userSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     projectListReducer,
     taskListReducer,
     dashboardReducer,
+    userReducer,
   },
 });
 

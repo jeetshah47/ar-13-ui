@@ -44,6 +44,19 @@ const projectListSlice = createSlice({
     updateSelectedProjectId(state, action: PayloadAction<string>) {
       state.common.selectedProjectId = action.payload;
     },
+    addProjectRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    addProjectSuccess(state, action: PayloadAction<ProjectResponse>) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.projects.push(action.payload);
+    },
+    addProjectFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -51,7 +64,10 @@ export const {
   getProjectListRequest,
   getProjectListSuccess,
   getProjectListFailed,
-  updateSelectedProjectId
+  updateSelectedProjectId,
+  addProjectRequest,
+  addProjectSuccess,
+  addProjectFailed,
 } = projectListSlice.actions;
 
 export const projectListReducer = projectListSlice.reducer;

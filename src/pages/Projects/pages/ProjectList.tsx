@@ -43,8 +43,16 @@ const ProjectList = () => {
 
   const navigate = useNavigate();
 
+  const handleAddProject = () => {
+    navigate("/app/projects/add-project");
+  };
+
   const AddButton = (
-    <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
+    <Button
+      variant="contained"
+      startIcon={<SvgIcon component={PlusIcon} />}
+      onClick={handleAddProject}
+    >
       Add Project
     </Button>
   );

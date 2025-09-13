@@ -14,11 +14,24 @@ import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react"
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import UploadIcon from "../../../assets/icons/general/upload.svg?react";
 import Chips from "../../../common/components/Chips/Chips";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router";
+import { getProjectDetails } from "../../../store/apis/projectApis";
 import defaultTheme from "../../../theme";
 
 const ProjectDetail = () => {
   const [currentStatus, setCurrentStatus] = useState("pending");
+  const [projectDetails, setProjectDetails] = useState<any>(null);
+  const { projectId } = useParams();
+
+  useEffect(() => {
+    if (projectId) {
+      getProjectDetails(projectId).then((data) => {
+        console.log("Project Details:", data);
+        setProjectDetails(data.projectDetails);
+      });
+    }
+  }, [projectId]);
   return (
     <Box sx={{ height: "100%" }}>
       <Link sx={{ alignItems: "center", display: "flex" }}>
@@ -49,7 +62,9 @@ const ProjectDetail = () => {
               justifyContent: "space-between",
             }}
           >
-            <Typography color="secondary">Project Number</Typography>
+            <Typography color="secondary">
+              {projectDetails?.projectNumber}
+            </Typography>
             <Box
               sx={{
                 backgroundColor: "#F4F9FD",
@@ -63,48 +78,47 @@ const ProjectDetail = () => {
           <Box sx={{ paddingTop: "24px" }}>
             <Typography variant="h6">Description</Typography>
             <Typography color="secondary.main">
-              App for maintaining your medical record, making appointments with
-              a doctor, storing prescriptions
+              {projectDetails?.description}
             </Typography>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main" fontSize={"16px"}>
                 Reporter
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <Avatar sx={{ width: "24px", height: "24px" }} />
-                <Typography>Evan Yates</Typography>
+                <Avatar
+                  sx={{ width: "24px", height: "24px" }}
+                  src={projectDetails?.reporter?.avatar}
+                />
+                <Typography>{projectDetails?.reporter?.name}</Typography>
               </Box>
             </Box>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main">Assignes</Typography>
               <AvatarGroup sx={{ justifyContent: "start" }} spacing="medium">
-                <Avatar
-                  sx={{ width: "24px", height: "24px" }}
-                  alt="Remy Sharp"
-                  src="/static/images/avatar/1.jpg"
-                />
-                <Avatar
-                  sx={{ width: "24px", height: "24px" }}
-                  alt="Travis Howard"
-                  src="/static/images/avatar/2.jpg"
-                />
-                <Avatar
-                  sx={{ width: "24px", height: "24px" }}
-                  alt="Cindy Baker"
-                  src="/static/images/avatar/3.jpg"
-                />
+                {projectDetails?.assignes?.map((assigne: any) => (
+                  <Avatar
+                    key={assigne.id}
+                    sx={{ width: "24px", height: "24px" }}
+                    alt={assigne.name}
+                    src={assigne.avatar}
+                  />
+                ))}
               </AvatarGroup>
             </Box>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main">Priority</Typography>
               <Box sx={{ display: "flex", gap: "4px" }}>
                 <SvgIcon component={YellowArrow} />
-                <Typography color="#FFBD21">Medium</Typography>
+                <Typography color="#FFBD21">
+                  {projectDetails?.priority}
+                </Typography>
               </Box>
             </Box>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main">Dead Line</Typography>
-              <Typography>Feb 23,2025</Typography>
+              <Typography>
+                {new Date(projectDetails?.deadline).toLocaleDateString()}
+              </Typography>
             </Box>
             <Box
               sx={{

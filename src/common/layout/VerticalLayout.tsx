@@ -10,7 +10,7 @@ const VerticalLayout = () => {
         display: "flex",
         width: "100%",
         position: "relative",
-        height: "auto",
+        // height: "auto",
       }}
     >
       <Box
@@ -27,10 +27,11 @@ const VerticalLayout = () => {
       <Box
         sx={{
           marginLeft: "230px",
-          overflow: "hidden",
+          overflow: "auto",
           width: "100%",
-          maxHeight: "100vh",
+          height: "100vh",
           padding: "20px",
+          boxSizing: "border-box",
         }}
       >
         <Suspense fallback={<Skeleton variant="rectangular" />}>
