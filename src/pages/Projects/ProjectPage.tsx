@@ -18,7 +18,7 @@ const ProjectPage = () => {
     <Box sx={{ height: "100%" }}>
       <Routes>
         <Route element={<AddProject />} path="/add-project" />
-        <Route element={<ProjectDetail />} path="/details" />
+        <Route element={<ProjectDetail />} path="/details/:projectId/:taskId" />
         <Route element={<ProjectList />} path="/" />
       </Routes>
     </Box>

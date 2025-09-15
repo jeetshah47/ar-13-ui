@@ -1,6 +1,41 @@
 import { Box, Typography } from "@mui/material";
+import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 
-const Event = () => {
+type EventProps = {
+  event: CalendarResponse;
+  onClick?: (event: CalendarResponse) => void;
+};
+
+const Event = ({ event, onClick }: EventProps) => {
+
+  const getCategoryColor = (category: string | undefined) => {
+    if (!category) return "#DE92EB";
+    
+    switch (category.toLowerCase()) {
+      case "work":
+        return "#4ECDC4";
+      case "personal":
+        return "#45B7D1";
+      case "meeting":
+        return "#96CEB4";
+      case "appointment":
+        return "#FFEAA7";
+      default:
+        return "#DE92EB";
+    }
+  };
+
+  const formatTime = (time: string | undefined) => {
+    if (!time) return "00:00";
+    return time.substring(0, 5); // Extract HH:MM from time string
+  };
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick(event);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -10,10 +45,45 @@ const Event = () => {
         display: "flex",
         overflow: "hidden",
         width: "100%",
+        cursor: onClick ? "pointer" : "default",
+        marginBottom: "2px",
+        "&:hover": onClick ? {
+          backgroundColor: "#E8F4FD",
+          transform: "scale(1.02)",
+          transition: "all 0.2s ease-in-out"
+        } : {}
       }}
+      onClick={handleClick}
     >
-      <Box sx={{ borderLeft: "3px solid #DE92EB" , paddingLeft: "4px"}}>
-        <Typography fontSize={"14px"}>Task Revision</Typography>
+      <Box 
+        sx={{ 
+          borderLeft: `3px solid ${getCategoryColor(event.category)}`,
+          paddingLeft: "4px",
+          width: "100%"
+        }}
+      >
+        <Typography 
+          fontSize={"12px"} 
+          fontWeight="600"
+          sx={{ 
+            color: "#2C3E50",
+            lineHeight: 1.2,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+          }}
+        >
+          {event.title || "Untitled Event"}
+        </Typography>
+        <Typography 
+          fontSize={"10px"} 
+          sx={{ 
+            color: "#7D8592",
+            lineHeight: 1.2
+          }}
+        >
+          {formatTime(event.time)}
+        </Typography>
       </Box>
     </Box>
   );

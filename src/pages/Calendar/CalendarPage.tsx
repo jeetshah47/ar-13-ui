@@ -1,23 +1,53 @@
-import { Box, Button, Grid, SvgIcon, Typography } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, Alert } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LeftIcon from "../../assets/icons/general/left.svg?react";
 import RightIcon from "../../assets/icons/general/calendar-14.svg?react";
 import Modal from "../../common/components/Modal/Modal";
 import EventForm from "./components/EventForm";
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { fetchCalendarEvents } from "../../store/features/calendar/calendarAction";
+import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
 const CalendarPage = () => {
+  const dispatch = useAppDispatch();
+  const { events } = useAppSelector((state) => state.calendarReducer.api.data);
+  const { loading, error } = useAppSelector((state) => state.calendarReducer.api);
+  
   const [dateState, setDateState] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
   const [selectedCellDate, setSelectedCellDate] = useState<Date | null>(null);
+
+  // Fetch calendar events when month changes
+  useEffect(() => {
+    const year = dateState.getFullYear();
+    const month = dateState.getMonth() + 1; // getMonth() returns 0-11, so add 1
+    dispatch(fetchCalendarEvents(year, month));
+  }, [dispatch, dateState]);
 
   const AddButton = (
     <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
       Add Events
     </Button>
   );
+
+  // Helper function to get events for a specific date
+  const getEventsForDate = (date: Date | null): CalendarResponse[] => {
+    if (!date) return [];
+    
+    const dateString = date.toISOString().split('T')[0];
+    return events.filter(event => {
+      const eventDate = new Date(event.start).toISOString().split('T')[0];
+      return eventDate === dateString;
+    });
+  };
+
+  // Helper function to check if a date has events
+  const hasEventsForDate = (date: Date | null): boolean => {
+    return getEventsForDate(date).length > 0;
+  };
 
   const getDaysInMonth = (date: Date): (Date | null)[] => {
     const year = date.getFullYear();
@@ -34,7 +64,7 @@ const CalendarPage = () => {
     const nextMonth = month + 1;
     const lastDayMonth = lastDay.getDay();
     const additiondays = 6 - lastDayMonth;
-    console.log("d", nextMonth, additiondays, lastDayMonth);
+    // Calculate additional days for next month
 
     const days: (Date | null)[] = [];
 
@@ -55,7 +85,6 @@ const CalendarPage = () => {
 
   const handleOnClikPrev = () => {
     dateState.setMonth(dateState.getMonth() - 1);
-    console.log("change date", dateState);
     const changedate = new Date(dateState);
     setDateState(changedate);
   };
@@ -86,6 +115,14 @@ const CalendarPage = () => {
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Calendar" endElement={AddButton} />
+      
+      {/* Error Display */}
+      {error && (
+        <Alert severity="error" sx={{ margin: "16px", borderRadius: "12px" }}>
+          {error}
+        </Alert>
+      )}
+      
       <Box
         sx={{
           paddingTop: "28px",
@@ -101,8 +138,30 @@ const CalendarPage = () => {
             borderRadius: "24px",
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
             height: "100%",
+            position: "relative",
           }}
         >
+          {/* Loading Overlay */}
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1000,
+                borderRadius: "24px",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          
           <Box
             sx={{
               display: "flex",
@@ -118,21 +177,24 @@ const CalendarPage = () => {
             </Typography>
             <SvgIcon onClick={handleOnClikNext} component={RightIcon} />
           </Box>
+          
           <Grid container columns={7}>
             {getDaysInMonth(dateState).map((date, index) => (
-              <Grid size={1}>
+              <Grid size={1} key={index}>
                 <Cell
-                  key={index}
                   date={date}
                   onClickCell={handleOnCellClick}
                   weekDay={index < 7 ? getWeekDayString(date) : ""}
+                  events={getEventsForDate(date)}
+                  hasEvents={hasEventsForDate(date)}
                 />
               </Grid>
             ))}
           </Grid>
         </Box>
+        
         <Modal show={showDateModal} onClose={handleOnCrossClick}>
-          <EventForm onClose={handleOnCrossClick} date={selectedCellDate} />
+          <EventForm onClose={handleOnCrossClick} date={selectedCellDate} currentMonth={dateState} />
         </Modal>
       </Box>
     </Box>

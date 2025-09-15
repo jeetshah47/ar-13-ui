@@ -14,27 +14,66 @@ import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react"
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import UploadIcon from "../../../assets/icons/general/upload.svg?react";
 import Chips from "../../../common/components/Chips/Chips";
-import { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import { getProjectDetails } from "../../../store/apis/projectApis";
+import { useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
 import defaultTheme from "../../../theme";
+import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
+import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
 
 const ProjectDetail = () => {
-  const [currentStatus, setCurrentStatus] = useState("pending");
-  const [projectDetails, setProjectDetails] = useState<any>(null);
-  const { projectId } = useParams();
+  const { taskId, projectId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  
+  const projectDetailState = useAppSelector(
+    (state: RootState) => state.projectDetailReducer
+  );
+  
+  const { taskDetails, projectDetails } = projectDetailState.api.data;
+  const { loading, error } = projectDetailState.api;
+  const { currentStatus } = projectDetailState.common;
 
   useEffect(() => {
-    if (projectId) {
-      getProjectDetails(projectId).then((data) => {
-        console.log("Project Details:", data);
-        setProjectDetails(data.projectDetails);
-      });
+    if (taskId && projectId) {
+      dispatch(fetchProjectDetailAction(taskId, projectId));
     }
-  }, [projectId]);
+  }, [taskId, projectId, dispatch]);
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!taskDetails || !taskId || !projectId) return;
+    
+    dispatch(updateTaskStatusAction(taskId, newStatus, taskDetails));
+  };
+  if (loading) {
+    return (
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Typography>Loading task details...</Typography>
+      </Box>
+    );
+  }
+
+  if (error || !taskDetails) {
+    return (
+      <Box sx={{ height: "100%" }}>
+        <Link 
+          sx={{ alignItems: "center", display: "flex", cursor: "pointer" }}
+          onClick={() => navigate("/app/projects")}
+        >
+          <SvgIcon component={LeftIcon} /> Back to Projects
+        </Link>
+        <Box sx={{ paddingTop: "28px", textAlign: "center" }}>
+          <Typography color="error">{error || "Task not found"}</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ height: "100%" }}>
-      <Link sx={{ alignItems: "center", display: "flex" }}>
+      <Link 
+        sx={{ alignItems: "center", display: "flex", cursor: "pointer" }}
+        onClick={() => navigate("/app/projects")}
+      >
         <SvgIcon component={LeftIcon} /> Back to Projects
       </Link>
       <Box
@@ -63,7 +102,7 @@ const ProjectDetail = () => {
             }}
           >
             <Typography color="secondary">
-              {projectDetails?.projectNumber}
+              {projectDetails?.title || "Project"}
             </Typography>
             <Box
               sx={{
@@ -78,7 +117,7 @@ const ProjectDetail = () => {
           <Box sx={{ paddingTop: "24px" }}>
             <Typography variant="h6">Description</Typography>
             <Typography color="secondary.main">
-              {projectDetails?.description}
+              {projectDetails?.description || "No description available"}
             </Typography>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main" fontSize={"16px"}>
@@ -87,20 +126,20 @@ const ProjectDetail = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <Avatar
                   sx={{ width: "24px", height: "24px" }}
-                  src={projectDetails?.reporter?.avatar}
+                  src={projectDetails?.reporter?.avatar || "/api/placeholder/24/24"}
                 />
-                <Typography>{projectDetails?.reporter?.name}</Typography>
+                <Typography>{projectDetails?.reporter?.name || "Project Owner"}</Typography>
               </Box>
             </Box>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main">Assignes</Typography>
               <AvatarGroup sx={{ justifyContent: "start" }} spacing="medium">
-                {projectDetails?.assignes?.map((assigne: any) => (
+                {projectDetails?.assignes?.map((assigne: { id: string; name: string; avatar: string }) => (
                   <Avatar
                     key={assigne.id}
                     sx={{ width: "24px", height: "24px" }}
                     alt={assigne.name}
-                    src={assigne.avatar}
+                    src={assigne.avatar || "/api/placeholder/24/24"}
                   />
                 ))}
               </AvatarGroup>
@@ -110,14 +149,14 @@ const ProjectDetail = () => {
               <Box sx={{ display: "flex", gap: "4px" }}>
                 <SvgIcon component={YellowArrow} />
                 <Typography color="#FFBD21">
-                  {projectDetails?.priority}
+                  {projectDetails?.priority || "Medium"}
                 </Typography>
               </Box>
             </Box>
             <Box sx={{ paddingTop: "10px" }}>
               <Typography color="secondary.main">Dead Line</Typography>
               <Typography>
-                {new Date(projectDetails?.deadline).toLocaleDateString()}
+                {projectDetails?.deadline ? new Date(projectDetails.deadline).toLocaleDateString() : "No deadline set"}
               </Typography>
             </Box>
             <Box
@@ -192,7 +231,7 @@ const ProjectDetail = () => {
               padding: "30px",
             }}
           >
-            <Typography color="secondary.main">PN00000125</Typography>
+            <Typography color="secondary.main">{taskDetails?.code}</Typography>
             <Box
               sx={{
                 paddingTop: "4px",
@@ -202,12 +241,12 @@ const ProjectDetail = () => {
               }}
             >
               <Typography variant="h6" fontWeight={"700"}>
-                UX Login + Registration
+                {taskDetails?.subject}
               </Typography>
               <Box sx={{}}>
                 <Chips
                   selected={currentStatus}
-                  onChange={(status) => setCurrentStatus(status)}
+                  onChange={(status) => handleStatusUpdate(status)}
                 />
               </Box>
             </Box>

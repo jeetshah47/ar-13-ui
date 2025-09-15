@@ -34,19 +34,42 @@ const ListView = ({ tasks }: ListViewProps) => {
     return `${diffDays}d ${diffHours}h`;
   };
 
-  const spentTime = ({ _nanoseconds, _seconds }: Created) => {
-    const milliseconds = _seconds * 1000 + _nanoseconds / 1000000;
-    const date1 = new Date(milliseconds);
-    const date2 = new Date();
-    const diffMs = Math.abs(date2.getTime() - date1.getTime());
-    // Calculate days and hours
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(
-      (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
+  const spentTime = (created: Created | undefined | null | string | Date) => {
+    if (!created) return "0d 0h";
 
-    // Format as "2d 4h"
-    return `${diffDays}d ${diffHours}h`;
+    let date1: Date;
+    
+    try {
+      // Handle different date formats
+      if (typeof created === 'object' && created !== null && '_nanoseconds' in created && '_seconds' in created) {
+        // Firestore timestamp object
+        const { _nanoseconds, _seconds } = created as { _nanoseconds: number; _seconds: number };
+        const milliseconds = _seconds * 1000 + _nanoseconds / 1000000;
+        date1 = new Date(milliseconds);
+      } else if (typeof created === 'object' && created !== null && 'toDate' in created && typeof (created as { toDate: () => Date }).toDate === 'function') {
+        // Firestore timestamp with toDate method
+        date1 = (created as { toDate: () => Date }).toDate();
+      } else if (typeof created === 'string' || created instanceof Date) {
+        // String date or regular Date object
+        date1 = new Date(created as string | Date);
+      } else {
+        return "0d 0h";
+      }
+
+      const date2 = new Date();
+      const diffMs = Math.abs(date2.getTime() - date1.getTime());
+      
+      // Calculate days and hours
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor(
+        (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+
+      // Format as "2d 4h"
+      return `${diffDays}d ${diffHours}h`;
+    } catch {
+      return "0d 0h";
+    }
   };
 
   const TaskCard = (task: TaskResponse) => (

@@ -1,8 +1,14 @@
 import { Box, Typography } from "@mui/material";
-import DragDropComponent from "./DragnDrop";
-import { blurAnimation } from "../../../common/animation/cssAnimation";
+import ProjectBoard from "./ProjectBoard";
+import { useAppSelector } from "../../../store/store";
 
 const TileView = () => {
+  const projectListState = useAppSelector(
+    (state) => state.projectListReducer
+  );
+  
+  const selectedProjectId = projectListState.common.selectedProjectId;
+
   return (
     <>
       <Box
@@ -14,44 +20,32 @@ const TileView = () => {
           marginTop: "12px",
         }}
       >
-        <Typography sx={{ fontWeight: "bold" }}>Active Task</Typography>
+        <Typography sx={{ fontWeight: "bold" }}>Active Tasks</Typography>
       </Box>
       <Box
         sx={{
           display: "flex",
           flexGrow: 1,
           height: "100%",
-          ...blurAnimation,
         }}
       >
-        {/* <Box
-        sx={{
-          backgroundColor: "white",
-          boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-          borderRadius: "24px",
-          padding: "20px",
-        }}
-      >
-        <Typography color="secondary">TS0001245</Typography>
-        <Typography>UX Drawings</Typography>
-        <Box
-          sx={{
-            display: "flex",
-            paddingTop: "30px",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}
-        >
-          <Typography
-            color="secondary"
-            sx={{ backgroundColor: "#F4F9FD", borderRadius: "8px", padding: "6px 10px" }}
+        {selectedProjectId ? (
+          <ProjectBoard projectId={selectedProjectId} />
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+            }}
           >
-            4d
-          </Typography>
-          <Avatar sx={{ width: "24px", height: "24px" }} />
-        </Box>
-      </Box> */}
-        <DragDropComponent />
+            <Typography color="text.secondary">
+              Please select a project to view tasks
+            </Typography>
+          </Box>
+        )}
       </Box>
     </>
   );

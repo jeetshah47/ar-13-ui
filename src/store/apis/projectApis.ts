@@ -1,4 +1,5 @@
 import type { ProjectResponse } from "../types/Project/ProjectResponse";
+import type { ProjectDetailResponse } from "../types/Project/ProjectDetailResponse";
 import { http } from "../../config/http";
 import type { ProjectRequest } from "../types/Project/ProjectRequest";
 
@@ -9,7 +10,6 @@ export async function getAllProjects(): Promise<{
   const url = `http://localhost:3000/api/project/all`;
   //   const token = localStorage.getItem("authToken");
   const result = await http.get(url);
-  console.log("resul", result.data);
   return result.data;
 }
 
@@ -19,8 +19,8 @@ export async function addProject(project: ProjectRequest): Promise<ProjectRespon
   return result.data;
 }
 
-export async function getProjectDetails(projectId: string): Promise<any> {
-  const url = `http://localhost:3000/api/project/${projectId}/details`;
+export async function getProjectDetails(projectId: string): Promise<ProjectDetailResponse> {
+  const url = `http://localhost:3000/api/project/${projectId}`;
   const result = await http.get(url);
   return result.data;
 }

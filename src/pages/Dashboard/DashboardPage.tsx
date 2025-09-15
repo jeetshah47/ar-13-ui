@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import RangeSelector from "../Landing/components/RangeSelector";
 import CustomCard from "../../common/components/Card/CustomCard";
@@ -14,6 +14,8 @@ import {
   type RootState,
 } from "../../store/store";
 import { getDashboardActions } from "../../store/features/dashboard/dashboardAction";
+import Modal from "../../common/components/Modal/Modal";
+import SupportModal from "../../common/components/SupportModal/SupportModal";
 
 const DashboardPage = () => {
   const [calenderState, setCalendarState] = useState<{
@@ -23,6 +25,7 @@ const DashboardPage = () => {
     start_date: new Date(),
     end_date: new Date(),
   });
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const dashboardData = useAppSelector(
     (state: RootState) => state.dashboardReducer.api
@@ -35,6 +38,14 @@ const DashboardPage = () => {
   };
   const handleEndDateChange = (date: Date | null) => {
     setCalendarState({ ...calenderState, end_date: date });
+  };
+
+  const handleOnCloseSupportModal = () => {
+    setShowSupportModal(false);
+  };
+
+  const handleOnClickSupportButton = () => {
+    setShowSupportModal(true);
   };
 
   const { employees, projects } = dashboardData.data.datas;
@@ -50,12 +61,21 @@ const DashboardPage = () => {
       <PageHeader
         title="Dashboard"
         endElement={
-          <RangeSelector
-            startDate={calenderState.start_date}
-            endDate={calenderState.end_date}
-            setEndDate={handleEndDateChange}
-            setStartDate={handleStartDateChange}
-          />
+          <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <Button
+              onClick={handleOnClickSupportButton}
+              variant="outlined"
+              sx={{ textTransform: "none" }}
+            >
+              Get Support
+            </Button>
+            <RangeSelector
+              startDate={calenderState.start_date}
+              endDate={calenderState.end_date}
+              setEndDate={handleEndDateChange}
+              setStartDate={handleStartDateChange}
+            />
+          </Box>
         }
       />
       <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px" }}>
@@ -93,6 +113,10 @@ const DashboardPage = () => {
           </Box>
         </Box>
       </Box>
+
+      <Modal onClose={handleOnCloseSupportModal} show={showSupportModal}>
+        <SupportModal onClose={handleOnCloseSupportModal} />
+      </Modal>
     </Box>
   );
 };

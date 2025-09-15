@@ -3,17 +3,21 @@ import { authReducer } from "./features/auth/authSlice";
 import { useDispatch, type TypedUseSelectorHook } from "react-redux";
 import { useSelector } from "react-redux";
 import { projectListReducer } from "./features/projects/projectSlice";
+import { projectDetailReducer } from "./features/projects/projectDetailSlice";
 import { taskListReducer } from "./features/task/taskSlice";
 import { dashboardReducer } from "./features/dashboard/dashboardSlice";
 import { userReducer } from "./features/user/userSlice";
+import { calendarReducer } from "./features/calendar/calendarSlice";
 
 export const store = configureStore({
   reducer: {
     authReducer,
     projectListReducer,
+    projectDetailReducer,
     taskListReducer,
     dashboardReducer,
     userReducer,
+    calendarReducer,
   },
 });
 

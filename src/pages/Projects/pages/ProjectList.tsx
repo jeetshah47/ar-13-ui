@@ -18,6 +18,7 @@ import { updateSelectedProjectId } from "../../../store/features/projects/projec
 import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
 import { getTaskListAction } from "../../../store/features/task/projectAction";
+import NoTaskMessage from "../components/NoTaskMessage";
 
 const activeCardStyles = {
   borderRight: "4px solid #3F8CFF",
@@ -163,17 +164,24 @@ const ProjectList = () => {
               onClickFilterShow={handleShowFilterModal}
             />
             <Box sx={{ paddingTop: "5px" }}>
-              {currentView === "list" && (
-                <ListView tasks={taskListState?.data?.tasks} />
+              {projectListState.common.selectedProjectId && 
+               (!taskListState?.data?.tasks || taskListState.data.tasks.length === 0) ? (
+                <NoTaskMessage />
+              ) : (
+                <>
+                  {currentView === "list" && (
+                    <ListView tasks={taskListState?.data?.tasks} />
+                  )}
+                  {currentView === "tile" && <TileView />}
+                  {currentView === "time" && <TimelineView />}
+                </>
               )}
-              {currentView === "tile" && <TileView />}
-              {currentView === "time" && <TimelineView />}
             </Box>
           </>
         </Box>
       </Box>
       <Modal open={showModal} onClose={handleCloseModal}>
-        <TaskForm />
+        <TaskForm onClose={handleCloseModal} />
       </Modal>
       {showFilterModal && <Filter onClose={handleCloseFilterModal} />}
     </Box>

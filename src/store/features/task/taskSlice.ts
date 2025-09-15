@@ -30,12 +30,59 @@ const taskListSlice = createSlice({
     getTaskListFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
       state.api.error = action.payload.error;
-      state.api.data.tasks = [];
+    },
+    addTaskRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    addTaskSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    addTaskFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    updateTaskRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    updateTaskSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    updateTaskFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    deleteTaskRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    deleteTaskSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    deleteTaskFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
     },
   },
 });
 
-export const { getTaskListRequest, getTaskListSuccess, getTaskListFailed } =
-  taskListSlice.actions;
+export const {
+  getTaskListRequest,
+  getTaskListSuccess,
+  getTaskListFailed,
+  addTaskRequest,
+  addTaskSuccess,
+  addTaskFailed,
+  updateTaskRequest,
+  updateTaskSuccess,
+  updateTaskFailed,
+  deleteTaskRequest,
+  deleteTaskSuccess,
+  deleteTaskFailed,
+} = taskListSlice.actions;
 
 export const taskListReducer = taskListSlice.reducer;

@@ -1,7 +1,136 @@
-import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { useState, useEffect } from "react";
+import { addTaskAction } from "../../../store/features/task/projectAction";
+import type { ITask } from "../../../store/types/Task/Task";
+import {
+  Box,
+  IconButton,
+  TextField,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  Chip,
+  Button,
+} from "@mui/material";
 import Crossicon from "../../../assets/icons/general/close/blue.svg?react";
+import {
+  useAppDispatch,
+  useAppSelector,
+  type RootState,
+} from "../../../store/store";
+import { getUsersAction } from "../../../store/features/user/userAction";
+import type { SelectChangeEvent } from "@mui/material";
 
-const TaskForm = () => {
+interface TaskFormProps {
+  onClose?: () => void;
+}
+
+const TaskForm = ({ onClose }: TaskFormProps) => {
+  const [subject, setSubject] = useState("");
+  const [code, setCode] = useState("");
+  const [status, setStatus] = useState("");
+  const [duration, setDuration] = useState("");
+  const [priority, setPriority] = useState("");
+  const [membersIds, setMembersIds] = useState<string[]>([]);
+
+  const dispatch = useAppDispatch();
+  const projectListState = useAppSelector(
+    (state: RootState) => state.projectListReducer
+  );
+  const { users } = useAppSelector((state: RootState) => state.userReducer);
+
+  useEffect(() => {
+    dispatch(getUsersAction());
+  }, [dispatch]);
+
+  const handleAddTask = () => {
+    const projectId = projectListState.common.selectedProjectId;
+    if (!projectId) {
+      return;
+    }
+
+    const newTask: ITask = {
+      _id: "", // Backend will generate this
+      subject,
+      code,
+      status,
+      duration: duration ? new Date(duration) : new Date(),
+      priority,
+      assignTo: membersIds,
+      projectId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    dispatch(addTaskAction(newTask));
+    
+    // Reset form and close modal
+    setSubject("");
+    setCode("");
+    setStatus("");
+    setDuration("");
+    setPriority("");
+    setMembersIds([]);
+    onClose?.();
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    switch (name) {
+      case "subject":
+        setSubject(value);
+        break;
+      case "code":
+        setCode(value);
+        break;
+      case "duration":
+        setDuration(value);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handlePriorityChange = (event: SelectChangeEvent) => {
+    setPriority(event.target.value);
+  };
+
+  const handleStatusChange = (event: SelectChangeEvent) => {
+    setStatus(event.target.value);
+  };
+
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 200,
+      },
+    },
+  };
+
+  const handleMembersChange = (event: SelectChangeEvent<typeof membersIds>) => {
+    const { value } = event.target;
+    setMembersIds(
+      // On autofill we get a stringified value.
+      typeof value === "string" ? value.split(",") : value
+    );
+  };
+
+  const handleClose = () => {
+    // Reset form when closing
+    setSubject("");
+    setCode("");
+    setStatus("");
+    setDuration("");
+    setPriority("");
+    setMembersIds([]);
+    onClose?.();
+  };
+
   return (
     <Box
       sx={{
@@ -23,11 +152,18 @@ const TaskForm = () => {
         }}
       >
         <Typography sx={{ fontWeight: "bold" }}>Add task</Typography>
-        <IconButton>
+        <IconButton onClick={handleClose}>
           <Crossicon />
         </IconButton>
       </Box>
-      <Box sx={{ height: "80%", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          height: "80%",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
             <Typography
@@ -38,7 +174,10 @@ const TaskForm = () => {
             </Typography>
             <TextField
               sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
+              placeholder="Enter Task Name"
+              name="subject"
+              value={subject}
+              onChange={handleChange}
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
@@ -46,11 +185,14 @@ const TaskForm = () => {
               color="secondary"
               sx={{ fontWeight: "bold", fontSize: "14px" }}
             >
-              Task Name
+              Task Code
             </Typography>
             <TextField
               sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
+              placeholder="Enter Task Code"
+              name="code"
+              value={code}
+              onChange={handleChange}
             />
           </Box>
         </Box>
@@ -60,11 +202,28 @@ const TaskForm = () => {
               color="secondary"
               sx={{ fontWeight: "bold", fontSize: "14px" }}
             >
-              Estimate
+              Time Spend
             </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
+            <input
+              type="datetime-local"
+              name="duration"
+              value={duration}
+              onChange={handleChange}
+              min={new Date().toISOString().slice(0, 16)}
+              style={{
+                width: "100%",
+                height: "56px",
+                padding: "0 14px",
+                border: "1px solid #D8E0F0",
+                borderRadius: "14px",
+                fontSize: "14px",
+                fontFamily: '"Nunito Sans", sans-serif',
+                color: "#000000",
+                outline: "none",
+                backgroundColor: "white",
+                boxSizing: "border-box",
+                margin: 0,
+              }}
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
@@ -72,12 +231,25 @@ const TaskForm = () => {
               color="secondary"
               sx={{ fontWeight: "bold", fontSize: "14px" }}
             >
-              Dead Line
+              Priority
             </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
-            />
+            <FormControl sx={{ width: "100%" }}>
+              <Select
+                value={priority}
+                onChange={handlePriorityChange}
+                displayEmpty
+                input={<OutlinedInput />}
+                sx={{ width: "100%" }}
+              >
+                <MenuItem value="">
+                  <em>Select Priority</em>
+                </MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Critical">Critical</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
         </Box>
         <Box>
@@ -86,37 +258,63 @@ const TaskForm = () => {
               color="secondary"
               sx={{ fontWeight: "bold", fontSize: "14px" }}
             >
-              Task Name
+              Status
             </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
-            />
+            <FormControl sx={{ width: "100%" }}>
+              <Select
+                value={status}
+                onChange={handleStatusChange}
+                displayEmpty
+                input={<OutlinedInput />}
+                sx={{ width: "100%" }}
+              >
+                <MenuItem value="">
+                  <em>Select Status</em>
+                </MenuItem>
+                <MenuItem value="To Do">To Do</MenuItem>
+                <MenuItem value="In Progress">In Progress</MenuItem>
+                <MenuItem value="Review">Review</MenuItem>
+                <MenuItem value="Done">Done</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography
-              color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
-            >
-              Task Name
+            <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+              Team Members
             </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
-            />
+            <FormControl sx={{ width: "100%" }}>
+              <InputLabel>Team Members</InputLabel>
+              <Select
+                multiple
+                value={membersIds}
+                onChange={handleMembersChange}
+                input={<OutlinedInput label="Team Members" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={
+                          users.find((user) => user.id === value)?.name ?? ""
+                        }
+                      />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+                name="membersIds"
+              >
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
-          <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography
-              color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
-            >
-              Task Name
-            </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
-            />
-          </Box>
+          <Button variant="contained" onClick={handleAddTask}>
+            Add Task
+          </Button>
         </Box>
       </Box>
     </Box>
