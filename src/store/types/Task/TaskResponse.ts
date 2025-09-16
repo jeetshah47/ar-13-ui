@@ -1,6 +1,8 @@
 import type { UserResponse } from "../User/UserResponse";
+import type { TimeSpentEntry, FileAttachment, ActivityLog } from "./TaskTypes";
 
 export interface TaskResponse {
+  id: string;
   subject: string;
   code: string;
   status: string;
@@ -9,8 +11,11 @@ export interface TaskResponse {
   assignTo: string[];
   assignDetails: UserResponse[];
   projectId: string;
-  id: string;
-  created: Created;
+  timeSpent?: TimeSpentEntry[];
+  description: string;
+  fileAttachments: FileAttachment[];
+  activityLogs: ActivityLog[];
+  created?: Created;
 }
 
 export interface Created {

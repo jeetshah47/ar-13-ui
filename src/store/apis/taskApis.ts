@@ -1,7 +1,7 @@
 import { http } from "../../config/http";
 import type { TaskResponse } from "../types/Task/TaskResponse";
 import type { ITask } from "../types/Task/Task";
-import type { TimeSpentEntry, FileAttachment, AssignableUser } from "../types/Task/TaskTypes";
+import type { TimeSpentEntry, FileAttachment, AssignableUser, ActivityLog } from "../types/Task/TaskTypes";
 
 export async function getAllTaskByProjectId(projectId: string): Promise<{
   tasks: TaskResponse[];
@@ -70,10 +70,22 @@ export async function updateTaskDescription(
 export async function addTimeSpent(
   projectId: string,
   taskId: string,
-  timeSpent: { hours: number; minutes: number; description?: string }
+  timeSpentData: { date: string; hours: number; minutes: number; description: string }
 ): Promise<{ message: string }> {
   const url = `http://localhost:3000/api/tasks/add-time-spent/${projectId}/${taskId}`;
-  const result = await http.post(url, timeSpent);
+  
+  // Convert hours and minutes to total minutes
+  const totalMinutes = (timeSpentData.hours * 60) + timeSpentData.minutes;
+  
+  const payload = {
+    timeSpent: {
+      date: timeSpentData.date,
+      timeSpent: totalMinutes,
+      description: timeSpentData.description
+    }
+  };
+  
+  const result = await http.post(url, payload);
   return result.data;
 }
 
@@ -111,7 +123,7 @@ export async function addFileAttachment(
   projectId: string,
   taskId: string,
   file: File
-): Promise<{ message: string }> {
+): Promise<{ message: string; fileAttachment: FileAttachment }> {
   const url = `http://localhost:3000/api/tasks/add-file-attachment/${projectId}/${taskId}`;
   const formData = new FormData();
   formData.append('file', file);
@@ -155,6 +167,15 @@ export async function getAssignableUsers(
   projectId: string
 ): Promise<{ users: AssignableUser[] }> {
   const url = `http://localhost:3000/api/tasks/assignable/${projectId}`;
+  const result = await http.get(url);
+  return result.data;
+}
+
+export async function getActivityLogs(
+  projectId: string,
+  taskId: string
+): Promise<{ activityLogs: ActivityLog[] }> {
+  const url = `http://localhost:3000/api/tasks/activity-logs/${projectId}/${taskId}`;
   const result = await http.get(url);
   return result.data;
 }

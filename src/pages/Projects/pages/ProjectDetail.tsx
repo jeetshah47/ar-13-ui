@@ -14,11 +14,40 @@ import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react"
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import UploadIcon from "../../../assets/icons/general/upload.svg?react";
 import Chips from "../../../common/components/Chips/Chips";
-import { useEffect } from "react";
+import TaskInfo from "../components/TaskInfo";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import defaultTheme from "../../../theme";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
+import { getActivityLogsAction, getFileAttachmentsAction } from "../../../store/features/task/projectAction";
+import type { ActivityLog, FileAttachment } from "../../../store/types/Task/TaskTypes";
+import FileUploadModal from "../components/FileUploadModal";
+
+// Icon mapping for activity types
+const getActivityIcon = (type: ActivityLog['type']) => {
+  switch (type) {
+    case 'time_spent_added':
+      return CalendarIcon;
+    case 'file_uploaded':
+      return UploadIcon;
+    case 'task_assigned':
+      return AttachmentIcon;
+    case 'status_changed':
+      return FilterIcon;
+    case 'task_created':
+      return FilesIcon;
+    default:
+      return UploadIcon;
+  }
+};
+
+// Utility function to handle Firebase timestamp conversion
+const parseFirebaseTimestamp = (timestamp: string | { _seconds: number; _nanoseconds: number }): Date => {
+  if (typeof timestamp === 'object' && timestamp._seconds) {
+    return new Date(timestamp._seconds * 1000);
+  }
+  return new Date(timestamp as string);
+};
 
 const ProjectDetail = () => {
   const { taskId, projectId } = useParams();
@@ -29,13 +58,23 @@ const ProjectDetail = () => {
     (state: RootState) => state.projectDetailReducer
   );
   
+  const taskListState = useAppSelector(
+    (state: RootState) => state.taskListReducer.api
+  );
+  
   const { taskDetails, projectDetails } = projectDetailState.api.data;
   const { loading, error } = projectDetailState.api;
   const { currentStatus } = projectDetailState.common;
+  const { activityLogs, fileAttachments } = taskListState.data;
+  const { loading: activityLogsLoading } = taskListState;
+  
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
 
   useEffect(() => {
     if (taskId && projectId) {
       dispatch(fetchProjectDetailAction(taskId, projectId));
+      dispatch(getActivityLogsAction(projectId, taskId));
+      dispatch(getFileAttachmentsAction(projectId, taskId));
     }
   }, [taskId, projectId, dispatch]);
 
@@ -43,6 +82,19 @@ const ProjectDetail = () => {
     if (!taskDetails || !taskId || !projectId) return;
     
     dispatch(updateTaskStatusAction(taskId, newStatus, taskDetails));
+  };
+
+  const handleLogTime = () => {
+    // TODO: Implement log time functionality
+    // This would typically open a modal or navigate to a time logging page
+  };
+
+  const handleOpenFileUpload = () => {
+    setShowFileUploadModal(true);
+  };
+
+  const handleCloseFileUpload = () => {
+    setShowFileUploadModal(false);
   };
   if (loading) {
     return (
@@ -256,128 +308,143 @@ const ProjectDetail = () => {
                 wireframes. Upon completion, show the team and discuss. Attach
                 the source to the task.
               </Typography>
+               <Box
+               sx={{
+                 paddingY: "15px",
+                 display: "flex",
+                 gap: "16px",
+               }}
+             >
+               <Box
+                 onClick={handleOpenFileUpload}
+                 sx={{
+                   backgroundColor: "#6D5DD315",
+                   padding: "10px",
+                   borderRadius: "14px",
+                   display: "flex",
+                   cursor: "pointer",
+                   transition: "all 0.2s ease",
+                   "&:hover": {
+                     backgroundColor: "#6D5DD330",
+                     transform: "scale(1.05)",
+                   },
+                 }}
+               >
+                 <SvgIcon component={AttachmentIcon} />
+               </Box>
+               <Box
+                 onClick={handleOpenFileUpload}
+                 sx={{
+                   backgroundColor: "#6D5DD315",
+                   padding: "10px",
+                   borderRadius: "14px",
+                   display: "flex",
+                   cursor: "pointer",
+                   transition: "all 0.2s ease",
+                   "&:hover": {
+                     backgroundColor: "#6D5DD330",
+                     transform: "scale(1.05)",
+                   },
+                 }}
+               >
+                 <SvgIcon component={FilesIcon} />
+               </Box>
+             </Box>
               <Typography color="secondary.main" fontWeight={"700"}>
                 Task Attachment
               </Typography>
-              <Box
-                sx={{
-                  paddingTop: "8px",
-                  display: "flex",
-                  alignContent: "center",
-                  gap: "16px",
-                }}
-              >
+              {activityLogsLoading ? (
+                <Box sx={{ padding: "20px", textAlign: "center" }}>
+                  <Typography>Loading attachments...</Typography>
+                </Box>
+              ) : fileAttachments && fileAttachments.length > 0 ? (
                 <Box
                   sx={{
-                    width: "156px",
-                    height: "144px",
-                    backgroundImage: "url(/src/assets/attachment/image.png)",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "cover",
-                    borderRadius: "14px",
+                    paddingTop: "8px",
+                    display: "flex",
+                    alignContent: "center",
+                    gap: "16px",
+                    flexWrap: "wrap",
                   }}
                 >
-                  <Box
-                    sx={{
-                      backgroundColor: "#2155A316",
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      position: "relative",
-                      borderRadius: "14px",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        backgroundColor: "#F5F8FC",
-                        padding: "10px",
-                        borderRadius: "14px",
-                        display: "flex",
-                        position: "absolute",
-                        margin: "5px",
-                        top: 0,
-                        right: 0,
-                      }}
-                    >
-                      <SvgIcon component={AttachmentIcon} />
-                    </Box>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        bottom: "1px",
-                        left: 0,
-                        backgroundColor: "#fff",
-                        borderRadius: "12px",
-                        width: "100%",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography fontSize={"12px"} fontWeight={"700"}>
-                        wireframes.png
-                      </Typography>
-                      <Typography fontSize={"12px"} color="secondary.main">
-                        Sep 22, 2020 | 10:52 AM
-                      </Typography>
-                    </Box>
-                  </Box>
+                  {fileAttachments.map((attachment: FileAttachment) => {
+                    const uploadDate = parseFirebaseTimestamp(attachment.uploadDate);
+                    const formattedDate = uploadDate.toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    });
+                    const formattedTime = uploadDate.toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    });
+                    
+                    return (
+                      <Box
+                        key={attachment.fileName}
+                        sx={{
+                          width: "156px",
+                          height: "144px",
+                          backgroundImage: attachment.fileUrl ? `url(${attachment.fileUrl})` : undefined,
+                          backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
+                          backgroundSize: "cover",
+                          borderRadius: "14px",
+                          backgroundColor: attachment.fileUrl ? undefined : "#F5F8FC",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            backgroundColor: "#2155A316",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex",
+                            position: "relative",
+                            borderRadius: "14px",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              backgroundColor: "#F5F8FC",
+                              padding: "10px",
+                              borderRadius: "14px",
+                              display: "flex",
+                              position: "absolute",
+                              margin: "5px",
+                              top: 0,
+                              right: 0,
+                            }}
+                          >
+                            <SvgIcon component={AttachmentIcon} />
+                          </Box>
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              bottom: "1px",
+                              left: 0,
+                              backgroundColor: "#fff",
+                              borderRadius: "12px",
+                              width: "100%",
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography fontSize={"12px"} fontWeight={"700"}>
+                              {attachment.originalName}
+                            </Typography>
+                            <Typography fontSize={"12px"} color="secondary.main">
+                              {formattedDate} | {formattedTime}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    );
+                  })}
                 </Box>
-                <Box
-                  sx={{
-                    width: "156px",
-                    height: "144px",
-                    backgroundImage: "url(/src/assets/attachment/image-2.png)",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "cover",
-                    borderRadius: "14px",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      backgroundColor: "#2155A316",
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      position: "relative",
-                      borderRadius: "14px",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        backgroundColor: "#F5F8FC",
-                        padding: "10px",
-                        borderRadius: "14px",
-                        display: "flex",
-                        position: "absolute",
-                        margin: "5px",
-                        top: 0,
-                        right: 0,
-                      }}
-                    >
-                      <SvgIcon component={AttachmentIcon} />
-                    </Box>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        bottom: "1px",
-                        left: 0,
-                        backgroundColor: "#fff",
-                        borderRadius: "12px",
-                        width: "100%",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography fontSize={"12px"} fontWeight={"700"}>
-                        site screens.png
-                      </Typography>
-                      <Typography fontSize={"12px"} color="secondary.main">
-                        Sep 19, 2020 | 10:52 AM
-                      </Typography>
-                    </Box>
-                  </Box>
+              ) : (
+                <Box sx={{ padding: "20px", textAlign: "center" }}>
+                  <Typography color="secondary.main">No attachments found</Typography>
                 </Box>
-              </Box>
+              )}
             </Box>
             <Box
               sx={{
@@ -387,115 +454,91 @@ const ProjectDetail = () => {
               }}
             >
               <Typography fontWeight={700}>Recent Activity</Typography>
-              <Box>
-                <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
-                  <Avatar sx={{ width: "50px", height: "50px" }} />
-                  <Box>
-                    <Typography fontWeight={700}>Oscar Holloway</Typography>
-                    <Typography color="secondary.main">
-                      UI/UX Designer
-                    </Typography>
-                  </Box>
+              {activityLogsLoading ? (
+                <Box sx={{ padding: "20px", textAlign: "center" }}>
+                  <Typography>Loading activity logs...</Typography>
                 </Box>
-                <Box
-                  sx={{
-                    background: "#F4F9FD",
-                    borderRadius: "14px",
-                    padding: "15px 20px",
-                    width: "fit-content",
-                    display: "flex",
-                    marginTop: "12px",
-                  }}
-                >
-                  <SvgIcon component={UploadIcon} />
-                  <Typography>
-                    Updated the status of Mind Map task to{" "}
-                    <span
-                      style={{
-                        color: defaultTheme.palette.primary.main,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {" "}
-                      In Progress
-                    </span>
-                  </Typography>
+              ) : activityLogs && activityLogs.length > 0 ? (
+                <Box>
+                  {activityLogs.map((activity: ActivityLog) => {
+                    const ActivityIcon = getActivityIcon(activity.type);
+                    const activityDate = parseFirebaseTimestamp(activity.timestamp);
+                    const formattedDate = activityDate.toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    });
+                    const formattedTime = activityDate.toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    });
+                    
+                    return (
+                      <Box key={activity.id} sx={{ marginBottom: "24px" }}>
+                        <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
+                          <Avatar sx={{ width: "50px", height: "50px" }}>
+                            {activity.userName.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography fontWeight={700}>{activity.userName}</Typography>
+                            <Typography color="secondary.main">
+                              {formattedDate} | {formattedTime}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box
+                          sx={{
+                            background: "#F4F9FD",
+                            borderRadius: "14px",
+                            padding: "15px 20px",
+                            width: "fit-content",
+                            display: "flex",
+                            marginTop: "12px",
+                          }}
+                        >
+                          <SvgIcon component={ActivityIcon} sx={{ marginRight: "8px" }} />
+                          <Typography>
+                            {activity.description}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  })}
                 </Box>
-                <Box
-                  sx={{
-                    background: "#F4F9FD",
-                    borderRadius: "14px",
-                    padding: "15px 20px",
-                    width: "fit-content",
-                    display: "flex",
-                    marginTop: "12px",
-                  }}
-                >
-                  <SvgIcon component={AttachmentIcon} />
-                  <Typography>Attach Files To Mind Map task to </Typography>
+              ) : (
+                <Box sx={{ padding: "20px", textAlign: "center" }}>
+                  <Typography color="secondary.main">No recent activity</Typography>
                 </Box>
-              </Box>
-              <Box>
-                <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
-                  <Avatar sx={{ width: "50px", height: "50px" }} />
-                  <Box>
-                    <Typography fontWeight={700}>Emily Tyler</Typography>
-                    <Typography color="secondary.main">
-                      UI/UX Designer
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
-                    background: "#F4F9FD",
-                    borderRadius: "14px",
-                    padding: "15px 20px",
-                    width: "fit-content",
-                    display: "flex",
-                    marginTop: "12px",
-                  }}
-                >
-                  <SvgIcon component={UploadIcon} />
-                  <Typography>
-                    Updated the status of Mind Map task to{" "}
-                    <span
-                      style={{
-                        color: defaultTheme.palette.primary.main,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {" "}
-                      In Progress
-                    </span>
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    background: "#F4F9FD",
-                    borderRadius: "14px",
-                    padding: "15px 20px",
-                    width: "fit-content",
-                    display: "flex",
-                    marginTop: "12px",
-                  }}
-                >
-                  <SvgIcon component={AttachmentIcon} />
-                  <Typography>Attach Files To Mind Map task to </Typography>
-                </Box>
-              </Box>
+              )}
             </Box>
           </Box>
         </Box>
-        {/* <Box
-          sx={{
-            width: "265px",
-            background: "#FFFFFF",
-            borderRadius: "24px",
-            boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-            height: "100%",
-          }}
-        ></Box> */}
+        <TaskInfo
+          reporter={projectDetails?.reporter ? { 
+            name: projectDetails.reporter.name || "Unknown Reporter",
+            avatar: projectDetails.reporter.avatar 
+          } : undefined}
+          assigned={taskDetails?.assignDetails && taskDetails.assignDetails.length > 0 ? {
+            name: taskDetails.assignDetails[0].name || "Unknown Assignee"
+          } : undefined}
+          priority={taskDetails?.priority || "Medium"}
+          deadline={taskDetails?.duration ? new Date(taskDetails.duration).toLocaleDateString() : "No deadline set"}
+          timeLogged="1d 3h 25m logged"
+          originalEstimate="Original Estimate 3d 8h"
+          projectId={projectId}
+          taskId={taskId}
+          onLogTime={handleLogTime}
+        />
       </Box>
+
+      {/* File Upload Modal */}
+      {showFileUploadModal && (
+        <FileUploadModal
+          onClose={handleCloseFileUpload}
+          projectId={projectId}
+          taskId={taskId}
+        />
+      )}
     </Box>
   );
 };

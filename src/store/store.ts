@@ -5,9 +5,11 @@ import { useSelector } from "react-redux";
 import { projectListReducer } from "./features/projects/projectSlice";
 import { projectDetailReducer } from "./features/projects/projectDetailSlice";
 import { taskListReducer } from "./features/task/taskSlice";
+import { timeTrackingReducer } from "./features/task/timeTrackingSlice";
 import { dashboardReducer } from "./features/dashboard/dashboardSlice";
 import { userReducer } from "./features/user/userSlice";
 import { calendarReducer } from "./features/calendar/calendarSlice";
+import { vacationReducer } from "./features/vacation/vacationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,9 +17,11 @@ export const store = configureStore({
     projectListReducer,
     projectDetailReducer,
     taskListReducer,
+    timeTrackingReducer,
     dashboardReducer,
     userReducer,
     calendarReducer,
+    vacationReducer,
   },
 });
 

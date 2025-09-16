@@ -2,11 +2,14 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { TaskState } from "./taskTypes";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
+import type { ActivityLog, FileAttachment } from "../../types/Task/TaskTypes";
 
 const initialState: TaskState = {
   api: {
     data: {
       tasks: [],
+      activityLogs: [],
+      fileAttachments: [],
     },
     error: "",
     loading: false,
@@ -67,6 +70,56 @@ const taskListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    addTimeSpentRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    addTimeSpentSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    addTimeSpentFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    getActivityLogsRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    getActivityLogsSuccess(state, action: PayloadAction<{ activityLogs: ActivityLog[] }>) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.activityLogs = action.payload.activityLogs;
+    },
+    getActivityLogsFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    getFileAttachmentsRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    getFileAttachmentsSuccess(state, action: PayloadAction<{ attachments: FileAttachment[] }>) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.fileAttachments = action.payload.attachments;
+    },
+    getFileAttachmentsFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    addFileAttachmentRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    addFileAttachmentSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    addFileAttachmentFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -83,6 +136,18 @@ export const {
   deleteTaskRequest,
   deleteTaskSuccess,
   deleteTaskFailed,
+  addTimeSpentRequest,
+  addTimeSpentSuccess,
+  addTimeSpentFailed,
+  getActivityLogsRequest,
+  getActivityLogsSuccess,
+  getActivityLogsFailed,
+  getFileAttachmentsRequest,
+  getFileAttachmentsSuccess,
+  getFileAttachmentsFailed,
+  addFileAttachmentRequest,
+  addFileAttachmentSuccess,
+  addFileAttachmentFailed,
 } = taskListSlice.actions;
 
 export const taskListReducer = taskListSlice.reducer;
