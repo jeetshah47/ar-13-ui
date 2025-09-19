@@ -2,17 +2,19 @@ import { Box, Skeleton } from "@mui/material";
 import MainSiderBar from "../components/Sidebar/MainSiderBar";
 import LandingPage from "../../pages/Landing/LandingPage";
 import { Suspense } from "react";
+import { NotificationProvider } from "../../contexts/NotificationContext";
 
 const VerticalLayout = () => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-        position: "relative",
-        // height: "auto",
-      }}
-    >
+    <NotificationProvider>
+      <Box
+        sx={{
+          display: "flex",
+          width: "100%",
+          position: "relative",
+          // height: "auto",
+        }}
+      >
       <Box
         sx={{
           position: "fixed",
@@ -39,6 +41,7 @@ const VerticalLayout = () => {
         </Suspense>
       </Box>
     </Box>
+    </NotificationProvider>
   );
 };
 

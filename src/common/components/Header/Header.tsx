@@ -1,8 +1,22 @@
-import { Box, Paper, SvgIcon } from "@mui/material";
+import { Box, Paper, SvgIcon, Badge } from "@mui/material";
+import { useState } from "react";
 import BellIcon from "../../../assets/icons/general/calendar-2.svg?react";
 import ProfileMenu from "./ProfileMenu";
+import NotificationModal from "../NotificationModal";
+import { useNotificationCount } from "../../../contexts/NotificationContext";
 
 const Header = () => {
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const { unread } = useNotificationCount();
+
+  const handleNotificationClick = () => {
+    setNotificationOpen(true);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationOpen(false);
+  };
+
   return (
     <Box
       sx={{
@@ -27,14 +41,36 @@ const Header = () => {
             justifyContent: "center",
             alignContent: "center",
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+            cursor: "pointer",
+            "&:hover": {
+              backgroundColor: "#F8FAFC",
+            },
           }}
+          onClick={handleNotificationClick}
         >
-          <SvgIcon component={BellIcon} />
+          <Badge
+            badgeContent={unread > 0 ? unread : undefined}
+            color="error"
+            sx={{
+              "& .MuiBadge-badge": {
+                backgroundColor: "#EF4444",
+                color: "white",
+                fontSize: "10px",
+                fontWeight: 600,
+                minWidth: "18px",
+                height: "18px",
+                borderRadius: "9px",
+              },
+            }}
+          >
+            <SvgIcon component={BellIcon} />
+          </Badge>
         </Paper>
         <Paper elevation={0} sx={{ display: "flex"}}>
           <ProfileMenu />
         </Paper>
       </Box>
+      {notificationOpen && <NotificationModal onClose={handleNotificationClose} />}
     </Box>
   );
 };

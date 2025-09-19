@@ -16,6 +16,7 @@ import {
 import { getDashboardActions } from "../../store/features/dashboard/dashboardAction";
 import Modal from "../../common/components/Modal/Modal";
 import SupportModal from "../../common/components/SupportModal/SupportModal";
+import NotificationTest from "../../components/NotificationTest";
 
 const DashboardPage = () => {
   const [calenderState, setCalendarState] = useState<{
@@ -78,6 +79,9 @@ const DashboardPage = () => {
           </Box>
         }
       />
+      <Box sx={{ padding: "28px 0px" }}>
+        <NotificationTest />
+      </Box>
       <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px" }}>
         <Box sx={{ width: "70%" }}>
           <CustomCard>
