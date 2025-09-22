@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import LeftIcon from "../../../assets/icons/general/left.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
+import EditIcon from "../../../assets/icons/general/gear.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
@@ -22,6 +23,7 @@ import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store
 import { getActivityLogsAction, getFileAttachmentsAction } from "../../../store/features/task/projectAction";
 import type { ActivityLog, FileAttachment } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
+import TaskFormModal from "../components/TaskFormModal";
 
 // Icon mapping for activity types
 const getActivityIcon = (type: ActivityLog['type']) => {
@@ -69,6 +71,7 @@ const ProjectDetail = () => {
   const { loading: activityLogsLoading } = taskListState;
   
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
 
   useEffect(() => {
     if (taskId && projectId) {
@@ -95,6 +98,14 @@ const ProjectDetail = () => {
 
   const handleCloseFileUpload = () => {
     setShowFileUploadModal(false);
+  };
+
+  const handleOpenEditTask = () => {
+    setShowEditTaskModal(true);
+  };
+
+  const handleCloseEditTask = () => {
+    setShowEditTaskModal(false);
   };
   if (loading) {
     return (
@@ -264,15 +275,34 @@ const ProjectDetail = () => {
             }}
           >
             <Typography>Task Details</Typography>
-            <Box
-              sx={{
-                backgroundColor: "#fff",
-                display: "flex",
-                padding: "10px",
-                borderRadius: "14px",
-              }}
-            >
-              <SvgIcon component={FilterIcon} />
+            <Box sx={{ display: "flex", gap: "8px" }}>
+              <Box
+                onClick={handleOpenEditTask}
+                sx={{
+                  backgroundColor: "#fff",
+                  display: "flex",
+                  padding: "10px",
+                  borderRadius: "14px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    transform: "scale(1.05)",
+                  },
+                }}
+              >
+                <SvgIcon component={EditIcon} />
+              </Box>
+              <Box
+                sx={{
+                  backgroundColor: "#fff",
+                  display: "flex",
+                  padding: "10px",
+                  borderRadius: "14px",
+                }}
+              >
+                <SvgIcon component={FilterIcon} />
+              </Box>
             </Box>
           </Box>
           <Box
@@ -537,6 +567,27 @@ const ProjectDetail = () => {
           onClose={handleCloseFileUpload}
           projectId={projectId}
           taskId={taskId}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {showEditTaskModal && taskDetails && (
+        <TaskFormModal
+          show={showEditTaskModal}
+          onClose={handleCloseEditTask}
+          task={{
+            id: taskDetails.id,
+            subject: taskDetails.subject,
+            code: taskDetails.code,
+            status: taskDetails.status,
+            duration: taskDetails.duration, // Pass as string, TaskForm will handle conversion
+            priority: taskDetails.priority,
+            assignTo: taskDetails.assignTo || [],
+            projectId: taskDetails.projectId,
+            createdAt: taskDetails.created || new Date(),
+            updatedAt: new Date(),
+          }}
+          isEditMode={true}
         />
       )}
     </Box>

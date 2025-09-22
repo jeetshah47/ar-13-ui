@@ -8,6 +8,7 @@ const initialState: TaskState = {
   api: {
     data: {
       tasks: [],
+      filteredTasks: [],
       activityLogs: [],
       fileAttachments: [],
     },
@@ -24,11 +25,13 @@ const taskListSlice = createSlice({
       state.api.loading = true;
       state.api.error = "";
       state.api.data.tasks = [];
+      state.api.data.filteredTasks = [];
     },
     getTaskListSuccess(state, action: PayloadAction<{ tasks: TaskResponse[] }>) {
       state.api.loading = false;
       state.api.error = "";
       state.api.data.tasks = action.payload.tasks;
+      // Filtered tasks will be set by the action
     },
     getTaskListFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
@@ -120,6 +123,9 @@ const taskListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    setFilteredTasks(state, action: PayloadAction<TaskResponse[]>) {
+      state.api.data.filteredTasks = action.payload;
+    },
   },
 });
 
@@ -148,6 +154,7 @@ export const {
   addFileAttachmentRequest,
   addFileAttachmentSuccess,
   addFileAttachmentFailed,
+  setFilteredTasks,
 } = taskListSlice.actions;
 
 export const taskListReducer = taskListSlice.reducer;

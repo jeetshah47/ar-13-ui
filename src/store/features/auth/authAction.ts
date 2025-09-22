@@ -13,7 +13,9 @@ import type { AxiosError } from "axios";
 import type { AuthError } from "../../types/Auth/AuthError";
 import toast from "react-hot-toast";
 import { signupApi, type SingUpRequest } from "../../apis/authApis";
+import { getUserProfile } from "../../apis/userApis";
 import type { FirebaseError } from "firebase/app";
+import type { UserRole } from "../../types/RBAC";
 
 export const authSignInActions =
   (email: string, password: string, cb?: () => void) =>
@@ -25,9 +27,44 @@ export const authSignInActions =
           const user = data.user;
           const token = await user.getIdToken();
           const uid = user.uid;
+          
+          // Store auth data in localStorage
           localStorage.setItem("authToken", token);
           localStorage.setItem("uid", uid);
-          dispatch(authSignInSuccess({ token, uid }));
+          
+          try {
+            // Fetch user profile from backend API
+            const userProfile = await getUserProfile(uid);
+            
+            // Store user data in localStorage
+            localStorage.setItem("userRole", userProfile.role);
+            localStorage.setItem("userEmail", userProfile.email);
+            localStorage.setItem("userName", userProfile.name);
+            
+            dispatch(authSignInSuccess({ 
+              token, 
+              uid, 
+              role: userProfile.role as UserRole,
+              email: userProfile.email,
+              name: userProfile.name
+            }));
+          } catch {
+            // Fallback to default role if API call fails
+            // This ensures the app continues to work even if the user profile API is unavailable
+            const defaultRole = "Admin";
+            localStorage.setItem("userRole", defaultRole);
+            localStorage.setItem("userEmail", user.email || "");
+            localStorage.setItem("userName", user.displayName || "");
+            
+            dispatch(authSignInSuccess({ 
+              token, 
+              uid, 
+              role: defaultRole as UserRole,
+              email: user.email || undefined,
+              name: user.displayName || undefined
+            }));
+          }
+          
           if (cb) cb();
         })
         .catch((error: FirebaseError) => {

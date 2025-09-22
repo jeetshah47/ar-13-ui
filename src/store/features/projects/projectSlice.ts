@@ -7,6 +7,7 @@ const initialState: ProjectState = {
   api: {
     data: {
       projects: [],
+      filteredProjects: [],
     },
     error: "",
     loading: false,
@@ -24,6 +25,7 @@ const projectListSlice = createSlice({
       state.api.loading = true;
       state.api.error = "";
       state.api.data.projects = [];
+      state.api.data.filteredProjects = [];
       state.common.selectedProjectId = "";
     },
     getProjectListSuccess(
@@ -33,12 +35,14 @@ const projectListSlice = createSlice({
       state.api.loading = false;
       state.api.error = "";
       state.api.data.projects = action.payload.projects;
+      // Filtered projects will be set by the action
       state.common.selectedProjectId = "";
     },
     getProjectListFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
       state.api.error = action.payload.error;
       state.api.data.projects = [];
+      state.api.data.filteredProjects = [];
       state.common.selectedProjectId = "";
     },
     updateSelectedProjectId(state, action: PayloadAction<string>) {
@@ -57,6 +61,9 @@ const projectListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    setFilteredProjects(state, action: PayloadAction<ProjectResponse[]>) {
+      state.api.data.filteredProjects = action.payload;
+    },
   },
 });
 
@@ -68,6 +75,7 @@ export const {
   addProjectRequest,
   addProjectSuccess,
   addProjectFailed,
+  setFilteredProjects,
 } = projectListSlice.actions;
 
 export const projectListReducer = projectListSlice.reducer;

@@ -2,11 +2,17 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { AuthState } from "./authTypes";
 import type { AuthResponse } from "../../types/Auth/AuthResponse";
 import type { AuthError } from "../../types/Auth/AuthError";
+import { getPermissionsForRole } from "../../types/RBAC/config";
+import type { UserRole } from "../../types/RBAC";
 
 const checkAuthFromToken = (): AuthState => {
   const token = localStorage.getItem("authToken");
   const uid = localStorage.getItem("uid");
-  const state = {
+  const role = localStorage.getItem("userRole") as UserRole | null;
+  const email = localStorage.getItem("userEmail");
+  const name = localStorage.getItem("userName");
+  
+  const state: AuthState = {
     api: {
       token: "",
       uid: "",
@@ -14,13 +20,33 @@ const checkAuthFromToken = (): AuthState => {
     common: {
       isLogin: false,
     },
+    user: {
+      role: null,
+      permissions: [],
+      email: null,
+      name: null,
+    },
     error: "",
     loading: false,
   };
+  
   if (token && uid) {
     state.api.token = token;
     state.api.uid = uid;
     state.common.isLogin = true;
+    
+    if (role) {
+      state.user.role = role;
+      state.user.permissions = getPermissionsForRole(role);
+    }
+    
+    if (email) {
+      state.user.email = email;
+    }
+    
+    if (name) {
+      state.user.name = name;
+    }
   }
 
   return state;
@@ -36,6 +62,10 @@ const authSlice = createSlice({
       state.api.token = "";
       state.api.uid = "";
       state.common.isLogin = false;
+      state.user.role = null;
+      state.user.permissions = [];
+      state.user.email = null;
+      state.user.name = null;
       state.loading = true;
       state.error = "";
     },
@@ -43,6 +73,20 @@ const authSlice = createSlice({
       state.api.token = action.payload.token;
       state.api.uid = action.payload.uid;
       state.common.isLogin = true;
+      
+      if (action.payload.role) {
+        state.user.role = action.payload.role;
+        state.user.permissions = getPermissionsForRole(action.payload.role);
+      }
+      
+      if (action.payload.email) {
+        state.user.email = action.payload.email;
+      }
+      
+      if (action.payload.name) {
+        state.user.name = action.payload.name;
+      }
+      
       state.loading = false;
       state.error = "";
     },
@@ -50,15 +94,26 @@ const authSlice = createSlice({
       state.api.token = "";
       state.api.uid = "";
       state.common.isLogin = false;
+      state.user.role = null;
+      state.user.permissions = [];
+      state.user.email = null;
+      state.user.name = null;
       state.loading = false;
       state.error = action.payload;
     },
     authLogout(state) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("uid");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
       state.api.token = "";
       state.api.uid = "";
       state.common.isLogin = false;
+      state.user.role = null;
+      state.user.permissions = [];
+      state.user.email = null;
+      state.user.name = null;
       state.loading = false;
       state.error = "";
     },

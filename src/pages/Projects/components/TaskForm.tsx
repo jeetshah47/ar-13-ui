@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { addTaskAction } from "../../../store/features/task/projectAction";
+import { useParams } from "react-router";
+import { addTaskAction, updateTaskAction } from "../../../store/features/task/projectAction";
 import type { ITask } from "../../../store/types/Task/Task";
 import {
   Box,
@@ -25,9 +26,11 @@ import type { SelectChangeEvent } from "@mui/material";
 
 interface TaskFormProps {
   onClose?: () => void;
+  task?: ITask; // Optional task for edit mode
+  isEditMode?: boolean;
 }
 
-const TaskForm = ({ onClose }: TaskFormProps) => {
+const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
   const [subject, setSubject] = useState("");
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
@@ -36,23 +39,40 @@ const TaskForm = ({ onClose }: TaskFormProps) => {
   const [membersIds, setMembersIds] = useState<string[]>([]);
 
   const dispatch = useAppDispatch();
-  const projectListState = useAppSelector(
-    (state: RootState) => state.projectListReducer
-  );
+  const { projectId } = useParams<{ projectId: string }>();
   const { users } = useAppSelector((state: RootState) => state.userReducer);
 
   useEffect(() => {
     dispatch(getUsersAction());
   }, [dispatch]);
 
-  const handleAddTask = () => {
-    const projectId = projectListState.common.selectedProjectId;
+  // Utility function to handle Firebase timestamp conversion
+  const parseFirebaseTimestamp = (timestamp: Date | { _seconds: number; _nanoseconds: number } | string): Date => {
+    if (typeof timestamp === 'object' && '_seconds' in timestamp) {
+      return new Date(timestamp._seconds * 1000);
+    }
+    return new Date(timestamp as string);
+  };
+
+  // Initialize form with task data if in edit mode
+  useEffect(() => {
+    if (isEditMode && task) {
+      setSubject(task.subject || "");
+      setCode(task.code || "");
+      setStatus(task.status || "");
+      setDuration(task.duration ? parseFirebaseTimestamp(task.duration).toISOString().split('T')[0] : "");
+      setPriority(task.priority || "");
+      setMembersIds(task.assignTo || []);
+    }
+  }, [isEditMode, task]);
+
+  const handleSubmitTask = () => {
     if (!projectId) {
       return;
     }
 
-    const newTask: ITask = {
-      _id: "", // Backend will generate this
+    const taskData: ITask = {
+      id: isEditMode && task ? task.id : "", // Use existing ID for edit mode
       subject,
       code,
       status,
@@ -60,11 +80,15 @@ const TaskForm = ({ onClose }: TaskFormProps) => {
       priority,
       assignTo: membersIds,
       projectId,
-      createdAt: new Date(),
+      createdAt: isEditMode && task ? task.createdAt : new Date(),
       updatedAt: new Date(),
     };
 
-    dispatch(addTaskAction(newTask));
+    if (isEditMode) {
+      dispatch(updateTaskAction(taskData));
+    } else {
+      dispatch(addTaskAction(taskData));
+    }
     
     // Reset form and close modal
     setSubject("");
@@ -151,7 +175,9 @@ const TaskForm = ({ onClose }: TaskFormProps) => {
           alignItems: "center",
         }}
       >
-        <Typography sx={{ fontWeight: "bold" }}>Add task</Typography>
+        <Typography sx={{ fontWeight: "bold" }}>
+          {isEditMode ? "Edit task" : "Add task"}
+        </Typography>
         <IconButton onClick={handleClose}>
           <Crossicon />
         </IconButton>
@@ -312,8 +338,8 @@ const TaskForm = ({ onClose }: TaskFormProps) => {
               </Select>
             </FormControl>
           </Box>
-          <Button variant="contained" onClick={handleAddTask}>
-            Add Task
+          <Button variant="contained" onClick={handleSubmitTask}>
+            {isEditMode ? "Update Task" : "Add Task"}
           </Button>
         </Box>
       </Box>

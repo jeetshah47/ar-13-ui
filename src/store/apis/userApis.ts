@@ -6,3 +6,9 @@ export async function getAllUsers(): Promise<{ users: UserResponse[] }> {
   const result = await http.get(url);
   return result.data;
 }
+
+export async function getUserProfile(userId: string): Promise<UserResponse> {
+  const url = `http://localhost:3000/api/users/${userId}`;
+  const result = await http.get(url);
+  return result.data;
+}

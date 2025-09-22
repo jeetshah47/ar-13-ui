@@ -10,6 +10,7 @@ import { useVacation } from "../../store/hooks/useVacation";
 import { useAppSelector } from "../../store/store";
 import { getUsersAction } from "../../store/features/user/userAction";
 import { useAppDispatch } from "../../store/store";
+import { RequirePermission } from "../../common/components/RBAC";
 
 const tabList = ["Employee's Vacations", "Calendar"];
 
@@ -66,13 +67,15 @@ const VacationPage = () => {
   };
 
   const AddButton = (
-    <Button 
-      variant="contained" 
-      startIcon={<SvgIcon component={PlusIcon} />}
-      onClick={handleOpenModal}
-    >
-      Add Request
-    </Button>
+    <RequirePermission permission="vacation:write">
+      <Button 
+        variant="contained" 
+        startIcon={<SvgIcon component={PlusIcon} />}
+        onClick={handleOpenModal}
+      >
+        Add Request
+      </Button>
+    </RequirePermission>
   );
   return (
     <Box sx={{ height: "100%" }}>

@@ -19,6 +19,7 @@ import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
 import { getTaskListAction } from "../../../store/features/task/projectAction";
 import NoTaskMessage from "../components/NoTaskMessage";
+import { RequirePermission } from "../../../common/components/RBAC";
 
 const activeCardStyles = {
   borderRight: "4px solid #3F8CFF",
@@ -49,13 +50,15 @@ const ProjectList = () => {
   };
 
   const AddButton = (
-    <Button
-      variant="contained"
-      startIcon={<SvgIcon component={PlusIcon} />}
-      onClick={handleAddProject}
-    >
-      Add Project
-    </Button>
+    <RequirePermission permission="projects:write">
+      <Button
+        variant="contained"
+        startIcon={<SvgIcon component={PlusIcon} />}
+        onClick={handleAddProject}
+      >
+        Add Project
+      </Button>
+    </RequirePermission>
   );
 
   const handleCloseModal = () => {

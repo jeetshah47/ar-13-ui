@@ -1,11 +1,13 @@
 import { getAllTaskByProjectId } from "../../apis/taskApis";
-import type { AppDispatch } from "../../store";
+import type { AppDispatch, RootState } from "../../store";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import {
   getTaskListRequest,
   getTaskListSuccess,
   getTaskListFailed,
+  setFilteredTasks,
 } from "./taskSlice";
+import { filterTasksByRole } from "../../utils/projectFiltering";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import {
@@ -44,12 +46,22 @@ import {
 } from "./taskSlice";
 
 export const getTaskListAction =
-  (projectId: string) => async (dispatch: AppDispatch) => {
+  (projectId: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
     dispatch(getTaskListRequest());
     try {
       getAllTaskByProjectId(projectId)
         .then((data: { tasks: TaskResponse[] }) => {
           dispatch(getTaskListSuccess(data));
+          
+          // Apply role-based filtering
+          const state = getState();
+          const userRole = state.authReducer.user.role;
+          const userId = state.authReducer.api.uid;
+          
+          if (userRole && userId) {
+            const filteredTasks = filterTasksByRole(data.tasks, userRole, userId);
+            dispatch(setFilteredTasks(filteredTasks));
+          }
         })
         .catch((error: AxiosError<ProjectErrorResponse>) => {
           if (error?.response?.data) {

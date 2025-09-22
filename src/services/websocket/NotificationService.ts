@@ -28,6 +28,20 @@ class NotificationAPIService {
     return headers;
   }
 
+  private parseDate(dateValue: any): Date {
+    if (!dateValue) {
+      return new Date(); // Return current date as fallback
+    }
+    
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date received from API:', dateValue);
+      return new Date(); // Return current date as fallback
+    }
+    
+    return date;
+  }
+
   async getAllNotifications(userId: string): Promise<Notification[]> {
     try {
       const response = await fetch(`${this.baseUrl}/all/${userId}`, {
@@ -42,8 +56,8 @@ class NotificationAPIService {
       const data = await response.json();
       return data.notifications.map((notification: any) => ({
         ...notification,
-        createdAt: new Date(notification.createdAt),
-        created: new Date(notification.created)
+        createdAt: this.parseDate(notification.createdAt),
+        created: this.parseDate(notification.created)
       }));
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -65,8 +79,8 @@ class NotificationAPIService {
       const data = await response.json();
       return data.notifications.map((notification: any) => ({
         ...notification,
-        createdAt: new Date(notification.createdAt),
-        created: new Date(notification.created)
+        createdAt: this.parseDate(notification.createdAt),
+        created: this.parseDate(notification.created)
       }));
     } catch (error) {
       console.error('Error fetching unread notifications:', error);

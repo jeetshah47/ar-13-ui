@@ -5,6 +5,7 @@ export interface TaskState {
   api: {
     data: { 
       tasks: TaskResponse[];
+      filteredTasks: TaskResponse[];
       activityLogs: ActivityLog[];
       fileAttachments: FileAttachment[];
     };

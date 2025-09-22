@@ -1,3 +1,5 @@
+import type { UserRole, Permission } from '../../types/RBAC';
+
 export interface AuthState {
   loading: boolean;
   error: string;
@@ -7,5 +9,11 @@ export interface AuthState {
   };
   common: {
     isLogin: boolean;
+  };
+  user: {
+    role: UserRole | null;
+    permissions: Permission[];
+    email: string | null;
+    name: string | null;
   };
 }

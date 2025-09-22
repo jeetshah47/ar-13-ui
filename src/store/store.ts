@@ -10,6 +10,7 @@ import { dashboardReducer } from "./features/dashboard/dashboardSlice";
 import { userReducer } from "./features/user/userSlice";
 import { calendarReducer } from "./features/calendar/calendarSlice";
 import { vacationReducer } from "./features/vacation/vacationSlice";
+import { employeeReducer } from "./features/employees/employeeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     userReducer,
     calendarReducer,
     vacationReducer,
+    employeeReducer,
   },
 });
 

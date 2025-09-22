@@ -258,7 +258,18 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                             color: "#64748B",
                           }}
                         >
-                          {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+                          {(() => {
+                            try {
+                              const date = new Date(notification.createdAt);
+                              if (isNaN(date.getTime())) {
+                                return "Just now";
+                              }
+                              return formatDistanceToNow(date, { addSuffix: true });
+                            } catch (error) {
+                              console.warn("Invalid date for notification:", notification.createdAt, error);
+                              return "Just now";
+                            }
+                          })()}
                         </Typography>
                         <Typography
                           variant="caption"

@@ -1,12 +1,12 @@
 export interface ITask {
-  _id: string;
+  id: string;
   subject: string;
   code: string;
   status: string;
-  duration: Date;
+  duration: Date | { _seconds: number; _nanoseconds: number } | string;
   priority: string;
   assignTo: string[];
   projectId: string;
-  createdAt: Date;
+  createdAt: Date | { _seconds: number; _nanoseconds: number } | string;
   updatedAt: Date;
 }
