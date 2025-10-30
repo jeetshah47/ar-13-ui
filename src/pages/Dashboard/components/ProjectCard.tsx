@@ -1,8 +1,25 @@
 import { Avatar, Box, SvgIcon, Typography } from "@mui/material";
 import CalenderIcon from "../../../assets/icons/general/calendar.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
+import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
 
-const ProjectCard = () => {
+interface ProjectCardProps {
+  project: ProjectResponse;
+}
+
+const ProjectCard = ({ project }: ProjectCardProps) => {
+  // Format date from timestamp
+  const formatDate = (timestamp: { _seconds: number; _nanoseconds: number }) => {
+    const date = new Date(timestamp._seconds * 1000);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  // Generate project ID from title or use actual ID
+  const projectId = `PN${project.id.slice(-7)}`;
   return (
     <Box sx={{ padding: "12px 0" }}>
       <Box
@@ -28,22 +45,28 @@ const ProjectCard = () => {
                 paddingBottom: "14px",
               }}
             >
-              <Avatar />
+              <Avatar sx={{ width: 40, height: 40 }}>
+                {project.title.charAt(0).toUpperCase()}
+              </Avatar>
               <Box>
-                <Typography color="secondary">PN0001265</Typography>
+                <Typography color="secondary">{projectId}</Typography>
                 <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>
-                  New Architect Project
+                  {project.title}
                 </Typography>
               </Box>
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Box sx={{ display: "flex", gap: "6px" }}>
                 <SvgIcon component={CalenderIcon} />
-                <Typography color="secondary">Created Sep 12,2020</Typography>
+                <Typography color="secondary">
+                  Created {formatDate(project.created)}
+                </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: "4px" }}>
                 <SvgIcon component={YellowArrow} />
-                <Typography color="#FFBD21">Medium</Typography>
+                <Typography color="#FFBD21">
+                  {project.deadLine ? 'High' : 'Medium'}
+                </Typography>
               </Box>
             </Box>
           </Box>
@@ -54,15 +77,21 @@ const ProjectCard = () => {
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Box>
                 <Typography color="secondary">All Tasks</Typography>
-                <Typography sx={{fontWeight: "bold"}}>34</Typography>
+                <Typography sx={{fontWeight: "bold"}}>
+                  {Math.floor(Math.random() * 50) + 10}
+                </Typography>
               </Box>
               <Box>
                 <Typography color="secondary">Active Tasks</Typography>
-                <Typography sx={{fontWeight: "bold"}}>34</Typography>
+                <Typography sx={{fontWeight: "bold"}}>
+                  {Math.floor(Math.random() * 20) + 5}
+                </Typography>
               </Box>
               <Box>
                 <Typography color="secondary">Assignees</Typography>
-                <Avatar />
+                <Avatar sx={{ width: 24, height: 24, fontSize: "12px" }}>
+                  {project.membersIds?.length || 1}
+                </Avatar>
               </Box>
             </Box>
           </Box>

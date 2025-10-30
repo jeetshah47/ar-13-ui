@@ -49,11 +49,12 @@ const StatusTag = ({ status }: StatusTagProps) => {
   return (
     <Box
       sx={{
-        padding: "7px 14px",
+        padding: "6px 12px",
         backgroundColor: colorMapping.bg,
         color: colorMapping.text,
         borderRadius: "8px",
-        fontWeight: "700"
+        fontWeight: 700,
+        fontSize: "var(--font-size-sm, 13px)"
       }}
     >
       {getStatusText()}

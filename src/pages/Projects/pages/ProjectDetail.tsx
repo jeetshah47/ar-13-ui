@@ -2,6 +2,7 @@ import {
   Avatar,
   AvatarGroup,
   Box,
+  Button,
   Link,
   SvgIcon,
   Typography,
@@ -20,10 +21,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
-import { getActivityLogsAction, getFileAttachmentsAction } from "../../../store/features/task/projectAction";
+import { getActivityLogsAction, getFileAttachmentsAction, claimTaskAction } from "../../../store/features/task/projectAction";
 import type { ActivityLog, FileAttachment } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";
+import ClaimTaskModal from "../components/ClaimTaskModal";
 
 // Icon mapping for activity types
 const getActivityIcon = (type: ActivityLog['type']) => {
@@ -68,10 +70,13 @@ const ProjectDetail = () => {
   const { loading, error } = projectDetailState.api;
   const { currentStatus } = projectDetailState.common;
   const { activityLogs, fileAttachments } = taskListState.data;
-  const { loading: activityLogsLoading } = taskListState;
+  const { loading: activityLogsLoading, error: claimTaskError } = taskListState;
+  const claimTaskLoading = taskListState.loading;
   
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+  const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
+  const [wasClaiming, setWasClaiming] = useState(false);
 
   useEffect(() => {
     if (taskId && projectId) {
@@ -80,6 +85,22 @@ const ProjectDetail = () => {
       dispatch(getFileAttachmentsAction(projectId, taskId));
     }
   }, [taskId, projectId, dispatch]);
+
+  // Close modal after successful claim
+  useEffect(() => {
+    if (wasClaiming && !claimTaskLoading && !claimTaskError && showClaimTaskModal) {
+      // Claim was successful, refresh data and close modal
+      setWasClaiming(false);
+      if (taskId && projectId) {
+        dispatch(fetchProjectDetailAction(taskId, projectId));
+        dispatch(getActivityLogsAction(projectId, taskId));
+      }
+      setShowClaimTaskModal(false);
+    } else if (wasClaiming && !claimTaskLoading && claimTaskError) {
+      // Claim failed, reset the flag but keep modal open
+      setWasClaiming(false);
+    }
+  }, [claimTaskLoading, claimTaskError, wasClaiming, showClaimTaskModal, taskId, projectId, dispatch]);
 
   const handleStatusUpdate = async (newStatus: string) => {
     if (!taskDetails || !taskId || !projectId) return;
@@ -106,6 +127,25 @@ const ProjectDetail = () => {
 
   const handleCloseEditTask = () => {
     setShowEditTaskModal(false);
+  };
+
+  const handleOpenClaimTask = () => {
+    setShowClaimTaskModal(true);
+  };
+
+  const handleCloseClaimTask = () => {
+    setShowClaimTaskModal(false);
+  };
+
+  const handleApproveClaim = () => {
+    if (taskId && projectId) {
+      setWasClaiming(true);
+      dispatch(claimTaskAction(projectId, taskId));
+    }
+  };
+
+  const handleRejectClaim = () => {
+    // Just close the modal, no action needed
   };
   if (loading) {
     return (
@@ -325,11 +365,31 @@ const ProjectDetail = () => {
               <Typography variant="h6" fontWeight={"700"}>
                 {taskDetails?.subject}
               </Typography>
-              <Box sx={{}}>
+              <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
                 <Chips
                   selected={currentStatus}
                   onChange={(status) => handleStatusUpdate(status)}
                 />
+                <Button
+                  variant="contained"
+                  onClick={handleOpenClaimTask}
+                  sx={{
+                    backgroundColor: "#3F8CFF",
+                    color: "#FFFFFF",
+                    borderRadius: "14px",
+                    padding: "13px 20px",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: 1.364,
+                    boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+                    "&:hover": {
+                      backgroundColor: "#3A81EB",
+                      boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.42)",
+                    },
+                  }}
+                >
+                  Claim Task
+                </Button>
               </Box>
             </Box>
             <Box sx={{ paddingTop: "16px" }}>
@@ -590,6 +650,15 @@ const ProjectDetail = () => {
           isEditMode={true}
         />
       )}
+
+      {/* Claim Task Modal */}
+      <ClaimTaskModal
+        show={showClaimTaskModal}
+        onClose={handleCloseClaimTask}
+        onApprove={handleApproveClaim}
+        onReject={handleRejectClaim}
+        isLoading={claimTaskLoading}
+      />
     </Box>
   );
 };

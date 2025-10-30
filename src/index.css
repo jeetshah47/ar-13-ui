@@ -18,6 +18,141 @@ body {
   background-color: #F4F9FD;
 }
 
+:root {
+  /* Primary Colors */
+  --color-primary: #3F8CFF;
+  --color-primary-hover: #3A81EB;
+  --color-primary-pressed: #1F6DE0;
+  --color-primary-disabled: #CED5E0;
+  --color-primary-light: rgba(63, 140, 255, 0.12);
+  --color-primary-shadow: rgba(63, 140, 255, 0.26);
+  --color-primary-shadow-hover: rgba(63, 140, 255, 0.42);
+
+  /* Text Colors */
+  --color-text-primary: #0A1629;
+  --color-text-secondary: #7D8592;
+  --color-text-tertiary: #91929E;
+  --color-text-disabled: #B2B8C2;
+
+  /* Background Colors */
+  --color-white: #FFFFFF;
+  --color-background-default: #F4F9FD;
+  --color-background-light: #E6EDF5;
+  --color-background-light-alt: #E6EBF5;
+  --color-card-gray: #F4F9FD;
+
+  /* Border Colors */
+  --color-border-default: #D8E0F0;
+  --color-border-disabled: #CED5E0;
+  --color-border-selected: #3F8CFF;
+  --color-border-error: #F65160;
+
+  /* Status Colors */
+  --color-success: #00D097;
+  --color-success-light: #E0F9F2;
+  --color-error: #F65160;
+  --color-error-light: rgba(246, 81, 96, 0.12);
+  --color-warning: #FFBD21;
+  --color-warning-light: #FDC748;
+  --color-info: #3F8CFF;
+  
+  /* Task Status Colors */
+  --color-status-todo: #7D8592;
+  --color-status-todo-bg: rgba(125, 133, 146, 0.14);
+  --color-status-in-progress: #3F8CFF;
+  --color-status-in-progress-bg: rgba(63, 140, 255, 0.12);
+  --color-status-in-review: #C418E6;
+  --color-status-in-review-bg: rgba(196, 24, 230, 0.11);
+  --color-status-done: #00D097;
+  --color-status-done-bg: #E0F9F2;
+
+  /* Vacation Status Colors */
+  --color-vacation-pending: #FDC748;
+  --color-vacation-approved: #00D097;
+  --color-vacation-pending-bg: rgba(253, 199, 72, 0.12);
+  --color-vacation-approved-bg: #E0F9F2;
+
+  /* Gray Scale */
+  --color-gray-50: #F4F9FD;
+  --color-gray-100: #E6EDF5;
+  --color-gray-200: #E6EBF5;
+  --color-gray-300: #D8E0F0;
+  --color-gray-400: #D8D8D8;
+  --color-gray-500: #CED5E0;
+  --color-gray-600: #B2B8C2;
+  --color-gray-700: #91929E;
+  --color-gray-800: #7D8592;
+  --color-gray-900: #0A1629;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 28px;
+  --spacing-4xl: 32px;
+
+  /* Typography */
+  --font-family: "Nunito Sans", sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 36px;
+  
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  --line-height-xs: 1.142857;
+  --line-height-sm: 1.333333;
+  --line-height-base: 1.363999;
+  --line-height-md: 1.364;
+  --line-height-lg: 1.363999911717006;
+  --line-height-xl: 1.3639999628067017;
+  --line-height-2xl: 1.5;
+  --line-height-3xl: 1.7142857142857142;
+
+  /* Radii */
+  --border-radius-xs: 2px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 7px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 10px;
+  --border-radius-2xl: 14px;
+  --border-radius-3xl: 16px;
+  --border-radius-4xl: 20px;
+  --border-radius-5xl: 24px;
+
+  /* Sizes */
+  --avatar-size: 24px;
+  --avatar-size-lg: 30px;
+  --avatar-size-xl: 50px;
+  --icon-size: 24px;
+  --icon-size-sm: 19px;
+  --priority-icon-width: 12px;
+  --priority-icon-height: 16px;
+  --card-height: 91px;
+
+  /* Shadows */
+  --shadow-card: 0px 6px 58px 0px rgba(196, 203, 214, 0.1);
+  --shadow-card-hover: 0px 6px 58px 0px rgba(196, 203, 214, 0.4);
+  --shadow-input: 0px 1px 2px 0px rgba(184, 200, 224, 0.22);
+  --shadow-button: 0px 6px 12px 0px rgba(63, 140, 255, 0.26);
+  --shadow-button-hover: 0px 6px 12px 0px rgba(63, 140, 255, 0.42);
+  --shadow-dropdown: 0px 6px 58px 0px rgba(121, 145, 173, 0.2);
+
+  /* Opacity */
+  --opacity-disabled: 0.5;
+  --opacity-overlay: 0.12;
+}
+
 .nunito-sans-main {
   font-family: "Nunito Sans", sans-serif;
   font-optical-sizing: auto;

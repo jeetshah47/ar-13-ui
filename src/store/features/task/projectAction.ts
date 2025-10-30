@@ -18,6 +18,7 @@ import {
   getActivityLogs,
   getFileAttachments,
   addFileAttachment,
+  claimTask,
 } from "../../apis/taskApis";
 import type { ITask } from "../../types/Task/Task";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
@@ -43,6 +44,9 @@ import {
   addFileAttachmentRequest,
   addFileAttachmentSuccess,
   addFileAttachmentFailed,
+  claimTaskRequest,
+  claimTaskSuccess,
+  claimTaskFailed,
 } from "./taskSlice";
 
 export const getTaskListAction =
@@ -206,6 +210,38 @@ export const addFileAttachmentAction =
       } else {
         dispatch(addFileAttachmentFailed({ error: "Unknown Error" }));
         toast.error("Failed to upload file");
+      }
+    }
+  };
+
+export const claimTaskAction = 
+  (projectId: string, taskId: string) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(claimTaskRequest());
+    try {
+      const response = await claimTask(projectId, taskId);
+      dispatch(claimTaskSuccess());
+      toast.success(response.message || "Task claimed successfully");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse | { message?: string }>;
+      if (axiosError?.response?.data) {
+        const errorData = axiosError.response.data;
+        const errorMessage = (errorData as ProjectErrorResponse).error || (errorData as { message?: string }).message;
+        dispatch(claimTaskFailed(errorData as ProjectErrorResponse));
+        
+        // Handle specific error cases
+        if (axiosError.response.status === 401) {
+          toast.error("Authentication failed. Please log in again.");
+        } else if (axiosError.response.status === 403) {
+          toast.error("You are not part of this project.");
+        } else if (axiosError.response.status === 404) {
+          toast.error("Task or project not found.");
+        } else {
+          toast.error(errorMessage || "Failed to claim task");
+        }
+      } else {
+        dispatch(claimTaskFailed({ error: "Unknown Error" }));
+        toast.error("Failed to claim task");
       }
     }
   };

@@ -179,3 +179,12 @@ export async function getActivityLogs(
   const result = await http.get(url);
   return result.data;
 }
+
+export async function claimTask(
+  projectId: string,
+  taskId: string
+): Promise<{ message: string }> {
+  const url = `http://localhost:3000/api/tasks/claim/${projectId}/${taskId}`;
+  const result = await http.put(url);
+  return result.data;
+}
