@@ -16,6 +16,7 @@ export interface SingUpRequest {
   email: string;
   password: string;
   role: UserRoles;
+  phoneNumber?: string;
 }
 
 export async function loginApi(
@@ -62,5 +63,27 @@ export async function signupApi(
       },
     }
   );
+  return result.data;
+}
+
+export async function validateSignupTokenApi(
+  token: string
+): Promise<{ message: string; valid: boolean }> {
+  const url = `http://localhost:3000/api/auth/validate-signup`;
+  const result = await axios.get(url, {
+    params: { token },
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = result.data;
+  // If valid is false, throw an error so it's handled by the catch block
+  if (data.valid === false) {
+    const error = new Error(data.reason || "Token validation failed") as Error & {
+      response?: { data: { valid: false; reason?: string } };
+    };
+    error.response = { data: { valid: false, reason: data.reason } };
+    throw error;
+  }
   return result.data;
 }

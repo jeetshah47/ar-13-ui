@@ -17,6 +17,12 @@ export async function addTask(task: ITask): Promise<{ message: string }> {
   return result.data;
 }
 
+export async function addMultipleTasks(tasks: ITask[]): Promise<{ message: string; count: number }> {
+  const url = `http://localhost:3000/api/tasks/add-multiple`;
+  const result = await http.post(url, { tasks });
+  return result.data;
+}
+
 export async function updateTask(task: ITask): Promise<{ message: string }> {
   const url = `http://localhost:3000/api/tasks/update`;
   const result = await http.put(url, task);

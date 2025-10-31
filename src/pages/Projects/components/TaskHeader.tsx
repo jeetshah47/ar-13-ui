@@ -1,10 +1,11 @@
-import { Box, IconButton, SvgIcon, Typography } from "@mui/material";
+import { Box, IconButton, SvgIcon, Typography, Button } from "@mui/material";
 import { ViewButtonOptions } from "../constants/project.contants";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
 
 type TaskHeaderProps = {
   onClickAddButton: () => void;
+  onClickAddDrawing?: () => void;
   onChangeViewOptions: (view: string) => void;
   onClickFilterShow: () => void;
   currentViewOption: string;
@@ -12,6 +13,7 @@ type TaskHeaderProps = {
 
 const TaskHeader = ({
   onClickAddButton,
+  onClickAddDrawing,
   onChangeViewOptions,
   onClickFilterShow,
   currentViewOption,
@@ -37,6 +39,20 @@ const TaskHeader = ({
           >
             <PlusIcon />
           </IconButton>
+          {onClickAddDrawing && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onClickAddDrawing}
+              sx={{
+                ml: 1,
+                textTransform: "none",
+                fontSize: "12px",
+              }}
+            >
+              Add Drawing
+            </Button>
+          )}
         </Box>
         <Box sx={{ display: "flex", gap: "16px" }}>
           {ViewButtonOptions.map((option) => (

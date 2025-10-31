@@ -1,11 +1,29 @@
 import { Box, Button, SvgIcon, TextField, Typography } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
+import { useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../store/store";
+import { inviteEmployeeAction } from "../../../store/features/employees/employeeActions";
 type EmployeeCardProps = {
   onClose: () => void;
 };
 
 const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
+  const dispatch = useAppDispatch();
+  const inviting = useAppSelector((s) => s.employeeReducer.inviting) ?? false;
+  const [email, setEmail] = useState("");
+
+  const handleInvite = () => {
+    if (!email.trim()) return;
+    dispatch(inviteEmployeeAction(email.trim(), onClose));
+  };
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleInvite();
+    }
+  };
   return (
     <Box
       sx={{
@@ -59,6 +77,9 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
           <TextField
             sx={{ width: "100%", paddingTop: "7px" }}
             placeholder="Enter Member's Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </Box>
         <Box sx={{ display: "flex", gap: "8px", paddingTop: "10px" }}>
@@ -76,7 +97,9 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
             alignItems: "center",
           }}
         >
-          <Button variant="contained">Approve</Button>
+          <Button variant="contained" disabled={inviting || !email.trim()} onClick={handleInvite}>
+            {inviting ? "Sending..." : "Send Invite"}
+          </Button>
         </Box>
       </Box>
     </Box>

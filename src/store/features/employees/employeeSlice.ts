@@ -8,6 +8,8 @@ const initialState: EmployeeState = {
   totalEmployees: 0,
   loading: false,
   error: "",
+  inviting: false,
+  inviteError: "",
 };
 
 const employeeSlice = createSlice({
@@ -47,6 +49,18 @@ const employeeSlice = createSlice({
     clearEmployeeError(state) {
       state.error = "";
     },
+    inviteEmployeeRequest(state) {
+      state.inviting = true;
+      state.inviteError = "";
+    },
+    inviteEmployeeSuccess(state) {
+      state.inviting = false;
+      state.inviteError = "";
+    },
+    inviteEmployeeFailed(state, action: PayloadAction<string>) {
+      state.inviting = false;
+      state.inviteError = action.payload;
+    },
   },
 });
 
@@ -59,6 +73,9 @@ export const {
   getEmployeeByIdFailed,
   clearSelectedEmployee,
   clearEmployeeError,
+  inviteEmployeeRequest,
+  inviteEmployeeSuccess,
+  inviteEmployeeFailed,
 } = employeeSlice.actions;
 
 export const employeeReducer = employeeSlice.reducer;

@@ -49,6 +49,18 @@ const taskListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    addMultipleTasksRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    addMultipleTasksSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    addMultipleTasksFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
     updateTaskRequest(state) {
       state.api.loading = true;
       state.api.error = "";
@@ -148,6 +160,9 @@ export const {
   addTaskRequest,
   addTaskSuccess,
   addTaskFailed,
+  addMultipleTasksRequest,
+  addMultipleTasksSuccess,
+  addMultipleTasksFailed,
   updateTaskRequest,
   updateTaskSuccess,
   updateTaskFailed,

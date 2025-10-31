@@ -1,4 +1,5 @@
 import { Box, Button, SvgIcon, CircularProgress, Alert, Typography } from "@mui/material";
+import { Lock } from "@mui/icons-material";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import { useState, useEffect } from "react";
@@ -35,6 +36,7 @@ const EmployeesPage = () => {
       <Button
         onClick={handleOnClickAddButton}
         variant="contained"
+        disabled={!!error || loading}
         startIcon={<SvgIcon component={PlusIcon} />}
       >
         Add Employees
@@ -59,17 +61,105 @@ const EmployeesPage = () => {
           </>
         }
       />
-      {currentTab === "List" && (
+      {/* Error Display - shown regardless of tab */}
+      {error && error.toLowerCase().includes("admin access required") ? (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "60px 20px",
+            textAlign: "center",
+            minHeight: "400px",
+          }}
+        >
+          <Box
+            sx={{
+              width: "200px",
+              height: "200px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "24px",
+              position: "relative",
+            }}
+          >
+            {/* Background gradient circle */}
+            <Box
+              sx={{
+                position: "absolute",
+                width: "180px",
+                height: "180px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, rgba(211, 47, 47, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Lock
+                sx={{
+                  fontSize: "80px",
+                  color: "#d32f2f",
+                  zIndex: 1,
+                }}
+              />
+            </Box>
+          </Box>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: "bold",
+              color: "#2C3E50",
+              marginBottom: "12px",
+            }}
+          >
+            Admin Access Required
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: "#7F8C8D",
+              maxWidth: "500px",
+              lineHeight: 1.6,
+              marginBottom: "8px",
+            }}
+          >
+            You need administrator privileges to access the employees section.
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#95A5A6",
+              maxWidth: "500px",
+            }}
+          >
+            Please contact your administrator if you believe this is an error.
+          </Typography>
+        </Box>
+      ) : error ? (
+        <Alert 
+          severity="error" 
+          sx={{ 
+            margin: "20px 0", 
+            borderRadius: "12px",
+            "& .MuiAlert-message": {
+              width: "100%"
+            }
+          }}
+        >
+          <Typography variant="body1" component="div">
+            {error}
+          </Typography>
+        </Alert>
+      ) : null}
+      {currentTab === "List" && !error && (
         <Box sx={{ padding: "28px 0px" }}>
           {loading && (
             <Box sx={{ display: "flex", justifyContent: "center", padding: "40px" }}>
               <CircularProgress />
             </Box>
-          )}
-          {error && (
-            <Alert severity="error" sx={{ margin: "20px 0" }}>
-              {error}
-            </Alert>
           )}
           {!loading && !error && employees.length === 0 && (
             <Box sx={{ textAlign: "center", padding: "40px" }}>
@@ -81,7 +171,7 @@ const EmployeesPage = () => {
           ))}
         </Box>
       )}
-      {currentTab === "Activity" && (
+      {currentTab === "Activity" && !error && (
         <Box sx={{ padding: "28px 0px" }}>
           <ActivitySection />
         </Box>

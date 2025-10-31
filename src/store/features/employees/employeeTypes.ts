@@ -6,6 +6,8 @@ export interface EmployeeState {
   totalEmployees: number;
   loading: boolean;
   error: string;
+  inviting?: boolean;
+  inviteError?: string;
 }
 
 export interface EmployeeActionTypes {

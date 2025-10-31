@@ -8,11 +8,14 @@ import {
   authSignUpFailed,
   authSignUpRequest,
   authSignUpSuccess,
+  validateSignupTokenRequest,
+  validateSignupTokenSuccess,
+  validateSignupTokenFailed,
 } from "./authSlice";
 import type { AxiosError } from "axios";
 import type { AuthError } from "../../types/Auth/AuthError";
 import toast from "react-hot-toast";
-import { signupApi, type SingUpRequest } from "../../apis/authApis";
+import { signupApi, type SingUpRequest, validateSignupTokenApi } from "../../apis/authApis";
 import { getUserProfile } from "../../apis/userApis";
 import type { FirebaseError } from "firebase/app";
 import type { UserRole } from "../../types/RBAC";
@@ -101,5 +104,26 @@ export const authSignUpActions =
     } catch {
       toast.error("Failed");
       dispatch(authSignUpFailed({ error: "User Signup failed" }));
+    }
+  };
+
+export const validateSignupTokenAction =
+  (token: string) => async (dispatch: AppDispatch) => {
+    dispatch(validateSignupTokenRequest());
+    try {
+      await validateSignupTokenApi(token);
+      dispatch(validateSignupTokenSuccess());
+    } catch (error) {
+      const axiosError = error as AxiosError<{ valid?: boolean; reason?: string; message?: string }>;
+      const responseData = axiosError.response?.data;
+      const reason = responseData?.reason;
+      const message = responseData?.message || reason || "Token validation failed";
+      
+      // Don't show toast for "Invitation already used" - we'll show a better UI instead
+      if (reason !== "Invitation already used") {
+        toast.error(message);
+      }
+      
+      dispatch(validateSignupTokenFailed({ message, reason }));
     }
   };

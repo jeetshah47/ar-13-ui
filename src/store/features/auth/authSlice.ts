@@ -28,6 +28,12 @@ const checkAuthFromToken = (): AuthState => {
     },
     error: "",
     loading: false,
+    tokenValidation: {
+      isValidating: false,
+      isValid: null,
+      error: "",
+      reason: undefined,
+    },
   };
   
   if (token && uid) {
@@ -129,6 +135,27 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = action.payload.error;
     },
+    validateSignupTokenRequest(state) {
+      state.tokenValidation.isValidating = true;
+      state.tokenValidation.error = "";
+    },
+    validateSignupTokenSuccess(state) {
+      state.tokenValidation.isValidating = false;
+      state.tokenValidation.isValid = true;
+      state.tokenValidation.error = "";
+    },
+    validateSignupTokenFailed(state, action: PayloadAction<{ message: string; reason?: string }>) {
+      state.tokenValidation.isValidating = false;
+      state.tokenValidation.isValid = false;
+      state.tokenValidation.error = action.payload.message;
+      state.tokenValidation.reason = action.payload.reason;
+    },
+    clearTokenValidation(state) {
+      state.tokenValidation.isValidating = false;
+      state.tokenValidation.isValid = null;
+      state.tokenValidation.error = "";
+      state.tokenValidation.reason = undefined;
+    },
   },
 });
 
@@ -140,6 +167,10 @@ export const {
   authSignUpRequest,
   authSignUpSuccess,
   authSignUpFailed,
+  validateSignupTokenRequest,
+  validateSignupTokenSuccess,
+  validateSignupTokenFailed,
+  clearTokenValidation,
 } = authSlice.actions;
 
 export const authReducer = authSlice.reducer;

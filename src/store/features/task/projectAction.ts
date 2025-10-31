@@ -12,6 +12,7 @@ import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import {
   addTask,
+  addMultipleTasks,
   updateTask,
   deleteTask,
   addTimeSpent,
@@ -26,6 +27,9 @@ import {
   addTaskRequest,
   addTaskSuccess,
   addTaskFailed,
+  addMultipleTasksRequest,
+  addMultipleTasksSuccess,
+  addMultipleTasksFailed,
   updateTaskRequest,
   updateTaskSuccess,
   updateTaskFailed,
@@ -95,6 +99,24 @@ export const addTaskAction = (task: ITask) => async (dispatch: AppDispatch) => {
   } catch {
     toast.success("Failed to add task");
     dispatch(addTaskFailed({ error: "Unknown Error" }));
+  }
+};
+
+export const addMultipleTasksAction = (tasks: ITask[]) => async (dispatch: AppDispatch) => {
+  dispatch(addMultipleTasksRequest());
+  try {
+    const response = await addMultipleTasks(tasks);
+    dispatch(addMultipleTasksSuccess());
+    toast.success(response.message || `${response.count} task(s) added successfully`);
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(addMultipleTasksFailed(axiosError.response.data));
+      toast.error(`Failed to add tasks: ${axiosError.response.data.error}`);
+    } else {
+      dispatch(addMultipleTasksFailed({ error: "Unknown Error" }));
+      toast.error("Failed to add tasks");
+    }
   }
 };
 

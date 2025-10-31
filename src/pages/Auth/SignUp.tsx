@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -12,16 +12,17 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff, ArrowForward } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useFormik } from "formik";
-import { authSignUpActions } from "../../store/features/auth/authAction";
-import { useAppDispatch } from "../../store/store";
+import { authSignUpActions, validateSignupTokenAction } from "../../store/features/auth/authAction";
+import { useAppDispatch, useAppSelector } from "../../store/store";
 
 type UserData = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  phoneNumber: string;
 };
 
 // Custom theme to match the design
@@ -58,28 +59,32 @@ const theme = createTheme({
 
 export default function PhoneValidationUI() {
   const [showPassword, setShowPassword] = useState(false);
+  const loading = useAppSelector((s) => s.authReducer.loading);
+  const { isValidating, isValid, error: validationError, reason } = useAppSelector(
+    (s) => s.authReducer.tokenValidation
+  );
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const formik = useFormik({
     initialValues: {
       firstName: "",
       lastName: "",
       email: "",
       password: "",
+      phoneNumber: "",
     },
     onSubmit: (values) => {
       handleSubmit(values);
     },
   });
   const dispatch = useAppDispatch();
-  // const [countryCode, setCountryCode] = useState("+91");
-
   const navigate = useNavigate();
-  // const handleSmsCodeChange = (index: number, value: string) => {
-  //   if (value.length <= 1 && /^\d*$/.test(value)) {
-  //     const newCode = [...smsCode];
-  //     newCode[index] = value;
-  //     setSmsCode(newCode);
-  //   }
-  // };
+
+  useEffect(() => {
+    if (token) {
+      dispatch(validateSignupTokenAction(token));
+    }
+  }, [token, dispatch]);
 
   const handleSubmit = async (values: UserData) => {
     dispatch(
@@ -92,6 +97,7 @@ export default function PhoneValidationUI() {
           email: values.email,
           password: values.password,
           role: "Standard",
+          phoneNumber: values.phoneNumber,
         },
         () => navigate("/auth/login")
       )
@@ -222,7 +228,57 @@ export default function PhoneValidationUI() {
             </Box>
 
             <Paper elevation={0} sx={{ p: 0 }}>
-              <form onSubmit={formik.handleSubmit}>
+              {isValidating && (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography>Validating token...</Typography>
+                </Box>
+              )}
+              {!isValidating && isValid === false && reason === "Invitation already used" && (
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "200px",
+                      height: "200px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <img
+                      src="/illustration/invite.svg"
+                      alt="Invitation already used"
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    />
+                  </Box>
+                  <Box sx={{ maxWidth: "400px" }}>
+                    <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+                      Invitation Already Used
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      This invitation link has already been used. If you need to sign up, please
+                      contact your administrator for a new invitation.
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              {!isValidating && isValid === false && reason !== "Invitation already used" && (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography color="error">
+                    {validationError || "Invalid or expired token. Please use a valid signup link."}
+                  </Typography>
+                </Box>
+              )}
+              {!isValidating && isValid === true && (
+                <form onSubmit={formik.handleSubmit}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                   {/* Name Fields */}
                   <Grid container spacing={2}>
@@ -363,6 +419,17 @@ export default function PhoneValidationUI() {
                     required
                   />
 
+                {/* Phone Number */}
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="phoneNumber"
+                  placeholder="e.g. +1 555 123 4567"
+                  value={formik.values.phoneNumber}
+                  onChange={formik.handleChange}
+                  variant="outlined"
+                />
+
                   {/* Password */}
                   <TextField
                     fullWidth
@@ -396,17 +463,19 @@ export default function PhoneValidationUI() {
                     variant="contained"
                     size="small"
                     type="submit"
-                    endIcon={<ArrowForward />}
+                  disabled={loading}
+                  endIcon={!loading ? <ArrowForward /> : undefined}
                     sx={{
                       px: 4,
                       py: 1.5,
                       fontSize: "0.875rem",
                     }}
                   >
-                    Submit
+                  {loading ? "Submitting..." : "Submit"}
                   </Button>
                 </Box>
               </form>
+              )}
             </Paper>
           </Container>
         </Box>

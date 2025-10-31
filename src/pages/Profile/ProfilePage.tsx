@@ -7,20 +7,32 @@ import {
 } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import Tab from "../../common/components/Tab/Tab";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProjectSection from "./components/ProjectSection";
 import TeamSection from "./components/TeamSection";
 import VacationSection from "./components/VacationSection";
 import Modal from "../../common/components/Modal/Modal";
 import VacationForm from "./components/VacationForm";
 import { ProfileSetting } from "./components/ProfileSetting";
-
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { getUserProfileAction } from "../../store/features/user/userActions";
 const tabList = ["Projects", "Team", "My Vacations"];
 
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("Projects");
   const [showModal, setShowModal] = useState(false);
   const [showSetting, ] = useState(false);
+  const dispatch = useAppDispatch();
+  const uid = useAppSelector((s) => s.authReducer.api.uid);
+  const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
+
+  useEffect(() => {
+    if (uid) {
+      dispatch(getUserProfileAction(uid));
+    }
+  }, [uid, dispatch]);
+
+  //
 
   const handleOnCloseModal = () => {
     setShowModal(false);
@@ -71,7 +83,7 @@ const ProfilePage = () => {
         >
           <Avatar sx={{ width: "64px", height: "64px" }} />
           <Typography fontWeight={700} fontSize={"18px"}>
-            Allen Perkins
+            {profileLoading ? "Loading..." : profile?.name || "-"}
           </Typography>
           <Typography fontSize={"14px"} color="secondary.main">
             UI/UX Designer
@@ -125,6 +137,8 @@ const ProfilePage = () => {
               <TextField
                 sx={{ width: "100%", paddingTop: "7px" }}
                 placeholder="Enter Email"
+                value={profile?.email || ""}
+                InputProps={{ readOnly: true }}
               />
             </Box>
             <Box sx={{ width: "100%", paddingTop: "10px" }}>
@@ -137,6 +151,8 @@ const ProfilePage = () => {
               <TextField
                 sx={{ width: "100%", paddingTop: "7px" }}
                 placeholder="Enter Number"
+                value={profile?.phoneNumber || ""}
+                InputProps={{ readOnly: true }}
               />
             </Box>
           </Box>

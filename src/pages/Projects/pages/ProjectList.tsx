@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import TileView from "../components/TileView";
 import TimelineView from "../components/TimelineView";
 import TaskForm from "../components/TaskForm";
+import DrawingTaskForm from "../components/DrawingTaskForm";
 import Filter from "../components/Filter";
 import { useNavigate } from "react-router";
 import {
@@ -31,6 +32,7 @@ const activeCardStyles = {
 const ProjectList = () => {
   const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
   const [showModal, setShowModal] = useState(false);
+  const [showDrawingModal, setShowDrawingModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
   const projectListState = useAppSelector(
@@ -69,6 +71,14 @@ const ProjectList = () => {
     setShowModal(true);
   };
 
+  const handleShowDrawingModal = () => {
+    setShowDrawingModal(true);
+  };
+
+  const handleCloseDrawingModal = () => {
+    setShowDrawingModal(false);
+  };
+
   const handleCloseFilterModal = () => {
     setShowFilterModal(false);
   };
@@ -84,8 +94,6 @@ const ProjectList = () => {
   const handleSelectCurrentProjectId = (projectId: string) => {
     dispatch(updateSelectedProjectId(projectId));
   };
-
-  console.log("tttttttttt",taskListState)
 
   useEffect(() => {
     const project_id = projectListState.common.selectedProjectId;
@@ -164,6 +172,7 @@ const ProjectList = () => {
               currentViewOption={currentView}
               onChangeViewOptions={(view) => setCurrentView(view)}
               onClickAddButton={handleShowModal}
+              onClickAddDrawing={handleShowDrawingModal}
               onClickFilterShow={handleShowFilterModal}
             />
             <Box sx={{ paddingTop: "5px" }}>
@@ -185,6 +194,9 @@ const ProjectList = () => {
       </Box>
       <Modal open={showModal} onClose={handleCloseModal}>
         <TaskForm onClose={handleCloseModal} />
+      </Modal>
+      <Modal open={showDrawingModal} onClose={handleCloseDrawingModal}>
+        <DrawingTaskForm onClose={handleCloseDrawingModal} />
       </Modal>
       {showFilterModal && <Filter onClose={handleCloseFilterModal} />}
     </Box>
