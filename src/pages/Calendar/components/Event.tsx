@@ -30,7 +30,8 @@ const Event = ({ event, onClick }: EventProps) => {
     return time.substring(0, 5); // Extract HH:MM from time string
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onClick) {
       onClick(event);
     }

@@ -1,38 +1,81 @@
 import { Box, Button, SvgIcon, TextField, Typography, MenuItem } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import { IOSSwitch } from "../../../common/components/Switch/IOSswitch";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
-import { createCalendarEvent, fetchCalendarEvents } from "../../../store/features/calendar/calendarAction";
+import { createCalendarEvent, editCalendarEvent, fetchCalendarEvents } from "../../../store/features/calendar/calendarAction";
 import type { CalendarRequest } from "../../../store/types/Calendar/CalendarRequest";
 import toast from "react-hot-toast";
+import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 
 type EventFormProps = {
   date: Date | null;
   onClose: () => void;
   currentMonth?: Date;
+  existingEvent?: CalendarResponse;
 };
 
-const EventForm = ({ date, onClose, currentMonth }: EventFormProps) => {
+const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProps) => {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.calendarReducer.api);
+
+  const initialDateString = date ? date.toISOString().split('T')[0] : "";
 
   const [formData, setFormData] = useState<CalendarRequest>({
     title: "",
     category: "",
     priority: "",
-    start: date ? date.toISOString().split('T')[0] : "",
-    end: date ? date.toISOString().split('T')[0] : "",
+    start: initialDateString,
+    end: initialDateString,
     time: "",
     description: "",
     isRepeating: false,
     repeatFrequency: "daily",
     repeatDays: [],
-    createdBy: "user123", // This should come from auth state
+    createdBy: "user123",
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("daily");
+
+  // Prefill when existingEvent is provided
+  useEffect(() => {
+    if (!existingEvent) return;
+
+    const eventDate = new Date(existingEvent.start);
+    const startDateStr = isNaN(eventDate.getTime())
+      ? initialDateString
+      : eventDate.toISOString().split('T')[0];
+
+    const derivedTime = existingEvent.time
+      ? existingEvent.time.substring(0, 5)
+      : (() => {
+          const iso = existingEvent.start;
+          const d = new Date(iso);
+          if (isNaN(d.getTime())) return "";
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          return `${hh}:${mm}`;
+        })();
+
+    const next: CalendarRequest = {
+      title: existingEvent.title ?? "",
+      category: existingEvent.category ?? "",
+      priority: existingEvent.priority ?? "",
+      start: startDateStr,
+      end: startDateStr,
+      time: derivedTime,
+      description: existingEvent.description ?? "",
+      isRepeating: existingEvent.isRepeating ?? false,
+      repeatFrequency: existingEvent.repeatFrequency ?? "daily",
+      repeatDays: existingEvent.repeatDays ?? [],
+      createdBy: existingEvent.createdBy ?? "user123",
+    };
+
+    setFormData(next);
+    setSelectedDays(next.repeatDays);
+    setSelectedFrequency(next.repeatFrequency);
+  }, [existingEvent, initialDateString]);
 
   const handleInputChange = (field: keyof CalendarRequest, value: string | boolean | string[]) => {
     setFormData(prev => ({
@@ -72,8 +115,13 @@ const EventForm = ({ date, onClose, currentMonth }: EventFormProps) => {
         end: endDateTime.toISOString(),
       };
 
-      await dispatch(createCalendarEvent(eventData));
-      toast.success("Event created successfully!");
+      if (existingEvent?.id) {
+        await dispatch(editCalendarEvent(existingEvent.id, eventData));
+        toast.success("Event updated successfully!");
+      } else {
+        await dispatch(createCalendarEvent(eventData));
+        toast.success("Event created successfully!");
+      }
       // Refresh the events list for the current month
       if (currentMonth) {
         const year = currentMonth.getFullYear();

@@ -19,6 +19,7 @@ const CalendarPage = () => {
   const [dateState, setDateState] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
   const [selectedCellDate, setSelectedCellDate] = useState<Date | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   // Fetch calendar events when month changes
   useEffect(() => {
@@ -33,14 +34,24 @@ const CalendarPage = () => {
     </Button>
   );
 
+  // Helper to format a Date as YYYY-MM-DD without calling toISOString on invalid dates
+  const toYMD = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   // Helper function to get events for a specific date
   const getEventsForDate = (date: Date | null): CalendarResponse[] => {
     if (!date) return [];
-    
-    const dateString = date.toISOString().split('T')[0];
-    return events.filter(event => {
-      const eventDate = new Date(event.start).toISOString().split('T')[0];
-      return eventDate === dateString;
+
+    const dateString = toYMD(date);
+    return events.filter((event) => {
+      if (!event.start) return false;
+      const parsed = new Date(event.start);
+      if (isNaN(parsed.getTime())) return false;
+      return toYMD(parsed) === dateString;
     });
   };
 
@@ -104,11 +115,21 @@ const CalendarPage = () => {
     date?.toDateString().split(" ")[0] ?? "";
 
   const handleOnCellClick = (date: Date | null) => {
+    // Open blank form for the selected date
     setSelectedCellDate(date);
+    setSelectedEventId(null);
+    setShowDateModal(true);
+  };
+
+  const handleOnEventClick = (event: CalendarResponse) => {
+    // Open prefilled form for the clicked event
+    setSelectedCellDate(new Date(event.start));
+    setSelectedEventId(event.id);
     setShowDateModal(true);
   };
   const handleOnCrossClick = () => {
     setSelectedCellDate(null);
+    setSelectedEventId(null);
     setShowDateModal(false);
   };
 
@@ -187,6 +208,7 @@ const CalendarPage = () => {
                   weekDay={index < 7 ? getWeekDayString(date) : ""}
                   events={getEventsForDate(date)}
                   hasEvents={hasEventsForDate(date)}
+                  onClickEvent={handleOnEventClick}
                 />
               </Grid>
             ))}
@@ -194,7 +216,16 @@ const CalendarPage = () => {
         </Box>
         
         <Modal show={showDateModal} onClose={handleOnCrossClick}>
-          <EventForm onClose={handleOnCrossClick} date={selectedCellDate} currentMonth={dateState} />
+          <EventForm 
+            onClose={handleOnCrossClick} 
+            date={selectedCellDate} 
+            currentMonth={dateState}
+            existingEvent={
+              selectedEventId 
+                ? events.find((e) => e.id === selectedEventId) ?? undefined 
+                : undefined
+            }
+          />
         </Modal>
       </Box>
     </Box>

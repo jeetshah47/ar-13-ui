@@ -8,9 +8,10 @@ type CellProps = {
   onClickCell: (date: Date | null) => void;
   events: CalendarResponse[];
   hasEvents: boolean;
+  onClickEvent?: (event: CalendarResponse) => void;
 };
 
-const Cell = ({ date, weekDay, onClickCell, events, hasEvents }: CellProps) => {
+const Cell = ({ date, weekDay, onClickCell, events, hasEvents, onClickEvent }: CellProps) => {
   return (
     <Box
       onClick={() => onClickCell(date)}
@@ -60,7 +61,7 @@ const Cell = ({ date, weekDay, onClickCell, events, hasEvents }: CellProps) => {
         }}
       >
         {events.slice(0, 3).map((event) => (
-          <Event key={event.id} event={event} />
+          <Event key={event.id} event={event} onClick={onClickEvent} />
         ))}
         {events.length > 3 && (
           <Box

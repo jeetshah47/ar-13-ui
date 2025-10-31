@@ -75,7 +75,7 @@ const MainSiderBar = () => {
         <img style={{ width: "100%" }} src={ARLOGO} />
       </Box>
       <Box>
-        <Stack>
+        <Stack gap={1}>
           <Item
             onClick={() => handleNavigation("/app/dashboard")}
             active={checkActiveStatus("dashboard")}
