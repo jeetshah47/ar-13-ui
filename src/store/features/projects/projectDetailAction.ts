@@ -7,10 +7,9 @@ import {
 } from "./projectDetailSlice";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
-import { getTaskDetailById, updateTask } from "../../apis/taskApis";
+import { getTaskDetailById, updateTaskStatus as updateTaskStatusApi } from "../../apis/taskApis";
 import { getProjectDetails } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
-import type { ITask } from "../../types/Task/Task";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
 
 export const fetchProjectDetailAction =
@@ -41,8 +40,24 @@ export const fetchProjectDetailAction =
     }
   };
 
+// Map Chips component status values to API format
+const mapStatusToApiFormat = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    progress: "in-progress",
+    pending: "pending",
+    review: "review",
+    success: "done",
+    // Also handle full status names if they come through
+    "In Progress": "in-progress",
+    "To Do": "to-do",
+    "Done": "done",
+    "Review": "review",
+  };
+  return statusMap[status] || status.toLowerCase().replace(/\s+/g, "-");
+};
+
 export const updateTaskStatusAction =
-  (taskId: string, newStatus: string, currentTaskDetails?: TaskResponse) =>
+  (taskId: string, newStatus: string, projectId: string, currentTaskDetails?: TaskResponse) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
     try {
       // Get current task details from state if not provided
@@ -54,21 +69,23 @@ export const updateTaskStatusAction =
         return;
       }
 
-      const updatedTask: ITask = {
-        _id: taskId,
-        subject: taskDetails.subject,
-        code: taskDetails.code,
-        status: newStatus,
-        duration: new Date(taskDetails.duration),
-        priority: taskDetails.priority,
-        assignTo: taskDetails.assignTo,
-        projectId: taskDetails.projectId,
-        createdAt: new Date(taskDetails.created._seconds * 1000),
-        updatedAt: new Date(),
-      };
+      if (!projectId) {
+        toast.error("Project ID not found");
+        return;
+      }
 
-      await updateTask(updatedTask);
+      // Map status to API format
+      const apiStatus = mapStatusToApiFormat(newStatus);
+
+      // Call the new API endpoint
+      await updateTaskStatusApi(projectId, taskId, apiStatus);
+      
+      // Update the local state
       dispatch(updateTaskStatus(newStatus));
+      
+      // Refresh task details to get the latest status from server
+      dispatch(fetchProjectDetailAction(taskId, projectId));
+      
       toast.success("Task status updated successfully");
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ProjectErrorResponse>;

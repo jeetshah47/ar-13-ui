@@ -194,3 +194,13 @@ export async function claimTask(
   const result = await http.put(url);
   return result.data;
 }
+
+export async function updateTaskStatus(
+  projectId: string,
+  taskId: string,
+  status: string
+): Promise<{ message: string }> {
+  const url = `http://localhost:3000/api/tasks/update-status/${projectId}/${taskId}`;
+  const result = await http.put(url, { status });
+  return result.data;
+}

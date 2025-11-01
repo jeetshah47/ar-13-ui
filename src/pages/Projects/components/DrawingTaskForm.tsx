@@ -44,6 +44,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
   const [leftList, setLeftList] = useState<DrawingItem[]>([]);
   const [rightList, setRightList] = useState<DrawingItem[]>([]);
   const [status, setStatus] = useState("");
+  const [duration, setDuration] = useState("");
   const [priority, setPriority] = useState("");
   const [membersIds, setMembersIds] = useState<string[]>([]);
 
@@ -106,6 +107,13 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
     setStatus(event.target.value);
   };
 
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    if (name === "duration") {
+      setDuration(value);
+    }
+  };
+
   const ITEM_HEIGHT = 48;
   const ITEM_PADDING_TOP = 8;
   const MenuProps = {
@@ -140,7 +148,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
       subject: drawing.name,
       code: `DWG-${drawing.key.toUpperCase()}`,
       status: status || "To Do",
-      duration: new Date(),
+      duration: duration ? new Date(duration) : new Date(),
       priority: priority || "Medium",
       assignTo: membersIds,
       projectId,
@@ -158,6 +166,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
       
       // Reset form and close modal
       setStatus("");
+      setDuration("");
       setPriority("");
       setMembersIds([]);
       setRightList([]);
@@ -182,6 +191,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
   const handleClose = () => {
     // Reset form when closing
     setStatus("");
+    setDuration("");
     setPriority("");
     setMembersIds([]);
     setRightList([]);
@@ -352,41 +362,80 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
             </FormControl>
           </Box>
         </Box>
-        <Box sx={{ mt: 2 }}>
-          <Typography
-            color="secondary"
-            sx={{ fontWeight: "bold", fontSize: "14px", mb: 1 }}
-          >
-            Team Members
-          </Typography>
-          <FormControl sx={{ width: "100%" }}>
-            <InputLabel>Team Members</InputLabel>
-            <Select
-              multiple
-              value={membersIds}
-              onChange={handleMembersChange}
-              input={<OutlinedInput label="Team Members" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip
-                      key={value}
-                      label={
-                        users.find((user) => user.id === value)?.name ?? ""
-                      }
-                    />
-                  ))}
-                </Box>
-              )}
-              MenuProps={MenuProps}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 2,
+            alignItems: { xs: "stretch", sm: "center" },
+            mt: 2,
+          }}
+        >
+          <Box sx={{ flex: { xs: "1", sm: "0 1 50%" } }}>
+            <Typography
+              color="secondary"
+              sx={{ fontWeight: "bold", fontSize: "14px", mb: 1 }}
             >
-              {users.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              Time Spend
+            </Typography>
+            <input
+              type="datetime-local"
+              name="duration"
+              value={duration}
+              onChange={handleChange}
+              min={new Date().toISOString().slice(0, 16)}
+              style={{
+                width: "100%",
+                height: "56px",
+                padding: "0 14px",
+                border: "1px solid #D8E0F0",
+                borderRadius: "14px",
+                fontSize: "14px",
+                fontFamily: '"Nunito Sans", sans-serif',
+                color: "#000000",
+                outline: "none",
+                backgroundColor: "white",
+                boxSizing: "border-box",
+                margin: 0,
+              }}
+            />
+          </Box>
+          <Box sx={{ flex: { xs: "1", sm: "0 1 50%" } }}>
+            <Typography
+              color="secondary"
+              sx={{ fontWeight: "bold", fontSize: "14px", mb: 1 }}
+            >
+              Team Members
+            </Typography>
+            <FormControl sx={{ width: "100%" }}>
+              <InputLabel>Team Members</InputLabel>
+              <Select
+                multiple
+                value={membersIds}
+                onChange={handleMembersChange}
+                input={<OutlinedInput label="Team Members" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={
+                          users.find((user) => user.id === value)?.name ?? ""
+                        }
+                      />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
       </Box>
 

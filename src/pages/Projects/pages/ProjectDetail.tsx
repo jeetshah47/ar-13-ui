@@ -21,11 +21,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
-import { getActivityLogsAction, getFileAttachmentsAction, claimTaskAction } from "../../../store/features/task/projectAction";
+import { getFileAttachmentsAction, claimTaskAction } from "../../../store/features/task/projectAction";
+import { getActivityLogsSuccess, getActivityLogsRequest } from "../../../store/features/task/taskSlice";
 import type { ActivityLog, FileAttachment } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";
 import ClaimTaskModal from "../components/ClaimTaskModal";
+import ActivityLogItem from "../components/ActivityLogItem";
+import { subscribeToTaskActivityLogs } from "../../../services/firebaseActivityLogService";
 
 // Icon mapping for activity types
 const getActivityIcon = (type: ActivityLog['type']) => {
@@ -77,14 +80,36 @@ const ProjectDetail = () => {
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
   const [wasClaiming, setWasClaiming] = useState(false);
+  
+  // Mock replies data (for UI purposes) - can be moved to API later
+  const mockReplies: Record<string, Array<{
+    id: string;
+    userId: string;
+    userName: string;
+    message: string;
+    timestamp: Date;
+  }>> = {};
 
+  // Fetch project details and file attachments
   useEffect(() => {
     if (taskId && projectId) {
       dispatch(fetchProjectDetailAction(taskId, projectId));
-      dispatch(getActivityLogsAction(projectId, taskId));
       dispatch(getFileAttachmentsAction(projectId, taskId));
     }
   }, [taskId, projectId, dispatch]);
+
+  // Subscribe to real-time activity logs
+  useEffect(() => {
+    if (!taskId) return;
+
+    dispatch(getActivityLogsRequest());
+
+    const unsubscribe = subscribeToTaskActivityLogs(taskId, (activityLogs) => {
+      dispatch(getActivityLogsSuccess({ activityLogs }));
+    });
+
+    return () => unsubscribe();
+  }, [taskId, dispatch]);
 
   // Close modal after successful claim
   useEffect(() => {
@@ -93,7 +118,7 @@ const ProjectDetail = () => {
       setWasClaiming(false);
       if (taskId && projectId) {
         dispatch(fetchProjectDetailAction(taskId, projectId));
-        dispatch(getActivityLogsAction(projectId, taskId));
+        // Activity logs will update automatically via real-time listener
       }
       setShowClaimTaskModal(false);
     } else if (wasClaiming && !claimTaskLoading && claimTaskError) {
@@ -105,7 +130,7 @@ const ProjectDetail = () => {
   const handleStatusUpdate = async (newStatus: string) => {
     if (!taskDetails || !taskId || !projectId) return;
     
-    dispatch(updateTaskStatusAction(taskId, newStatus, taskDetails));
+    dispatch(updateTaskStatusAction(taskId, newStatus, projectId, taskDetails));
   };
 
   const handleLogTime = () => {
@@ -147,6 +172,17 @@ const ProjectDetail = () => {
   const handleRejectClaim = () => {
     // Just close the modal, no action needed
   };
+
+  // Handle reply submission (for future API integration)
+  const handleReplySubmit = (activityId: string, message: string) => {
+    // TODO: Add API call to save reply
+    // Example: dispatch(addReplyAction(activityId, message));
+    void activityId; // Placeholder for future API call
+    void message; // Placeholder for future API call
+  };
+
+  // Get current user name
+  const currentUserName = projectDetailState.api.data.projectDetails?.reporter?.name || "You";
   if (loading) {
     return (
       <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -184,7 +220,8 @@ const ProjectDetail = () => {
           paddingTop: "28px",
           display: "flex",
           gap: "28px",
-          height: "100%",
+          height: "calc(100vh - 100px)",
+          minHeight: 0,
         }}
       >
         <Box
@@ -305,13 +342,14 @@ const ProjectDetail = () => {
             </Box>
           </Box>
         </Box>
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               pb: "24px",
+              flexShrink: 0,
             }}
           >
             <Typography>Task Details</Typography>
@@ -348,9 +386,11 @@ const ProjectDetail = () => {
           <Box
             sx={{
               backgroundColor: "#fff",
-              height: "100%",
+              flex: 1,
               borderRadius: "24px",
               padding: "30px",
+              overflowY: "auto",
+              minHeight: 0,
             }}
           >
             <Typography color="secondary.main">{taskDetails?.code}</Typography>
@@ -563,35 +603,19 @@ const ProjectDetail = () => {
                       minute: '2-digit' 
                     });
                     
+                    const replies = mockReplies[activity.id] || [];
+                    
                     return (
-                      <Box key={activity.id} sx={{ marginBottom: "24px" }}>
-                        <Box sx={{ display: "flex", gap: "16px", paddingY: "12px" }}>
-                          <Avatar sx={{ width: "50px", height: "50px" }}>
-                            {activity.userName.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <Box>
-                            <Typography fontWeight={700}>{activity.userName}</Typography>
-                            <Typography color="secondary.main">
-                              {formattedDate} | {formattedTime}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Box
-                          sx={{
-                            background: "#F4F9FD",
-                            borderRadius: "14px",
-                            padding: "15px 20px",
-                            width: "fit-content",
-                            display: "flex",
-                            marginTop: "12px",
-                          }}
-                        >
-                          <SvgIcon component={ActivityIcon} sx={{ marginRight: "8px" }} />
-                          <Typography>
-                            {activity.description}
-                          </Typography>
-                        </Box>
-                      </Box>
+                      <ActivityLogItem
+                        key={activity.id}
+                        activity={activity}
+                        activityIcon={ActivityIcon}
+                        formattedDate={formattedDate}
+                        formattedTime={formattedTime}
+                        replies={replies}
+                        currentUserName={currentUserName}
+                        onReplySubmit={handleReplySubmit}
+                      />
                     );
                   })}
                 </Box>

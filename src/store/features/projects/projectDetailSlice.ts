@@ -4,6 +4,27 @@ import type { TaskResponse } from "../../types/Task/TaskResponse";
 import type { ProjectDetailResponse } from "../../types/Project/ProjectDetailResponse";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 
+// Map API status values to Chips component status values
+const mapStatusToChipsFormat = (status: string): string => {
+  const statusLower = status.toLowerCase().trim().replace(/-/g, " ");
+  
+  // Map common status values to Chips format
+  const statusMap: Record<string, string> = {
+    "to do": "pending",
+    "todo": "pending",
+    "pending": "pending",
+    "in progress": "progress",
+    "inprogress": "progress",
+    "progress": "progress",
+    "review": "review",
+    "done": "success",
+    "success": "success",
+    "completed": "success",
+  };
+
+  return statusMap[statusLower] || "pending";
+};
+
 const initialState: ProjectDetailState = {
   api: {
     data: {
@@ -39,7 +60,7 @@ const projectDetailSlice = createSlice({
       state.api.error = "";
       state.api.data.taskDetails = action.payload.taskDetails;
       state.api.data.projectDetails = action.payload.projectDetails;
-      state.common.currentStatus = action.payload.taskDetails.status.toLowerCase();
+      state.common.currentStatus = mapStatusToChipsFormat(action.payload.taskDetails.status);
     },
     fetchProjectDetailFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
@@ -49,8 +70,10 @@ const projectDetailSlice = createSlice({
     },
     updateTaskStatus(state, action: PayloadAction<string>) {
       if (state.api.data.taskDetails) {
-        state.api.data.taskDetails.status = action.payload;
-        state.common.currentStatus = action.payload.toLowerCase();
+        // action.payload is the Chips format status (e.g., "progress", "pending")
+        // We need to keep the original status format in taskDetails for API consistency
+        // But map it to Chips format for currentStatus
+        state.common.currentStatus = action.payload;
       }
     },
     clearProjectDetail(state) {
