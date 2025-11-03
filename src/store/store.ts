@@ -11,6 +11,7 @@ import { userReducer } from "./features/user/userSlice";
 import { calendarReducer } from "./features/calendar/calendarSlice";
 import { vacationReducer } from "./features/vacation/vacationSlice";
 import { employeeReducer } from "./features/employees/employeeSlice";
+import { activityLogsReducer } from "./features/activityLogs/activityLogsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     calendarReducer,
     vacationReducer,
     employeeReducer,
+    activityLogsReducer,
   },
 });
 

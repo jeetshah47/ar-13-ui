@@ -1,11 +1,13 @@
 import { Box, Link, Typography } from "@mui/material";
+import type { ReactNode } from "react";
 
 type CardHeaderProps = {
   title: string;
   link?: string;
+  endElement?: ReactNode;
 };
 
-const CardHeader = ({ title, link }: CardHeaderProps) => {
+const CardHeader = ({ title, link, endElement }: CardHeaderProps) => {
   return (
     <Box
       sx={{
@@ -17,7 +19,7 @@ const CardHeader = ({ title, link }: CardHeaderProps) => {
       <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}>
         {title}
       </Typography>
-      {link && <Link href={link}>View all</Link>}
+      {endElement ? endElement : link && <Link href={link}>View all</Link>}
     </Box>
   );
 };
