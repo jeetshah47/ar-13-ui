@@ -325,7 +325,6 @@ const getLeaveTypeCell = (
   date: string
 ): { leaveType: string; status: "approved" | "pending" } => {
   const result = work.find((task) => task.date === date);
-  console.log("first", result);
   if (result) {
     return {
       leaveType: result.leaveType,
@@ -367,7 +366,6 @@ const VacationssCalender: React.FC = () => {
     // const nextMonth = month + 1;
     // const lastDayMonth = lastDay.getDay();
     // const additiondays = 6 - lastDayMonth;
-    // console.log("d", nextMonth, additiondays, lastDayMonth);
 
     const days: (Date | null)[] = [];
 
@@ -395,7 +393,6 @@ const VacationssCalender: React.FC = () => {
     status: "approved" | "pending";
     styleType: "bg" | "br";
   }) => {
-    console.log("datas", leaveType, status);
     const colorMap: {
       [index: string]: {
         approved: string;

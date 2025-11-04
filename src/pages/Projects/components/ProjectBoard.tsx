@@ -33,6 +33,38 @@ interface ProjectBoardProps {
   projectId: string;
 }
 
+// Format duration from Date to string - moved outside component for performance
+const formatDuration = (date: Date | { toDate: () => Date } | string): string => {
+  if (!date) return "0h";
+
+  let dateObj: Date;
+  
+  try {
+    // Check if it's a Firestore timestamp object with toDate method
+    if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
+      dateObj = (date as { toDate: () => Date }).toDate();
+    } else if (typeof date === 'string' || date instanceof Date) {
+      // Handle string dates or regular Date objects
+      dateObj = new Date(date as string | Date);
+    } else {
+      return "0h";
+    }
+    
+    const now = new Date();
+    const diffInHours = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return `${Math.round(diffInHours)}h`;
+    } else {
+      const days = Math.floor(diffInHours / 24);
+      const hours = Math.round(diffInHours % 24);
+      return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+    }
+  } catch {
+    return "0h";
+  }
+};
+
 const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const navigate = useNavigate();
   const [columns, setColumns] = useState<Column[]>([
@@ -71,38 +103,6 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const [draggedItem, setDraggedItem] = useState<TaskItem | null>(null);
   const [draggedFromColumn, setDraggedFromColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-
-  // Format duration from Date to string
-  const formatDuration = (date: Date | { toDate: () => Date } | string): string => {
-    if (!date) return "0h";
-
-    let dateObj: Date;
-    
-    try {
-      // Check if it's a Firestore timestamp object with toDate method
-      if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
-        dateObj = (date as { toDate: () => Date }).toDate();
-      } else if (typeof date === 'string' || date instanceof Date) {
-        // Handle string dates or regular Date objects
-        dateObj = new Date(date as string | Date);
-      } else {
-        return "0h";
-      }
-      
-      const now = new Date();
-      const diffInHours = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
-
-      if (diffInHours < 24) {
-        return `${Math.round(diffInHours)}h`;
-      } else {
-        const days = Math.floor(diffInHours / 24);
-        const hours = Math.round(diffInHours % 24);
-        return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
-      }
-    } catch {
-      return "0h";
-    }
-  };
 
   // Convert Firebase task to TaskItem
   const convertFirebaseTaskToTaskItem = useCallback((firebaseTask: FirebaseTask): TaskItem => {

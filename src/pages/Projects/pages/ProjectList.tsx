@@ -1,4 +1,5 @@
-import { Box, Button, Modal, SvgIcon, Typography } from "@mui/material";
+import { Box, Button, SvgIcon, Typography } from "@mui/material";
+import Modal from "../../../common/components/Modal/Modal";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 
@@ -119,7 +120,9 @@ const ProjectList = () => {
             background: "#FFFFFF",
             borderRadius: "24px",
             boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-            overflow: "scroll",
+            overflow: "auto",
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch",
             "::-webkit-scrollbar": {
               width: "3px",
             },
@@ -192,11 +195,35 @@ const ProjectList = () => {
           </>
         </Box>
       </Box>
-      <Modal open={showModal} onClose={handleCloseModal}>
-        <TaskForm onClose={handleCloseModal} />
+      <Modal show={showModal} onClose={handleCloseModal}>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "24px",
+            padding: "24px",
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+        >
+          <TaskForm onClose={handleCloseModal} />
+        </Box>
       </Modal>
-      <Modal open={showDrawingModal} onClose={handleCloseDrawingModal}>
-        <DrawingTaskForm onClose={handleCloseDrawingModal} />
+      <Modal show={showDrawingModal} onClose={handleCloseDrawingModal}>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "24px",
+            padding: "24px",
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+        >
+          <DrawingTaskForm onClose={handleCloseDrawingModal} />
+        </Box>
       </Modal>
       {showFilterModal && <Filter onClose={handleCloseFilterModal} />}
     </Box>

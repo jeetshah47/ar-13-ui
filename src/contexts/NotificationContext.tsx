@@ -83,7 +83,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     // Setup event listeners
     client.on("connect", () => {
-      console.log("WebSocket connected successfully");
       setIsConnected(true);
       setError(null);
       
@@ -94,12 +93,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     });
 
     client.on("disconnect", () => {
-      console.log("WebSocket disconnected");
       setIsConnected(false);
     });
 
     client.on("notification", (notification: Notification) => {
-      console.log("Received notification:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setNotificationCount((prev) => ({
         total: prev.total + 1,
@@ -108,24 +105,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     });
 
     client.on("notification_count", (count: NotificationCount) => {
-      console.log("Received notification count:", count);
       setNotificationCount(count);
     });
 
     client.on("authenticated", (data: { success: boolean }) => {
       if (data.success) {
-        console.log("WebSocket authentication successful");
         setIsConnected(true);
         setError(null);
       } else {
-        console.error("WebSocket authentication failed");
         setError("Authentication failed");
         setIsConnected(false);
       }
     });
 
     client.on("connect_error", (error: Error) => {
-      console.error("WebSocket connection error:", error);
       setError(`WebSocket connection failed: ${error.message}`);
       setIsConnected(false);
     });
@@ -193,7 +186,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isConnected && !isLoading && notifications.length === 0) {
-        console.warn("WebSocket not connected, using mock notifications for testing");
         // You can uncomment this to use mock data when websocket fails
         // const mockNotifications = [
         //   {

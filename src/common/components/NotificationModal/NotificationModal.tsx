@@ -29,9 +29,6 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
     markAllAsRead,
     refreshNotifications
   } = useNotifications();
-  console.log("notifications", notifications);
-  console.log("isLoading", isLoading);
-  console.log("error", error);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -157,6 +154,8 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
             sx={{
               maxHeight: "400px",
               overflowY: "auto",
+              scrollBehavior: "smooth",
+              WebkitOverflowScrolling: "touch",
               "&::-webkit-scrollbar": {
                 width: "6px",
               },
@@ -265,8 +264,7 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                                 return "Just now";
                               }
                               return formatDistanceToNow(date, { addSuffix: true });
-                            } catch (error) {
-                              console.warn("Invalid date for notification:", notification.createdAt, error);
+                            } catch {
                               return "Just now";
                             }
                           })()}

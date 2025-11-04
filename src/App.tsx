@@ -11,6 +11,7 @@ function App() {
     <ThemeProvider theme={defaultTheme}>
       <Routes>
         <Route
+          key="/app/*"
           path="/app/*"
           element={
             <ProtectedRoute>
@@ -19,9 +20,9 @@ function App() {
           }
         />
         {publicRoutes.map((route) => (
-          <Route path={route.path} element={route.component} />
+          <Route key={route.path} path={route.path} element={route.component} />
         ))}
-        <Route path="/" element={<Navigate to={"/app/dashboard"} />} />
+        <Route key="/" path="/" element={<Navigate to={"/app/dashboard"} />} />
       </Routes>
       <Toaster />
     </ThemeProvider>

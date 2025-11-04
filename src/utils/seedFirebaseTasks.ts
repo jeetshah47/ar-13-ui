@@ -120,20 +120,19 @@ export const seedFirebaseTasks = async (projectId: string = "project1"): Promise
       const taskWithProjectId = { ...task, projectId };
       await addDoc(tasksRef, taskWithProjectId);
     }
-    
-    console.log("Sample project and tasks seeded successfully!");
-  } catch (error) {
-    console.error("Error seeding project and tasks:", error);
+  } catch {
+    // Error seeding project and tasks
   }
 };
 
 // Function to clear all tasks for a project
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const clearProjectTasks = async (projectId: string): Promise<void> => {
   try {
     // Note: In a real app, you'd want to batch delete or use a cloud function
     // For now, this is just a placeholder
-    console.log(`Clearing tasks for project: ${projectId}`);
-  } catch (error) {
-    console.error("Error clearing tasks:", error);
+    // projectId parameter is kept for API consistency
+  } catch {
+    // Error clearing tasks
   }
 };

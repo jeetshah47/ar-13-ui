@@ -17,18 +17,19 @@ import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import UploadIcon from "../../../assets/icons/general/upload.svg?react";
 import Chips from "../../../common/components/Chips/Chips";
 import TaskInfo from "../components/TaskInfo";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
-import { getFileAttachmentsAction, claimTaskAction } from "../../../store/features/task/projectAction";
-import { getActivityLogsSuccess, getActivityLogsRequest } from "../../../store/features/task/taskSlice";
+import { claimTaskAction } from "../../../store/features/task/projectAction";
+import { getActivityLogsSuccess } from "../../../store/features/task/taskSlice";
 import type { ActivityLog, FileAttachment } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";
 import ClaimTaskModal from "../components/ClaimTaskModal";
 import ActivityLogItem from "../components/ActivityLogItem";
 import { subscribeToTaskActivityLogs } from "../../../services/firebaseActivityLogService";
+import Modal from "../../../common/components/Modal/Modal";
 
 // Icon mapping for activity types
 const getActivityIcon = (type: ActivityLog['type']) => {
@@ -59,7 +60,9 @@ const parseFirebaseTimestamp = (timestamp: string | { _seconds: number; _nanosec
 const ProjectDetail = () => {
   const { taskId, projectId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
+  const activityLogsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
   
   const projectDetailState = useAppSelector(
     (state: RootState) => state.projectDetailReducer
@@ -72,14 +75,18 @@ const ProjectDetail = () => {
   const { taskDetails, projectDetails } = projectDetailState.api.data;
   const { loading, error } = projectDetailState.api;
   const { currentStatus } = projectDetailState.common;
-  const { activityLogs, fileAttachments } = taskListState.data;
-  const { loading: activityLogsLoading, error: claimTaskError } = taskListState;
+  const { activityLogs } = taskListState.data;
+  const { loading: taskListLoading, error: claimTaskError } = taskListState;
   const claimTaskLoading = taskListState.loading;
+  
+  // Get file attachments from task details
+  const fileAttachments = taskDetails?.fileAttachments || [];
   
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
   const [wasClaiming, setWasClaiming] = useState(false);
+  const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
   
   // Mock replies data (for UI purposes) - can be moved to API later
   const mockReplies: Record<string, Array<{
@@ -90,26 +97,92 @@ const ProjectDetail = () => {
     timestamp: Date;
   }>> = {};
 
-  // Fetch project details and file attachments
+  // Fetch project details (file attachments are included in task details)
   useEffect(() => {
     if (taskId && projectId) {
       dispatch(fetchProjectDetailAction(taskId, projectId));
-      dispatch(getFileAttachmentsAction(projectId, taskId));
     }
   }, [taskId, projectId, dispatch]);
 
   // Subscribe to real-time activity logs
   useEffect(() => {
-    if (!taskId) return;
+    if (!taskId || !projectId) return;
 
-    dispatch(getActivityLogsRequest());
-
-    const unsubscribe = subscribeToTaskActivityLogs(taskId, (activityLogs) => {
+    // Don't dispatch getActivityLogsRequest here - it sets loading state which interferes with file attachments
+    // The real-time subscription will update activity logs directly
+    const unsubscribe = subscribeToTaskActivityLogs(projectId, taskId, (activityLogs) => {
       dispatch(getActivityLogsSuccess({ activityLogs }));
     });
 
     return () => unsubscribe();
-  }, [taskId, dispatch]);
+  }, [taskId, projectId, dispatch]);
+
+  // Scroll to activity log when hash is present in URL
+  useEffect(() => {
+    if (!location.hash || !activityLogs || activityLogs.length === 0) return;
+
+    // Extract activity log ID from hash (format: #activity-{id})
+    const activityLogId = location.hash.replace('#activity-', '');
+    
+    // Wait for DOM to be ready and activity logs to be rendered
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    const scrollToActivity = () => {
+      // Find the scroll container (the Box with overflowY: auto)
+      const scrollContainer = document.getElementById('project-detail-content');
+      
+      // Try to find element by ID
+      const elementById = document.getElementById(`activity-${activityLogId}`);
+      const targetElement = activityLogsRef.current[activityLogId] || elementById;
+      
+      if (targetElement && scrollContainer) {
+        // Get the element's position relative to the scroll container
+        const elementRect = targetElement.getBoundingClientRect();
+        const containerRect = scrollContainer.getBoundingClientRect();
+        
+        // Calculate the scroll position needed to center the element
+        const elementTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+        const elementHeight = elementRect.height;
+        const containerHeight = scrollContainer.clientHeight;
+        const scrollPosition = elementTop - (containerHeight / 2) + (elementHeight / 2);
+        
+        // Scroll to the calculated position
+        scrollContainer.scrollTo({
+          top: Math.max(0, scrollPosition),
+          behavior: 'smooth'
+        });
+        
+        // Highlight the element briefly
+        targetElement.style.transition = 'background-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease';
+        targetElement.style.backgroundColor = '#E8F4FD';
+        targetElement.style.boxShadow = '0 0 0 4px rgba(63, 140, 255, 0.2)';
+        targetElement.style.padding = '8px';
+        targetElement.style.borderRadius = '8px';
+        targetElement.style.margin = '-8px';
+        
+        setTimeout(() => {
+          targetElement.style.backgroundColor = '';
+          targetElement.style.boxShadow = '';
+          targetElement.style.padding = '';
+          targetElement.style.borderRadius = '';
+          targetElement.style.margin = '';
+          setTimeout(() => {
+            targetElement.style.transition = '';
+          }, 300);
+        }, 2000);
+      } else if (retryCount < maxRetries) {
+        // Retry after a short delay if element not found yet
+        retryCount++;
+        setTimeout(scrollToActivity, 200);
+      }
+    };
+
+    // Initial delay to ensure DOM is ready
+    const timeoutId = setTimeout(scrollToActivity, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [location.hash, activityLogs]);
 
   // Close modal after successful claim
   useEffect(() => {
@@ -171,6 +244,24 @@ const ProjectDetail = () => {
 
   const handleRejectClaim = () => {
     // Just close the modal, no action needed
+  };
+
+  const handleOpenImagePreview = (attachment: FileAttachment) => {
+    setPreviewImage(attachment);
+  };
+
+  const handleCloseImagePreview = () => {
+    setPreviewImage(null);
+  };
+
+  const isImageAttachment = (attachment: FileAttachment): boolean => {
+    if (attachment.mimeType) {
+      return attachment.mimeType.startsWith('image/');
+    }
+    // Fallback: check file extension
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+    const fileName = attachment.fileName.toLowerCase();
+    return imageExtensions.some(ext => fileName.endsWith(ext));
   };
 
   // Handle reply submission (for future API integration)
@@ -384,6 +475,7 @@ const ProjectDetail = () => {
             </Box>
           </Box>
           <Box
+            id="project-detail-content"
             sx={{
               backgroundColor: "#fff",
               flex: 1,
@@ -391,6 +483,8 @@ const ProjectDetail = () => {
               padding: "30px",
               overflowY: "auto",
               minHeight: 0,
+              scrollBehavior: "smooth",
+              WebkitOverflowScrolling: "touch",
             }}
           >
             <Typography color="secondary.main">{taskDetails?.code}</Typography>
@@ -483,7 +577,7 @@ const ProjectDetail = () => {
               <Typography color="secondary.main" fontWeight={"700"}>
                 Task Attachment
               </Typography>
-              {activityLogsLoading ? (
+              {loading ? (
                 <Box sx={{ padding: "20px", textAlign: "center" }}>
                   <Typography>Loading attachments...</Typography>
                 </Box>
@@ -509,18 +603,30 @@ const ProjectDetail = () => {
                       minute: '2-digit' 
                     });
                     
+                    const isImage = isImageAttachment(attachment);
+                    const imageUrl = attachment.fileUrl ? `http://localhost:3000${attachment.fileUrl}` : undefined;
+                    
                     return (
                       <Box
                         key={attachment.fileName}
+                        onClick={() => isImage && imageUrl && handleOpenImagePreview(attachment)}
                         sx={{
                           width: "156px",
                           height: "144px",
-                          backgroundImage: attachment.fileUrl ? `url(${attachment.fileUrl})` : undefined,
+                          backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
                           backgroundPosition: "center",
                           backgroundRepeat: "no-repeat",
                           backgroundSize: "cover",
                           borderRadius: "14px",
-                          backgroundColor: attachment.fileUrl ? undefined : "#F5F8FC",
+                          backgroundColor: imageUrl ? undefined : "#F5F8FC",
+                          cursor: isImage && imageUrl ? "pointer" : "default",
+                          transition: "all 0.2s ease",
+                          ...(isImage && imageUrl && {
+                            "&:hover": {
+                              transform: "scale(1.02)",
+                              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)",
+                            },
+                          }),
                         }}
                       >
                         <Box
@@ -584,7 +690,7 @@ const ProjectDetail = () => {
               }}
             >
               <Typography fontWeight={700}>Recent Activity</Typography>
-              {activityLogsLoading ? (
+              {activityLogs === undefined || (activityLogs.length === 0 && taskListLoading) ? (
                 <Box sx={{ padding: "20px", textAlign: "center" }}>
                   <Typography>Loading activity logs...</Typography>
                 </Box>
@@ -606,16 +712,23 @@ const ProjectDetail = () => {
                     const replies = mockReplies[activity.id] || [];
                     
                     return (
-                      <ActivityLogItem
+                      <Box
                         key={activity.id}
-                        activity={activity}
-                        activityIcon={ActivityIcon}
-                        formattedDate={formattedDate}
-                        formattedTime={formattedTime}
-                        replies={replies}
-                        currentUserName={currentUserName}
-                        onReplySubmit={handleReplySubmit}
-                      />
+                        id={`activity-${activity.id}`}
+                        ref={(el: HTMLDivElement | null) => {
+                          activityLogsRef.current[activity.id] = el;
+                        }}
+                      >
+                        <ActivityLogItem
+                          activity={activity}
+                          activityIcon={ActivityIcon}
+                          formattedDate={formattedDate}
+                          formattedTime={formattedTime}
+                          replies={replies}
+                          currentUserName={currentUserName}
+                          onReplySubmit={handleReplySubmit}
+                        />
+                      </Box>
                     );
                   })}
                 </Box>
@@ -683,6 +796,70 @@ const ProjectDetail = () => {
         onReject={handleRejectClaim}
         isLoading={claimTaskLoading}
       />
+
+      {/* Image Preview Modal */}
+      {previewImage && previewImage.fileUrl && (
+        <Modal show={!!previewImage} onClose={handleCloseImagePreview}>
+          <Box
+            sx={{
+              position: "relative",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              backgroundColor: "#fff",
+              borderRadius: "24px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Box
+              sx={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                cursor: "pointer",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                },
+              }}
+              onClick={handleCloseImagePreview}
+            >
+              <Typography sx={{ fontSize: "20px", lineHeight: 1 }}>×</Typography>
+            </Box>
+            <Box
+              component="img"
+              src={`http://localhost:3000${previewImage.fileUrl}`}
+              alt={previewImage.originalName}
+              sx={{
+                maxWidth: "100%",
+                maxHeight: "80vh",
+                objectFit: "contain",
+                borderRadius: "12px",
+              }}
+            />
+            <Typography
+              sx={{
+                marginTop: "16px",
+                fontSize: "16px",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
+              {previewImage.originalName}
+            </Typography>
+          </Box>
+        </Modal>
+      )}
     </Box>
   );
 };

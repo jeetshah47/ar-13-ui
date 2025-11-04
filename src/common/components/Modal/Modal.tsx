@@ -6,9 +6,10 @@ type ModalProps = {
   children: React.ReactNode;
 };
 
-const Modal = ({ show, children }: ModalProps) => {
+const Modal = ({ show, onClose, children }: ModalProps) => {
   return (
     <Box
+      onClick={onClose}
       sx={{
         backgroundColor: "rgba(33, 85, 163, 0.16)",
         position: "fixed",

@@ -108,25 +108,29 @@ const convertFirebaseActivityLog = (firebaseLog: FirebaseActivityLog, userName: 
 
 /**
  * Subscribe to real-time activity logs for a specific task
+ * @param projectId - The ID of the project
  * @param taskId - The ID of the task
  * @param callback - Callback function that receives the activity logs
  * @returns Unsubscribe function
  */
 export const subscribeToTaskActivityLogs = (
+  projectId: string,
   taskId: string,
   callback: (activityLogs: ActivityLog[]) => void
 ): Unsubscribe => {
-  // eslint-disable-next-line no-console
-  console.log("Subscribing to activity logs for taskId:", taskId);
+  // entityId is in format "projectId/taskId"
+  const entityId = `${projectId}/${taskId}`;
+  
+  // Check if user has a token in localStorage (indicates they're authenticated)
+  const hasToken = !!localStorage.getItem("authToken");
   
   // Check authentication state
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    // eslint-disable-next-line no-console
-    console.warn("No authenticated user found. Activity logs require authentication.");
-  } else {
-    // eslint-disable-next-line no-console
-    console.log("Authenticated user:", currentUser.uid);
+  if (!currentUser && !hasToken) {
+    // Return early with empty callback if no auth at all
+    callback([]);
+    // Return a no-op unsubscribe function
+    return () => {};
   }
   
   // Try collection path: activityLogs/logs/taskActivityLogs (as subcollection)
@@ -136,23 +140,17 @@ export const subscribeToTaskActivityLogs = (
   try {
     // Try path as nested subcollection first
     activityLogsRef = collection(db, "activityLogs", "logs", "taskActivityLogs");
-    // eslint-disable-next-line no-console
-    console.log("Using collection path: activityLogs/logs/taskActivityLogs");
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Error with collection path:", error);
     // Try alternative: maybe taskActivityLogs is a top-level collection
     activityLogsRef = collection(db, "taskActivityLogs");
-    // eslint-disable-next-line no-console
-    console.log("Trying alternative path: taskActivityLogs");
   }
   
-  // Query for logs where entityType is 'task' and entityId matches taskId
+  // Query for logs where entityType is 'task' and entityId matches the full "projectId/taskId" format
   // Query without orderBy to avoid index requirement, then sort manually (like firebaseTaskService)
   const q = query(
     activityLogsRef,
     where("entityType", "==", "task"),
-    where("entityId", "==", taskId)
+    where("entityId", "==", entityId)
   );
 
   return onSnapshot(
@@ -160,14 +158,8 @@ export const subscribeToTaskActivityLogs = (
     (snapshot) => {
       const activityLogs: ActivityLog[] = [];
       
-      // eslint-disable-next-line no-console
-      console.log("Activity logs snapshot:", snapshot.size, "documents found for taskId:", taskId);
-      
       snapshot.forEach((doc) => {
         const data = doc.data();
-        
-        // eslint-disable-next-line no-console
-        console.log("Activity log document:", doc.id, data);
         
         // Try different field names for timestamp
         const timestamp = data.createdAt || data.created || data.timestamp || new Date();
@@ -203,64 +195,11 @@ export const subscribeToTaskActivityLogs = (
         return getTimestamp(b.timestamp) - getTimestamp(a.timestamp);
       });
 
-      // eslint-disable-next-line no-console
-      console.log("Processed activity logs:", activityLogs.length);
       callback(activityLogs);
     },
-    (error) => {
-      // eslint-disable-next-line no-console
-      console.error("Error listening to activity logs:", error);
-      // eslint-disable-next-line no-console
-      console.error("Error code:", error?.code);
-      // eslint-disable-next-line no-console
-      console.error("Error message:", error?.message);
-      // eslint-disable-next-line no-console
-      console.error("Full error object:", JSON.stringify(error, null, 2));
-      
-      // Check if it's a permissions error
-      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
-        // eslint-disable-next-line no-console
-        console.error("⚠️ PERMISSIONS ERROR: Firestore security rules are blocking access.");
-        // eslint-disable-next-line no-console
-        console.error("You need to update Firestore security rules in Firebase Console.");
-        // eslint-disable-next-line no-console
-        console.error("Go to: Firebase Console → Firestore Database → Rules");
-        // eslint-disable-next-line no-console
-        console.error("Collection path being used: activityLogs/logs/taskActivityLogs");
-        // eslint-disable-next-line no-console
-        console.error("");
-        // eslint-disable-next-line no-console
-        console.error("Try this rule (if 'logs' is a document ID):");
-        // eslint-disable-next-line no-console
-        console.error("match /activityLogs/logs/taskActivityLogs/{taskActivityLogId} {");
-        // eslint-disable-next-line no-console
-        console.error("  allow read: if request.auth != null;");
-        // eslint-disable-next-line no-console
-        console.error("}");
-        // eslint-disable-next-line no-console
-        console.error("");
-        // eslint-disable-next-line no-console
-        console.error("OR if the structure is different, try:");
-        // eslint-disable-next-line no-console
-        console.error("match /taskActivityLogs/{taskActivityLogId} {");
-        // eslint-disable-next-line no-console
-        console.error("  allow read: if request.auth != null;");
-        // eslint-disable-next-line no-console
-        console.error("}");
-      }
-      
-      // Check if it's an index error
-      if (error?.code === "failed-precondition" && error?.message?.includes("index")) {
-        // eslint-disable-next-line no-console
-        console.error("Firestore index required! Check the console for a link to create the index.");
-        // eslint-disable-next-line no-console
-        console.error("You need to create a composite index for:");
-        // eslint-disable-next-line no-console
-        console.error("Collection: activityLogs/logs/taskActivityLogs");
-        // eslint-disable-next-line no-console
-        console.error("Fields: entityType (Ascending), entityId (Ascending)");
-      }
-      
+    (_error) => {
+      // Silently handle errors - callback with empty array
+      // Error details can be logged to error tracking service in production
       callback([]);
     }
   );

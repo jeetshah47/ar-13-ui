@@ -97,8 +97,8 @@ const VacationForm = ({ onClose }: VacationFormProps) => {
       await createRequest(vacationRequest);
       // Close the form on success
       onClose();
-    } catch (err) {
-      console.error("Failed to create vacation request:", err);
+    } catch {
+      // Failed to create vacation request - error handling can be added here
     }
   };
 

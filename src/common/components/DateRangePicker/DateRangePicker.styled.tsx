@@ -33,11 +33,15 @@ interface BaseComponentProps {
 // Container Components
 interface ContainerProps extends BoxProps, BaseComponentProps {}
 
-export const Container: React.FC<ContainerProps> = ({ children, ...props }) => (
-  <Box sx={{ position: 'relative' }} {...props}>
-    {children}
-  </Box>
+export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
+  ({ children, ...props }, ref) => (
+    <Box ref={ref} sx={{ position: 'relative' }} {...props}>
+      {children}
+    </Box>
+  )
 );
+
+Container.displayName = 'Container';
 
 // Trigger Button Components
 interface TriggerButtonProps extends ButtonProps, BaseComponentProps {}

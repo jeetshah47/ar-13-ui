@@ -1,22 +1,27 @@
 import { Box } from "@mui/material";
 import Header from "../../common/components/Header/Header";
-import { Route, Routes } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 import { authRoutes } from "../../routes";
+import AnimatedPage from "../../common/components/AnimatedPage/AnimatedPage";
 
 const LandingPage = () => {
+  const location = useLocation();
+
   return (
     <Box sx={{ height: "100%", width: "100%"}}>
       <Header />
-      <Box sx={{ padding: "28px", height: "100%"}}>
-        <Routes>
-          {authRoutes.map((route) => (
-            <Route
-              key={route.path}
-              element={route.component}
-              path={route.path}
-            />
-          ))}
-        </Routes>
+      <Box sx={{ padding: "28px", minHeight: "100%" }}>
+        <AnimatedPage>
+          <Routes location={location} key={location.pathname}>
+            {authRoutes.map((route) => (
+              <Route
+                key={route.path}
+                element={route.component}
+                path={route.path}
+              />
+            ))}
+          </Routes>
+        </AnimatedPage>
       </Box>
     </Box>
   );

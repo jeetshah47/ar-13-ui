@@ -27,6 +27,7 @@ const VerticalLayout = () => {
         <MainSiderBar />
       </Box>
       <Box
+        data-scroll-container
         sx={{
           marginLeft: "230px",
           overflow: "auto",
@@ -34,6 +35,8 @@ const VerticalLayout = () => {
           height: "100vh",
           padding: "20px",
           boxSizing: "border-box",
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <Suspense fallback={<Skeleton variant="rectangular" />}>

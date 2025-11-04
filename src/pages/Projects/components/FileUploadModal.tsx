@@ -73,8 +73,8 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
       setSelectedFiles([]);
       setUploadProgress(0);
       onClose?.();
-    } catch (error) {
-      console.error("Upload failed:", error);
+    } catch {
+      // Upload failed - error handling can be added here
     } finally {
       setUploading(false);
     }

@@ -2,11 +2,13 @@ import CardHeader from "../../../common/components/Card/CardHeader";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import { Avatar, Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchRecentTaskActivityLogs } from "../../../store/features/activityLogs/activityLogsAction";
 
 const ActivityCard = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const activityState = useAppSelector((state: RootState) => state.activityLogsReducer.api);
 
   useEffect(() => {
@@ -15,6 +17,17 @@ const ActivityCard = () => {
 
   const { loading, error, data } = activityState;
   const items = data.items || [];
+
+  const handleActivityClick = (log: typeof items[0]) => {
+    if (log.entityType === "task" && log.entityId) {
+      // entityId is in format "projectId/taskId"
+      const [projectId, taskId] = log.entityId.split("/");
+      if (projectId && taskId) {
+        // Navigate with hash to scroll to specific activity log
+        navigate(`/app/projects/details/${projectId}/${taskId}#activity-${log.id}`);
+      }
+    }
+  };
 
   return (
     <CustomCard>
@@ -81,6 +94,7 @@ const ActivityCard = () => {
 
                   {/* Action Card */}
                   <Box
+                    onClick={() => handleActivityClick(log)}
                     sx={{
                       bgcolor: "#F4F9FD",
                       borderRadius: "14px",
@@ -89,6 +103,15 @@ const ActivityCard = () => {
                       display: "flex",
                       alignItems: "flex-start",
                       gap: "16px",
+                      cursor: log.entityType === "task" ? "pointer" : "default",
+                      transition: "all 0.2s ease",
+                      ...(log.entityType === "task" && {
+                        "&:hover": {
+                          bgcolor: "#E8F4FD",
+                          transform: "translateY(-1px)",
+                          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+                        },
+                      }),
                     }}
                   >
                     {(() => {

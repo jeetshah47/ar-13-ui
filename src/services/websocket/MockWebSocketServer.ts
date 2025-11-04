@@ -27,25 +27,21 @@ export class MockWebSocketServer {
 
   private setupEventHandlers() {
     this.io.on('connection', (socket) => {
-      console.log(`Client connected: ${socket.id}`);
       this.connectedClients.set(socket.id, socket);
 
       // Handle authentication
       socket.on('authenticate', (data) => {
-        console.log('Authentication attempt:', data);
         // For testing, accept any token
         socket.emit('authenticated', { success: true });
       });
 
       // Handle project joining
       socket.on('join_project', (projectId: string) => {
-        console.log(`Client ${socket.id} joined project: ${projectId}`);
         socket.join(`project_${projectId}`);
       });
 
       // Handle project leaving
       socket.on('leave_project', (projectId: string) => {
-        console.log(`Client ${socket.id} left project: ${projectId}`);
         socket.leave(`project_${projectId}`);
       });
 
@@ -93,7 +89,6 @@ export class MockWebSocketServer {
       }, 30000); // Every 30 seconds
 
       socket.on('disconnect', () => {
-        console.log(`Client disconnected: ${socket.id}`);
         this.connectedClients.delete(socket.id);
         clearInterval(testInterval);
       });
@@ -104,11 +99,8 @@ export class MockWebSocketServer {
     return new Promise((resolve, reject) => {
       this.server.listen(this.port, (err?: Error) => {
         if (err) {
-          console.error('Failed to start mock WebSocket server:', err);
           reject(err);
         } else {
-          console.log(`Mock WebSocket server running on port ${this.port}`);
-          console.log(`Connect to: http://localhost:${this.port}`);
           resolve();
         }
       });
@@ -117,7 +109,6 @@ export class MockWebSocketServer {
 
   stop(): void {
     this.server.close();
-    console.log('Mock WebSocket server stopped');
   }
 
   // Method to send notifications to all connected clients
@@ -146,5 +137,7 @@ export const mockWebSocketServer = new MockWebSocketServer();
 
 // Start the server if this file is run directly
 if (require.main === module) {
-  mockWebSocketServer.start().catch(console.error);
+  mockWebSocketServer.start().catch(() => {
+    // Error starting mock server
+  });
 }

@@ -6,7 +6,6 @@ import {
   CalendarHeader,
   CalendarSection,
   ClearActionButton,
-  ClearButton,
   Container,
   DayButton,
   DayCell,
@@ -30,7 +29,7 @@ import {
   YearPickerTitle,
 } from "./DateRangePicker.styled";
 import CalenderIcon from "../../../assets/icons/general/calendar.svg?react";
-import { SvgIcon } from "@mui/material";
+import { SvgIcon, Box } from "@mui/material";
 interface DateRange {
   start: Date;
   end: Date;
@@ -365,23 +364,50 @@ export const DateRangePicker = ({
   return (
     <Container ref={pickerRef}>
       {/* Trigger Button */}
-      <TriggerButton onClick={() => setIsOpen(!isOpen)} hidden={calenderView}>
-        <TriggerContent>
-          {/* <TriggerIcon /> */}
-          <SvgIcon component={CalenderIcon} />
-          <TriggerText hasDate={!!startDate}>{displayText()}</TriggerText>
-        </TriggerContent>
-        {(startDate || endDate) && (
-          <ClearButton
+      <Box sx={{ position: 'relative', display: 'inline-block', width: '100%', maxWidth: '28rem' }}>
+        <TriggerButton 
+          onClick={() => setIsOpen(!isOpen)} 
+          hidden={calenderView}
+        >
+          <TriggerContent>
+            {/* <TriggerIcon /> */}
+            <SvgIcon component={CalenderIcon} />
+            <TriggerText hasDate={!!startDate}>{displayText()}</TriggerText>
+          </TriggerContent>
+        </TriggerButton>
+        {(startDate || endDate) && !calenderView && (
+          <Box
+            component="span"
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               clearSelection();
             }}
+            sx={{
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+              },
+              fontSize: '14px',
+              color: '#6b7280',
+              fontWeight: 500,
+            }}
           >
-            X
-          </ClearButton>
+            ×
+          </Box>
         )}
-      </TriggerButton>
+      </Box>
 
       {/* Picker Dropdown */}
       {isOpen && (

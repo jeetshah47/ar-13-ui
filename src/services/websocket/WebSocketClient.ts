@@ -40,25 +40,21 @@ export class WebSocketClient {
   joinUserRoom(userId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('join_user_room', userId);
-      console.log(`Joining user room: user_${userId}`);
     }
   }
 
   leaveUserRoom(userId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('leave_user_room', userId);
-      console.log(`Leaving user room: user_${userId}`);
     }
   }
 
   // Legacy methods for backward compatibility
   joinProject(projectId: string): void {
-    console.warn('joinProject is deprecated, use joinUserRoom instead');
     this.joinUserRoom(projectId);
   }
 
   leaveProject(projectId: string): void {
-    console.warn('leaveProject is deprecated, use leaveUserRoom instead');
     this.leaveUserRoom(projectId);
   }
 
@@ -81,52 +77,42 @@ export class WebSocketClient {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Connected to notification service');
       this.eventListeners.connect?.();
     });
 
     this.socket.on('disconnect', () => {
-      console.log('Disconnected from notification service');
       this.eventListeners.disconnect?.();
     });
 
     this.socket.on('notification', (notification: Notification) => {
-      console.log('Received notification:', notification);
       this.eventListeners.notification?.(notification);
     });
 
     this.socket.on('project_notification', (notification: Notification) => {
-      console.log('Received project notification:', notification);
       this.eventListeners.project_notification?.(notification);
     });
 
     this.socket.on('global_notification', (notification: Notification) => {
-      console.log('Received global notification:', notification);
       this.eventListeners.global_notification?.(notification);
     });
 
     this.socket.on('notification_count', (count: NotificationCount) => {
-      console.log('Received notification count:', count);
       this.eventListeners.notification_count?.(count);
     });
 
     this.socket.on('authenticated', (data: { success: boolean }) => {
-      console.log('Authentication result:', data);
       this.eventListeners.authenticated?.(data);
     });
 
     this.socket.on('connect_error', (error: Error) => {
-      console.error('Connection error:', error.message);
       this.eventListeners.connect_error?.(error);
     });
 
     this.socket.on('reconnect', (attemptNumber: number) => {
-      console.log('Reconnected after', attemptNumber, 'attempts');
       this.eventListeners.reconnect?.(attemptNumber);
     });
 
     this.socket.on('reconnect_error', (error: Error) => {
-      console.error('Reconnection failed:', error);
       this.eventListeners.reconnect_error?.(error);
     });
   }

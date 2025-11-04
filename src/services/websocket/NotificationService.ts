@@ -35,7 +35,6 @@ class NotificationAPIService {
     
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date received from API:', dateValue);
       return new Date(); // Return current date as fallback
     }
     
@@ -60,7 +59,6 @@ class NotificationAPIService {
         created: this.parseDate(notification.created)
       }));
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       throw error;
     }
   }
@@ -83,7 +81,6 @@ class NotificationAPIService {
         created: this.parseDate(notification.created)
       }));
     } catch (error) {
-      console.error('Error fetching unread notifications:', error);
       throw error;
     }
   }
@@ -102,7 +99,6 @@ class NotificationAPIService {
       const data = await response.json();
       return data.count;
     } catch (error) {
-      console.error('Error fetching notification count:', error);
       throw error;
     }
   }
@@ -118,7 +114,6 @@ class NotificationAPIService {
         throw new Error(`Failed to mark notification as read: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       throw error;
     }
   }
@@ -134,7 +129,6 @@ class NotificationAPIService {
         throw new Error(`Failed to mark all notifications as read: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
       throw error;
     }
   }
@@ -150,7 +144,6 @@ class NotificationAPIService {
         throw new Error(`Failed to delete notification: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
       throw error;
     }
   }
@@ -166,7 +159,6 @@ class NotificationAPIService {
         throw new Error(`Failed to delete all notifications: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error deleting all notifications:', error);
       throw error;
     }
   }
