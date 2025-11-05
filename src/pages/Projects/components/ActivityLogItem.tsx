@@ -14,22 +14,11 @@ import AttachIcon from "../../../assets/icons/general/attach/dark.svg?react";
 import AddLinkIcon from "../../../assets/icons/general/addlink/dark.svg?react";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
 
-interface Reply {
-  id: string;
-  userId: string;
-  userName: string;
-  message: string;
-  timestamp: Date;
-}
-
 interface ActivityLogItemProps {
   activity: ActivityLog;
   activityIcon: React.ComponentType;
   formattedDate: string;
   formattedTime: string;
-  replies?: Reply[];
-  currentUserName?: string;
-  onReplySubmit?: (activityId: string, message: string) => void;
 }
 
 const ActivityLogItem = ({
@@ -37,9 +26,6 @@ const ActivityLogItem = ({
   activityIcon: ActivityIcon,
   formattedDate,
   formattedTime,
-  replies = [],
-  currentUserName = "You",
-  onReplySubmit,
 }: ActivityLogItemProps) => {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -47,13 +33,24 @@ const ActivityLogItem = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const hasReplies = replies.length > 0;
+  // Mock replies data for UI display only (no actual functionality)
+  const mockReplies: Array<{
+    id: string;
+    userName: string;
+    message: string;
+    timestamp: Date;
+  }> = [];
+
+  const hasReplies = mockReplies.length > 0;
 
   const handleToggleReplyInput = () => {
     setShowReplyInput((prev) => !prev);
     if (showReplyInput) {
       setReplyText("");
+      setSelectedFiles([]);
     }
   };
 
@@ -62,11 +59,22 @@ const ActivityLogItem = ({
   };
 
   const handleSubmitReply = () => {
-    if (replyText.trim() && onReplySubmit) {
-      onReplySubmit(activity.id, replyText.trim());
+    // Placeholder - no actual functionality
+    if (replyText.trim()) {
+      console.log("Reply would be submitted (UI only - no integration)");
       setReplyText("");
+      setSelectedFiles([]);
       setShowReplyInput(false);
     }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
   };
 
   const toggleReplies = () => {
@@ -135,7 +143,7 @@ const ActivityLogItem = ({
         <Typography>{activity.description}</Typography>
       </Box>
 
-      {/* Reply Section */}
+      {/* Reply Section - UI Only (No Backend Integration) */}
       <Box sx={{ marginLeft: "66px" }}>
         {/* Reply button and replies count */}
         <Box sx={{ display: "flex", alignItems: "center", gap: "12px", mb: 1 }}>
@@ -169,80 +177,72 @@ const ActivityLogItem = ({
                 minWidth: "auto",
               }}
             >
-              {isExpanded ? "Hide" : "Show"} {replies.length}{" "}
-              {replies.length === 1 ? "reply" : "replies"}
+              {isExpanded ? "Hide" : "Show"} {mockReplies.length}{" "}
+              {mockReplies.length === 1 ? "reply" : "replies"}
             </Button>
           )}
         </Box>
 
-        {/* Replies list */}
+        {/* Replies list - Empty for now (UI placeholder) */}
         {hasReplies && isExpanded && (
           <Box sx={{ marginTop: "12px", marginBottom: "12px" }}>
-            {replies.map((reply) => {
-              const replyFormattedDate = reply.timestamp.toLocaleDateString(
-                "en-GB",
-                {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                }
-              );
-              const replyFormattedTime = reply.timestamp.toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              );
-
-              return (
-                <Box
-                  key={reply.id}
-                  sx={{
-                    display: "flex",
-                    gap: "12px",
-                    marginBottom: "16px",
-                    paddingLeft: "16px",
-                    borderLeft: "2px solid #E4E6E8",
-                  }}
-                >
-                  <Avatar sx={{ width: "32px", height: "32px" }}>
-                    {reply.userName.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        mb: 0.5,
-                      }}
-                    >
-                      <Typography fontWeight={600} fontSize="14px">
-                        {reply.userName}
-                      </Typography>
-                      <Typography color="secondary.main" fontSize="12px">
-                        {replyFormattedDate} | {replyFormattedTime}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        background: "#FFFFFF",
-                        borderRadius: "12px",
-                        padding: "10px 14px",
-                        border: "1px solid #E4E6E8",
-                      }}
-                    >
-                      <Typography fontSize="14px">{reply.message}</Typography>
-                    </Box>
+            {/* Reply items would be displayed here */}
+            {mockReplies.map((reply) => (
+              <Box
+                key={reply.id}
+                sx={{
+                  display: "flex",
+                  gap: "12px",
+                  marginBottom: "16px",
+                  paddingLeft: "16px",
+                  borderLeft: "2px solid #E4E6E8",
+                }}
+              >
+                <Avatar sx={{ width: "32px", height: "32px" }}>
+                  {reply.userName.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      mb: 0.5,
+                    }}
+                  >
+                    <Typography fontWeight={600} fontSize="14px">
+                      {reply.userName}
+                    </Typography>
+                    <Typography color="secondary.main" fontSize="12px">
+                      {reply.timestamp.toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}{" "}
+                      |{" "}
+                      {reply.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      background: "#FFFFFF",
+                      borderRadius: "12px",
+                      padding: "10px 14px",
+                      border: "1px solid #E4E6E8",
+                    }}
+                  >
+                    <Typography fontSize="14px">{reply.message}</Typography>
                   </Box>
                 </Box>
-              );
-            })}
+              </Box>
+            ))}
           </Box>
         )}
 
-        {/* Reply input - Based on Figma design */}
+        {/* Reply input - UI Only (No Backend Integration) */}
         {showReplyInput && (
           <Box
             sx={{
@@ -265,6 +265,16 @@ const ActivityLogItem = ({
                 padding: "0 12px",
               }}
             >
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFileSelect}
+                accept="*/*"
+              />
+
               {/* Left Icons */}
               <IconButton
                 size="small"
@@ -275,12 +285,20 @@ const ActivityLogItem = ({
                   marginRight: "12px",
                   color: "#6D5DD3",
                 }}
-                onClick={() => {
-                  // TODO: Handle attach file
-                }}
+                onClick={handleAttachClick}
+                title="Attach file (UI only - no functionality)"
               >
                 <SvgIcon component={AttachIcon} sx={{ fontSize: "24px" }} />
               </IconButton>
+              {selectedFiles.length > 0 && (
+                <Typography
+                  fontSize="10px"
+                  color="secondary.main"
+                  sx={{ marginRight: "8px" }}
+                >
+                  {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""}
+                </Typography>
+              )}
 
               <IconButton
                 size="small"
@@ -292,8 +310,10 @@ const ActivityLogItem = ({
                   color: "#15C0E6",
                 }}
                 onClick={() => {
-                  // TODO: Handle add link
+                  // Placeholder - no functionality
+                  console.log("Add link clicked (UI only)");
                 }}
+                title="Add link (UI only - no functionality)"
               >
                 <SvgIcon component={AddLinkIcon} sx={{ fontSize: "24px" }} />
               </IconButton>
@@ -354,8 +374,10 @@ const ActivityLogItem = ({
                   color: "#3F8CFF",
                 }}
                 onClick={() => {
-                  // TODO: Handle mention
+                  // Placeholder - no functionality
+                  console.log("Mention clicked (UI only)");
                 }}
+                title="Mention user (UI only - no functionality)"
               >
                 <AlternateEmail sx={{ fontSize: "20px" }} />
               </IconButton>
@@ -429,6 +451,7 @@ const ActivityLogItem = ({
                   },
                   padding: 0,
                 }}
+                title="Send reply (UI only - no functionality)"
               >
                 <Send sx={{ color: "#FFFFFF", fontSize: "24px" }} />
               </Button>
@@ -441,4 +464,3 @@ const ActivityLogItem = ({
 };
 
 export default ActivityLogItem;
-

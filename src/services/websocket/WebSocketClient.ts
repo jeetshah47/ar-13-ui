@@ -120,7 +120,7 @@ export class WebSocketClient {
   // Update auth token
   updateAuthToken(token: string): void {
     this.config.authToken = token;
-    if (this.socket?.connected) {
+    if (this.socket?.connected && typeof this.socket.auth === 'object' && this.socket.auth !== null) {
       this.socket.auth.token = token;
     }
   }
@@ -128,7 +128,12 @@ export class WebSocketClient {
   // Get connection status
   getConnectionStatus(): 'connected' | 'disconnected' | 'connecting' {
     if (!this.socket) return 'disconnected';
-    if (this.socket.connecting) return 'connecting';
-    return this.socket.connected ? 'connected' : 'disconnected';
+    if (this.socket.connected) return 'connected';
+    // Socket exists but not connected - could be connecting or disconnected
+    // Since socket.io-client doesn't expose a 'connecting' state directly,
+    // we check if it's actively disconnected vs in a connecting state
+    // For simplicity, we'll return 'disconnected' if not connected
+    // If you need to track 'connecting' state, consider tracking it manually during connect()
+    return this.socket.disconnected ? 'disconnected' : 'connecting';
   }
 }
