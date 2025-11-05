@@ -1,12 +1,12 @@
 import { Box, Link, SvgIcon, Typography } from "@mui/material";
 import LeftIcon from "../../../assets/icons/general/left.svg?react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
 import { claimTaskAction } from "../../../store/features/task/projectAction";
 import { getActivityLogsSuccess } from "../../../store/features/task/taskSlice";
-import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
+import type { FileAttachment, ActivityLog } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";
 import ClaimTaskModal from "../components/ClaimTaskModal";
@@ -19,6 +19,7 @@ import { subscribeToTaskActivityLogs } from "../../../services/firebaseActivityL
 import Modal from "../../../common/components/Modal/Modal";
 import { parseFirebaseTimestamp, isImageAttachment } from "../utils/taskUtils";
 import { getActivityIcon } from "../utils/activityLogUtils";
+import { getUsersAction } from "../../../store/features/user/userAction";
 
 const ProjectDetail = () => {
   const { taskId, projectId } = useParams();
@@ -35,6 +36,10 @@ const ProjectDetail = () => {
     (state: RootState) => state.taskListReducer.api
   );
 
+  const userState = useAppSelector(
+    (state: RootState) => state.userReducer
+  );
+
   const { taskDetails, projectDetails } = projectDetailState.api.data;
   const { loading, error } = projectDetailState.api;
   const { currentStatus } = projectDetailState.common;
@@ -42,6 +47,7 @@ const ProjectDetail = () => {
   const { loading: taskListLoading } = taskListState;
   const claimTaskLoading = taskListState.loading;
   const claimTaskError = taskListState.error;
+  const { users } = userState;
 
   // Get file attachments from task details
   const fileAttachments = taskDetails?.fileAttachments || [];
@@ -54,12 +60,42 @@ const ProjectDetail = () => {
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
 
 
+  // Fetch users if not already loaded
+  useEffect(() => {
+    if (users.length === 0 && !userState.loading) {
+      dispatch(getUsersAction());
+    }
+  }, [dispatch, users.length, userState.loading]);
+
   // Fetch project details
   useEffect(() => {
     if (taskId && projectId) {
       dispatch(fetchProjectDetailAction(taskId, projectId));
     }
   }, [taskId, projectId, dispatch]);
+
+  // Map activity logs with user names from store
+  const mappedActivityLogs = useMemo(() => {
+    if (!activityLogs || activityLogs.length === 0) return activityLogs || [];
+    
+    return activityLogs.map((log: ActivityLog) => {
+      // If userName is already a proper name (not a user ID), return as is
+      if (log.userName && log.userName !== log.userId && log.userName !== "Unknown User") {
+        return log;
+      }
+      
+      // Otherwise, try to find user in store by userId
+      const user = users.find((u) => u.id === log.userId);
+      if (user) {
+        return {
+          ...log,
+          userName: user.name || log.userName || "Unknown User",
+        };
+      }
+      
+      return log;
+    });
+  }, [activityLogs, users]);
 
   // Subscribe to real-time activity logs
   useEffect(() => {
@@ -248,7 +284,7 @@ const ProjectDetail = () => {
 
             {/* Activity Logs Section */}
             <ActivityLogsSection
-              activityLogs={activityLogs}
+              activityLogs={mappedActivityLogs}
               loading={taskListLoading}
               getActivityIcon={getActivityIcon}
               parseFirebaseTimestamp={parseFirebaseTimestamp}

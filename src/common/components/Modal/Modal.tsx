@@ -7,9 +7,16 @@ type ModalProps = {
 };
 
 const Modal = ({ show, onClose, children }: ModalProps) => {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if clicking directly on the backdrop, not on its children
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
     <Box
-      onClick={onClose}
+      onClick={handleBackdropClick}
       sx={{
         backgroundColor: "rgba(33, 85, 163, 0.16)",
         position: "fixed",

@@ -1,10 +1,12 @@
 import { Card } from "@mui/material";
+import type { CardProps } from "@mui/material";
 
 type CustomCardProps = {
   children?: React.ReactNode;
+  sx?: CardProps["sx"];
 };
 
-const CustomCard = ({ children }: CustomCardProps) => {
+const CustomCard = ({ children, sx }: CustomCardProps) => {
   return (
     <Card
       elevation={0}
@@ -13,6 +15,8 @@ const CustomCard = ({ children }: CustomCardProps) => {
         paddingX: "20px",
         borderRadius: "24px",
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+        backgroundColor: "#FFFFFF",
+        ...sx,
       }}
     >
       {children}

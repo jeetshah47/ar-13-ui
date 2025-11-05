@@ -47,11 +47,39 @@ const CalendarPage = () => {
     if (!date) return [];
 
     const dateString = toYMD(date);
+    const currentMonth = dateState.getMonth();
+    const currentYear = dateState.getFullYear();
+    const dateMonth = date.getMonth();
+    const dateYear = date.getFullYear();
+    
+    // Only show events for dates in the current month being viewed (not on grayed out previous/next month days)
+    const isInCurrentMonth = dateMonth === currentMonth && dateYear === currentYear;
+
     return events.filter((event) => {
       if (!event.start) return false;
       const parsed = new Date(event.start);
       if (isNaN(parsed.getTime())) return false;
-      return toYMD(parsed) === dateString;
+      
+      const eventDateString = toYMD(parsed);
+      
+      // Check if it's a daily repeating event
+      if (event.isRepeating && event.repeatFrequency === 'daily') {
+        // For daily repeating events, show on all dates from start date onwards
+        // but only within the current month being viewed
+        if (!isInCurrentMonth) return false;
+        
+        // Check if the current date is on or after the event start date
+        // This allows events that started in previous months to show in current month
+        const eventDate = new Date(parsed);
+        eventDate.setHours(0, 0, 0, 0);
+        const currentDate = new Date(date);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        return currentDate >= eventDate;
+      }
+      
+      // For non-repeating events, use exact date match
+      return eventDateString === dateString;
     });
   };
 

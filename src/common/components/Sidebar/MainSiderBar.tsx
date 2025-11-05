@@ -12,8 +12,10 @@ import DashIcon from "../../../assets/icons/sidebar/dashboard/active.svg?react";
 import ProjectIcon from "../../../assets/icons/sidebar/projects/inactive.svg?react";
 import CalenderIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import VacationsIcon from "../../../assets/icons/sidebar/vacations/inactive.svg?react";
-import InfoPortalIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
+import EmployeesIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
+import InfoPortalIcon from "../../../assets/icons/sidebar/infoportal/active.svg?react";
 import { useLocation, useNavigate } from "react-router";
+import { RequireAdmin } from "../RBAC/RequirePermission";
 
 interface ItemProps {
   active?: boolean;
@@ -127,7 +129,7 @@ const MainSiderBar = () => {
             elevation={0}
           >
             <SvgIcon
-              component={InfoPortalIcon}
+              component={EmployeesIcon}
               color={checkActiveStatus("employees") ? "primary" : "secondary"}
             />
             <Typography
@@ -136,19 +138,36 @@ const MainSiderBar = () => {
               Employees
             </Typography>
           </Item>
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/vacations")}
+              active={checkActiveStatus("vacations")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={VacationsIcon}
+                color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+              >
+                Vacations
+              </Typography>
+            </Item>
+          </RequireAdmin>
           <Item
-            onClick={() => handleNavigation("/app/vacations")}
-            active={checkActiveStatus("vacations")}
+            onClick={() => handleNavigation("/app/info-portal")}
+            active={checkActiveStatus("info-portal")}
             elevation={0}
           >
             <SvgIcon
-              component={VacationsIcon}
-              color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+              component={InfoPortalIcon}
+              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
             />
             <Typography
-              color={checkActiveStatus("vacations") ? "primary" : "secondary"}
+              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
             >
-              Vacations
+              Info Portal
             </Typography>
           </Item>
         </Stack>

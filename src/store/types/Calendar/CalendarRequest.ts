@@ -10,4 +10,5 @@ export interface CalendarRequest {
   repeatFrequency: string;
   repeatDays: string[];
   createdBy: string;
+  addToGoogleCalendar?: boolean;
 }

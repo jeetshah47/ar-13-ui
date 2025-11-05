@@ -11,6 +11,7 @@ import { getTaskDetailById, updateTaskStatus as updateTaskStatusApi } from "../.
 import { getProjectDetails } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
+import { mapStatusToUnified, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
 export const fetchProjectDetailAction =
   (taskId: string, projectId: string) => async (dispatch: AppDispatch) => {
@@ -40,20 +41,13 @@ export const fetchProjectDetailAction =
     }
   };
 
-// Map Chips component status values to API format
-const mapStatusToApiFormat = (status: string): string => {
-  const statusMap: Record<string, string> = {
-    progress: "in-progress",
-    pending: "pending",
-    review: "review",
-    success: "done",
-    // Also handle full status names if they come through
-    "In Progress": "in-progress",
-    "To Do": "to-do",
-    "Done": "done",
-    "Review": "review",
-  };
-  return statusMap[status] || status.toLowerCase().replace(/\s+/g, "-");
+// Map unified status to API format (for backward compatibility with API)
+const mapStatusToApiFormat = (status: TaskStatus | string): string => {
+  // First normalize to unified format
+  const unifiedStatus = mapStatusToUnified(status);
+  
+  // Return the unified status as-is (API should accept the unified format)
+  return unifiedStatus;
 };
 
 export const updateTaskStatusAction =

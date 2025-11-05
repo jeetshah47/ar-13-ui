@@ -329,10 +329,10 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
                 <MenuItem value="">
                   <em>Select Status</em>
                 </MenuItem>
-                <MenuItem value="To Do">To Do</MenuItem>
-                <MenuItem value="In Progress">In Progress</MenuItem>
-                <MenuItem value="Review">Review</MenuItem>
-                <MenuItem value="Done">Done</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="todo">Todo</MenuItem>
+                <MenuItem value="review">Review</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
               </Select>
             </FormControl>
           </Box>

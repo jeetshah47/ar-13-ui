@@ -31,8 +31,14 @@ type PriorityColor = "error" | "warning" | "success" | "default";
 const HorizontalDragDropComponent: React.FC = () => {
   const [columns, setColumns] = useState<Column[]>([
     {
+      id: "pending",
+      title: "Pending",
+      color: "#f8f9fa",
+      items: [],
+    },
+    {
       id: "todo",
-      title: "To Do",
+      title: "Todo",
       color: "#f8f9fa",
       items: [
         {
@@ -56,25 +62,6 @@ const HorizontalDragDropComponent: React.FC = () => {
       ],
     },
     {
-      id: "inprogress",
-      title: "In Progress",
-      color: "#e3f2fd",
-      items: [
-        {
-          id: 4,
-          title: "Task 4",
-          description: "Write unit tests",
-          priority: "High",
-        },
-        {
-          id: 5,
-          title: "Task 5",
-          description: "Fix bug reports",
-          priority: "Medium",
-        },
-      ],
-    },
-    {
       id: "review",
       title: "Review",
       color: "#fff3e0",
@@ -88,8 +75,8 @@ const HorizontalDragDropComponent: React.FC = () => {
       ],
     },
     {
-      id: "done",
-      title: "Done",
+      id: "completed",
+      title: "Completed",
       color: "#e8f5e8",
       items: [
         {

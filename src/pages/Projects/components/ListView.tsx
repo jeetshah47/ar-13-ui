@@ -9,12 +9,13 @@ import { blurAnimation } from "../../../common/animation/cssAnimation";
 import type {
   TaskResponse,
 } from "../../../store/types/Task/TaskResponse";
+import type { TimeSpentEntry } from "../../../store/types/Task/TaskTypes";
 
 type ListViewProps = {
   tasks: TaskResponse[];
 };
 
-type StatusType = "progress" | "success" | "review" | "pending";
+// StatusType removed - StatusTag now accepts any string and normalizes it
 
 const ListView = ({ tasks }: ListViewProps) => {
   const formatDuration = (duration: string) => {
@@ -51,7 +52,7 @@ const ListView = ({ tasks }: ListViewProps) => {
     }
   };
 
-  const calculateSpentTime = (timeSpentEntries: any[] | undefined) => {
+  const calculateSpentTime = (timeSpentEntries: TimeSpentEntry[] | undefined) => {
     if (!timeSpentEntries || timeSpentEntries.length === 0) {
       return "0d 0h";
     }
@@ -297,7 +298,7 @@ const ListView = ({ tasks }: ListViewProps) => {
         </Typography>
       </Box>
       <Box sx={{ gridArea: "status-value" }}>
-        <StatusTag status={task.status as StatusType} />
+        <StatusTag status={task.status} />
       </Box>
 
       {/* Progress Indicator */}

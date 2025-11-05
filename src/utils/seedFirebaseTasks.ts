@@ -15,7 +15,7 @@ const sampleTasks = [
   {
     subject: "Animation for buttons",
     code: "TS0001245",
-    status: "Backlog",
+    status: "pending",
     duration: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours from now
     priority: "Low",
     assignTo: ["user1"],
@@ -24,7 +24,7 @@ const sampleTasks = [
   {
     subject: "Animation for Landing page",
     code: "TS0001246",
-    status: "Backlog",
+    status: "pending",
     duration: new Date(Date.now() + 8 * 60 * 60 * 1000),
     priority: "Low",
     assignTo: ["user1"],
@@ -33,7 +33,7 @@ const sampleTasks = [
   {
     subject: "Preloader",
     code: "TS0001247",
-    status: "Backlog",
+    status: "pending",
     duration: new Date(Date.now() + 6 * 60 * 60 * 1000),
     priority: "Low",
     assignTo: ["user1"],
@@ -42,7 +42,7 @@ const sampleTasks = [
   {
     subject: "UX sketches",
     code: "TS0001248",
-    status: "In Progress",
+    status: "todo",
     duration: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
     priority: "Medium",
     assignTo: ["user2"],
@@ -51,7 +51,7 @@ const sampleTasks = [
   {
     subject: "Mind Map",
     code: "TS0001249",
-    status: "In Progress",
+    status: "todo",
     duration: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000), // 2d 4h
     priority: "Medium",
     assignTo: ["user2"],
@@ -60,7 +60,7 @@ const sampleTasks = [
   {
     subject: "UX Login + Registration",
     code: "TS0001250",
-    status: "In Progress",
+    status: "todo",
     duration: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     priority: "Medium",
     assignTo: ["user2"],
@@ -69,7 +69,7 @@ const sampleTasks = [
   {
     subject: "Research reports",
     code: "TS0001251",
-    status: "In Review",
+    status: "review",
     duration: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     priority: "Medium",
     assignTo: ["user3"],
@@ -78,7 +78,7 @@ const sampleTasks = [
   {
     subject: "Research",
     code: "TS0001252",
-    status: "In Review",
+    status: "review",
     duration: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
     priority: "Medium",
     assignTo: ["user3"],
@@ -87,7 +87,7 @@ const sampleTasks = [
   {
     subject: "Research reports (presentation for client)",
     code: "TS0001253",
-    status: "In Review",
+    status: "review",
     duration: new Date(Date.now() + 6 * 60 * 60 * 1000),
     priority: "Low",
     assignTo: ["user3"],
@@ -96,7 +96,7 @@ const sampleTasks = [
   {
     subject: "UI Login + Registration\n(+ other screens)",
     code: "TS0001254",
-    status: "Done",
+    status: "completed",
     duration: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000), // 1d 6h
     priority: "Medium",
     assignTo: ["user4"],

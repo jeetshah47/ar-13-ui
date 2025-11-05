@@ -1,3 +1,5 @@
+import type { LeaveRequest } from "../Vacation/VacationTypes";
+
 export interface UserProfileResponse {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface UserProfileResponse {
   projects: Record<string, unknown>;
   tasks: Record<string, unknown>;
   created: string; // ISO date string
+  leaveRequests?: LeaveRequest[];
 }
 
 export interface GetUserProfileApiResponse {

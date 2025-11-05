@@ -20,8 +20,12 @@ export const useVacation = () => {
   }, [dispatch]);
 
 
-  const updateRequestStatus = useCallback(async (requestId: string, status: 'approved' | 'rejected') => {
-    return dispatch(updateVacationRequestStatusAction(requestId, status));
+  const updateRequestStatus = useCallback(async (
+    requestId: string, 
+    status: 'approved' | 'rejected',
+    reviewComments?: string
+  ) => {
+    return dispatch(updateVacationRequestStatusAction(requestId, status, reviewComments));
   }, [dispatch]);
 
   return {

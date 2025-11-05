@@ -80,14 +80,14 @@ body {
   --color-info: #3F8CFF;
   
   /* Task Status Colors */
+  --color-status-pending: #7D8592;
+  --color-status-pending-bg: rgba(125, 133, 146, 0.14);
   --color-status-todo: #7D8592;
   --color-status-todo-bg: rgba(125, 133, 146, 0.14);
-  --color-status-in-progress: #3F8CFF;
-  --color-status-in-progress-bg: rgba(63, 140, 255, 0.12);
-  --color-status-in-review: #C418E6;
-  --color-status-in-review-bg: rgba(196, 24, 230, 0.11);
-  --color-status-done: #00D097;
-  --color-status-done-bg: #E0F9F2;
+  --color-status-review: #C418E6;
+  --color-status-review-bg: rgba(196, 24, 230, 0.11);
+  --color-status-completed: #00D097;
+  --color-status-completed-bg: #E0F9F2;
 
   /* Vacation Status Colors */
   --color-vacation-pending: #FDC748;

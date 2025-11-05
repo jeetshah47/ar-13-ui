@@ -75,7 +75,17 @@ const convertTimestamp = (
 };
 
 // Convert Firebase activity log to ActivityLog format
-const convertFirebaseActivityLog = (firebaseLog: FirebaseActivityLog, userName: string = "Unknown User"): ActivityLog => {
+const convertFirebaseActivityLog = (
+  firebaseLog: FirebaseActivityLog,
+  userName: string = "Unknown User",
+  createdByUser?: {
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    designation?: string;
+  }
+): ActivityLog => {
   // Extract metadata from fields and metadata
   const metadata: ActivityLog["metadata"] = {
     ...firebaseLog.metadata,
@@ -95,12 +105,15 @@ const convertFirebaseActivityLog = (firebaseLog: FirebaseActivityLog, userName: 
     }
   }
 
+  // Use createdByUser name if available, otherwise fall back to userName parameter
+  const finalUserName = createdByUser?.name || userName;
+
   return {
     id: firebaseLog.id,
     type: mapActionToType(firebaseLog.action),
     timestamp: convertTimestamp(firebaseLog.createdAt),
     userId: firebaseLog.createdBy,
-    userName: userName,
+    userName: finalUserName,
     description: firebaseLog.description || "",
     metadata: metadata,
   };
@@ -176,10 +189,12 @@ export const subscribeToTaskActivityLogs = (
           metadata: data.metadata || {},
         };
 
-        // Use createdBy as userName for now (can be enhanced with user lookup)
-        const userName = data.createdBy || data.userName || "Unknown User";
+        // Extract user information from Firebase data
+        // Check for createdByUser object first, then fall back to userName field, then createdBy ID
+        const createdByUser = data.createdByUser || null;
+        const userName = createdByUser?.name || data.userName || data.createdBy || "Unknown User";
         
-        const activityLog = convertFirebaseActivityLog(firebaseLog, userName);
+        const activityLog = convertFirebaseActivityLog(firebaseLog, userName, createdByUser);
         activityLogs.push(activityLog);
       });
 

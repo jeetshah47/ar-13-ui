@@ -14,8 +14,20 @@ import VacationSection from "./components/VacationSection";
 import Modal from "../../common/components/Modal/Modal";
 import VacationForm from "./components/VacationForm";
 import { ProfileSetting } from "./components/ProfileSetting";
-import { useAppDispatch, useAppSelector } from "../../store/store";
+import GoogleAccountLink from "./components/GoogleAccountLink";
+import { useAppDispatch, useAppSelector, type RootState } from "../../store/store";
 import { getUserProfileAction } from "../../store/features/user/userActions";
+
+// Helper function to generate initials from name
+const getInitials = (name: string | null | undefined): string => {
+  if (!name) return "U";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
 const tabList = ["Projects", "Team", "My Vacations"];
 
 const ProfilePage = () => {
@@ -25,6 +37,15 @@ const ProfilePage = () => {
   const dispatch = useAppDispatch();
   const uid = useAppSelector((s) => s.authReducer.api.uid);
   const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
+  
+  // Get auth state user data as fallback
+  const authUserName = useAppSelector((state: RootState) => state.authReducer.user.name);
+  const authUserEmail = useAppSelector((state: RootState) => state.authReducer.user.email);
+  
+  // Use profile data or fallback to auth state
+  const displayName = profile?.name || authUserName || "-";
+  const displayEmail = profile?.email || authUserEmail || "";
+  const avatarInitials = getInitials(profile?.name || authUserName);
 
   useEffect(() => {
     if (uid) {
@@ -81,9 +102,20 @@ const ProfilePage = () => {
             padding: "24px 18px",
           }}
         >
-          <Avatar sx={{ width: "64px", height: "64px" }} />
+          <Avatar 
+            sx={{ 
+              width: "64px", 
+              height: "64px",
+              bgcolor: "#E0E0E0",
+              color: "#666666",
+              fontSize: "24px",
+              fontWeight: "bold",
+            }}
+          >
+            {avatarInitials}
+          </Avatar>
           <Typography fontWeight={700} fontSize={"18px"}>
-            {profileLoading ? "Loading..." : profile?.name || "-"}
+            {profileLoading ? "Loading..." : displayName}
           </Typography>
           <Typography fontSize={"14px"} color="secondary.main">
             UI/UX Designer
@@ -137,7 +169,7 @@ const ProfilePage = () => {
               <TextField
                 sx={{ width: "100%", paddingTop: "7px" }}
                 placeholder="Enter Email"
-                value={profile?.email || ""}
+                value={displayEmail}
                 InputProps={{ readOnly: true }}
               />
             </Box>
@@ -155,6 +187,7 @@ const ProfilePage = () => {
                 InputProps={{ readOnly: true }}
               />
             </Box>
+            <GoogleAccountLink />
           </Box>
         </Box>
         <Box

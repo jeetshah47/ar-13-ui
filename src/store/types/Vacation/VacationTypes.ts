@@ -31,6 +31,42 @@ export interface VacationResponse {
   updatedAt: string;
 }
 
+// Firestore timestamp format
+export interface FirestoreTimestamp {
+  _seconds: number;
+  _nanoseconds: number;
+}
+
+// User details for leave requests
+export interface LeaveRequestUserDetails {
+  name: string;
+  email: string;
+  password?: string;
+  designation?: string;
+  created?: FirestoreTimestamp;
+  id: string;
+  role: string;
+}
+
+// Leave request from user profile API
+export interface LeaveRequest {
+  userId: string;
+  requestType: RequestType;
+  startDate: FirestoreTimestamp;
+  endDate: FirestoreTimestamp;
+  duration: number;
+  durationType: DurationType;
+  comments: string;
+  requestedAt: FirestoreTimestamp;
+  reviewedAt?: FirestoreTimestamp | null;
+  reviewComments?: string | null;
+  reviewedBy?: string | null;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  id: string;
+  userDetails?: LeaveRequestUserDetails | null;
+  reviewerDetails?: LeaveRequestUserDetails | null;
+}
+
 export interface VacationStats {
   vacationDays: number;
   sickLeaveDays: number;

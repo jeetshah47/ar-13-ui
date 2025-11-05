@@ -9,6 +9,9 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { TASK_STATUS, TASK_STATUSES_ARRAY, mapStatusToUnified, type TaskStatus } from "../pages/Projects/constants/taskStatus.constants";
+
+export { TASK_STATUS, type TaskStatus };
 
 export interface FirebaseTask {
   id: string;
@@ -31,15 +34,13 @@ export interface FirebaseProject {
   tasks: FirebaseTask[];
 }
 
+// Legacy export for backward compatibility
 export const taskStatuses = {
-  backlog: "Backlog",
-  todo: "To Do", 
-  inprogress: "In Progress",
-  review: "In Review",
-  done: "Done"
+  pending: TASK_STATUS.PENDING,
+  todo: TASK_STATUS.TODO,
+  review: TASK_STATUS.REVIEW,
+  completed: TASK_STATUS.COMPLETED,
 } as const;
-
-export type TaskStatus = keyof typeof taskStatuses;
 
 // Listen to tasks for a specific project in real-time
 export const subscribeToProjectTasks = (
@@ -63,9 +64,10 @@ export const subscribeToProjectTasks = (
       
       // Sort tasks by status for better organization
       const sortedTasks = tasks.sort((a, b) => {
-        const statusOrder = ["Backlog", "To Do", "In Progress", "In Review", "Done"];
-        const aIndex = statusOrder.indexOf(a.status);
-        const bIndex = statusOrder.indexOf(b.status);
+        const aUnified = mapStatusToUnified(a.status);
+        const bUnified = mapStatusToUnified(b.status);
+        const aIndex = TASK_STATUSES_ARRAY.indexOf(aUnified);
+        const bIndex = TASK_STATUSES_ARRAY.indexOf(bUnified);
         return aIndex - bIndex;
       });
       

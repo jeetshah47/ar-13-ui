@@ -41,7 +41,18 @@ const DashboardPage = () => {
     (state: RootState) => state.calendarReducer.api
   );
 
+  // User data selector
+  const userName = useAppSelector(
+    (state: RootState) => state.authReducer.user.name
+  );
+  const userEmail = useAppSelector(
+    (state: RootState) => state.authReducer.user.email
+  );
+
   const dispatch = useAppDispatch();
+  
+  // Get display name for welcome message
+  const displayName = userName || userEmail?.split("@")[0] || "there";
 
   const handleStartDateChange = (date: Date | null) => {
     setCalendarState({ ...calenderState, start_date: date });
@@ -99,7 +110,7 @@ const DashboardPage = () => {
 
   return (
     <Box>
-      <Typography color="secondary">Welcome back, Jeet</Typography>
+      <Typography color="secondary">Welcome back, {displayName}</Typography>
       <PageHeader
         title="Dashboard"
         endElement={

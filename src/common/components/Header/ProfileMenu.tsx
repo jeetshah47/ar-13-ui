@@ -10,15 +10,34 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useState, type MouseEvent } from "react";
 import defaultTheme from "../../../theme";
-import { useAppDispatch } from "../../../store/store";
+import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { authLogout } from "../../../store/features/auth/authSlice";
 import { useNavigate } from "react-router";
+
+// Helper function to generate initials from name
+const getInitials = (name: string | null): string => {
+  if (!name) return "U";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
 const ProfileMenu = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const open = Boolean(anchorEl);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  
+  // Get user data from Redux store
+  const userName = useAppSelector((state: RootState) => state.authReducer.user.name);
+  const userEmail = useAppSelector((state: RootState) => state.authReducer.user.email);
+  
+  // Display name or email as fallback
+  const displayName = userName || userEmail || "User";
+  const initials = getInitials(userName);
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -101,10 +120,21 @@ const ProfileMenu = () => {
         }}
         disableElevation
         onClick={handleClick}
-        startIcon={<Avatar sx={{ width: "24px", height: "24px" }} />}
+        startIcon={
+          <Avatar 
+            sx={{ 
+              width: "24px", 
+              height: "24px",
+              fontSize: "10px",
+              bgcolor: defaultTheme.palette.primary.main,
+            }}
+          >
+            {initials}
+          </Avatar>
+        }
         endIcon={<KeyboardArrowDownIcon />}
       >
-        Jeet Shah
+        {displayName}
       </Button>
       <StyledMenu
         id="demo-customized-menu"

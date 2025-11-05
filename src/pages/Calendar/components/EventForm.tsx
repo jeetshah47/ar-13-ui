@@ -3,7 +3,7 @@ import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import { IOSSwitch } from "../../../common/components/Switch/IOSswitch";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
-import { createCalendarEvent, editCalendarEvent, fetchCalendarEvents } from "../../../store/features/calendar/calendarAction";
+import { createCalendarEvent, editCalendarEvent, fetchCalendarEvents, removeCalendarEvent } from "../../../store/features/calendar/calendarAction";
 import type { CalendarRequest } from "../../../store/types/Calendar/CalendarRequest";
 import toast from "react-hot-toast";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
@@ -18,6 +18,7 @@ type EventFormProps = {
 const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProps) => {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.calendarReducer.api);
+  const uid = useAppSelector((state) => state.authReducer.api.uid);
 
   const initialDateString = date ? date.toISOString().split('T')[0] : "";
 
@@ -32,11 +33,22 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     isRepeating: false,
     repeatFrequency: "daily",
     repeatDays: [],
-    createdBy: "user123",
+    createdBy: uid || "",
+    addToGoogleCalendar: false,
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("daily");
+
+  // Update createdBy when uid becomes available
+  useEffect(() => {
+    if (uid && !existingEvent) {
+      setFormData(prev => ({
+        ...prev,
+        createdBy: uid,
+      }));
+    }
+  }, [uid, existingEvent]);
 
   // Prefill when existingEvent is provided
   useEffect(() => {
@@ -69,13 +81,14 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       isRepeating: existingEvent.isRepeating ?? false,
       repeatFrequency: existingEvent.repeatFrequency ?? "daily",
       repeatDays: existingEvent.repeatDays ?? [],
-      createdBy: existingEvent.createdBy ?? "user123",
+      createdBy: existingEvent.createdBy ?? (uid || ""),
+      addToGoogleCalendar: existingEvent.addToGoogleCalendar ?? false,
     };
 
     setFormData(next);
     setSelectedDays(next.repeatDays);
     setSelectedFrequency(next.repeatFrequency);
-  }, [existingEvent, initialDateString]);
+  }, [existingEvent, initialDateString, uid]);
 
   const handleInputChange = (field: keyof CalendarRequest, value: string | boolean | string[]) => {
     setFormData(prev => ({
@@ -104,6 +117,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       return;
     }
 
+    if (!uid) {
+      toast.error("User not authenticated. Please log in again.");
+      return;
+    }
+
     try {
       // Combine date and time for start and end
       const startDateTime = new Date(`${formData.start}T${formData.time}:00Z`);
@@ -111,6 +129,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
 
       const eventData: CalendarRequest = {
         ...formData,
+        createdBy: uid, // Ensure we use the current user ID
         start: startDateTime.toISOString(),
         end: endDateTime.toISOString(),
       };
@@ -131,6 +150,32 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       onClose();
     } catch {
       toast.error("Failed to create event");
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!existingEvent?.id) {
+      return;
+    }
+
+    const confirmed = window.confirm("Are you sure you want to remove this event? This action cannot be undone.");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await dispatch(removeCalendarEvent(existingEvent.id));
+      toast.success("Event removed successfully!");
+      
+      // Refresh the events list for the current month
+      if (currentMonth) {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1; // getMonth() returns 0-11, so add 1
+        dispatch(fetchCalendarEvents(year, month));
+      }
+      onClose();
+    } catch {
+      toast.error("Failed to remove event");
     }
   };
 
@@ -159,7 +204,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
         }}
       >
         <Typography fontWeight={"bold"} variant="h6">
-          Add Event
+          {existingEvent ? "Edit Event" : "Add Event"}
         </Typography>
         <Box
           sx={{
@@ -300,6 +345,24 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           marginTop: "20px",
         }}
       >
+        <Typography fontWeight={"700"}>Add to Google Calendar</Typography>
+        <IOSSwitch 
+          sx={{ m: 1 }} 
+          checked={formData.addToGoogleCalendar ?? false}
+          onChange={(e) => handleInputChange("addToGoogleCalendar", e.target.checked)}
+        />
+      </Box>
+      <Box
+        sx={{
+          backgroundColor: "#F4F9FD",
+          borderRadius: "14px",
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "20px",
+        }}
+      >
         <Typography fontWeight={"700"}>Repeat Event</Typography>
         <IOSSwitch 
           sx={{ m: 1 }} 
@@ -372,17 +435,30 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
         sx={{
           display: "flex",
           flex: 1,
-          justifyContent: "end",
+          justifyContent: "space-between",
           paddingY: "12px",
           alignItems: "center",
+          gap: "12px",
         }}
       >
+        {existingEvent && (
+          <Button 
+            variant="outlined" 
+            color="error"
+            onClick={handleDeleteEvent}
+            disabled={loading}
+            sx={{ minWidth: "120px" }}
+          >
+            Remove Event
+          </Button>
+        )}
+        <Box sx={{ flex: 1 }} />
         <Button 
           variant="contained" 
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? "Saving..." : "Save Event"}
+          {loading ? "Saving..." : existingEvent ? "Update Event" : "Save Event"}
         </Button>
       </Box>
     </Box>

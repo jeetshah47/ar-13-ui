@@ -3,6 +3,7 @@ import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Tab from "../../common/components/Tab/Tab";
 import EmpVacationCard from "./components/EmpVacationCard";
+import VacationRequestCard from "./components/VacationRequestCard";
 import { useState, useEffect, useMemo } from "react";
 // import VacationsCalender from "./components/VacationCalender";
 import VacationForm from "../Profile/components/VacationForm";
@@ -11,16 +12,30 @@ import { useAppSelector } from "../../store/store";
 import { getUsersAction } from "../../store/features/user/userAction";
 import { useAppDispatch } from "../../store/store";
 import { RequirePermission } from "../../common/components/RBAC";
-
-const tabList = ["Employee's Vacations", "Calendar"];
+import { usePermissions } from "../../store/hooks/usePermissions";
+import toast from "react-hot-toast";
 
 const VacationPage = () => {
-  const [currentTab, setCurrentTab] = useState(tabList[0]);
+  const { isAdmin } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const dispatch = useAppDispatch();
-  const { requests, loading, error, getAllRequests } = useVacation();
+  const { requests, loading, error, getAllRequests, updateRequestStatus } = useVacation();
   const { users, loading: usersLoading } = useAppSelector((state) => state.userReducer);
+  
+  // Get tab list based on user role
+  const tabList = useMemo(() => {
+    const baseTabs = ["Employee's Vacations"];
+    if (isAdmin()) {
+      return ["Vacation Requests", ...baseTabs];
+    }
+    return baseTabs;
+  }, [isAdmin]);
+  
+  // Set initial tab based on user role
+  const [currentTab, setCurrentTab] = useState(() => {
+    return isAdmin() ? "Vacation Requests" : "Employee's Vacations";
+  });
 
   // Calculate employee vacation stats by mapping requests to users
   const employeeStats = useMemo(() => {
@@ -66,6 +81,35 @@ const VacationPage = () => {
     setIsModalOpen(false);
   };
 
+  const handleApproveRequest = async (requestId: string, reviewComments?: string) => {
+    try {
+      await updateRequestStatus(requestId, "approved", reviewComments);
+      toast.success("Request approved successfully");
+      getAllRequests(); // Refresh requests
+    } catch {
+      toast.error("Failed to approve request");
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string, reviewComments?: string) => {
+    try {
+      await updateRequestStatus(requestId, "rejected", reviewComments);
+      toast.success("Request rejected successfully");
+      getAllRequests(); // Refresh requests
+    } catch {
+      toast.error("Failed to reject request");
+    }
+  };
+
+  // Get user info for a request
+  const getUserInfo = (userId: string) => {
+    const user = users?.find(u => u.id === userId);
+    return {
+      name: user?.name || "Unknown User",
+      email: user?.email || "",
+    };
+  };
+
   const AddButton = (
     <RequirePermission permission="vacation:write">
       <Button 
@@ -94,6 +138,53 @@ const VacationPage = () => {
           </>
         }
       />
+      {currentTab === "Vacation Requests" && isAdmin() && (
+        <Box
+          sx={{
+            padding: "28px 0px",
+          }}
+        >
+          {(loading || usersLoading) && (
+            <Box sx={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+              <CircularProgress />
+            </Box>
+          )}
+          
+          {error && (
+            <Alert severity="error" sx={{ marginBottom: "16px" }}>
+              {error}
+            </Alert>
+          )}
+          
+          {/* Vacation request cards */}
+          {!loading && !usersLoading && requests.length > 0 && (
+            <>
+              {requests.map((request) => {
+                const userInfo = getUserInfo(request.userId);
+                return (
+                  <VacationRequestCard
+                    key={request.id}
+                    request={request}
+                    userName={userInfo.name}
+                    userEmail={userInfo.email}
+                    onApprove={handleApproveRequest}
+                    onReject={handleRejectRequest}
+                    isLoading={loading}
+                  />
+                );
+              })}
+            </>
+          )}
+          
+          {/* Show message when no data */}
+          {!loading && !usersLoading && requests.length === 0 && (
+            <Box sx={{ textAlign: "center", padding: "40px" }}>
+              <p>No vacation requests found.</p>
+            </Box>
+          )}
+        </Box>
+      )}
+      
       {currentTab === "Employee's Vacations" && (
         <Box
           sx={{

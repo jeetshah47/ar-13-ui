@@ -8,6 +8,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { subscribeToProjectTasks, updateTaskStatus, type FirebaseTask } from "../../../services/firebaseTaskService";
+import { mapStatusToUnified } from "../constants/taskStatus.constants";
 
 interface TaskItem {
   id: string;
@@ -69,34 +70,28 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const navigate = useNavigate();
   const [columns, setColumns] = useState<Column[]>([
     {
-      id: "backlog",
-      title: "Backlog",
+      id: "pending",
+      title: "Pending",
       items: [],
-      status: "Backlog",
+      status: "pending",
     },
     {
       id: "todo",
-      title: "To Do",
+      title: "Todo",
       items: [],
-      status: "To Do",
-    },
-    {
-      id: "inprogress",
-      title: "In Progress",
-      items: [],
-      status: "In Progress",
+      status: "todo",
     },
     {
       id: "review",
-      title: "In Review",
+      title: "Review",
       items: [],
-      status: "In Review",
+      status: "review",
     },
     {
-      id: "done",
-      title: "Done",
+      id: "completed",
+      title: "Completed",
       items: [],
-      status: "Done",
+      status: "completed",
     },
   ]);
 
@@ -129,7 +124,11 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       setColumns(prevColumns => 
         prevColumns.map(column => ({
           ...column,
-          items: taskItems.filter(task => task.status === column.status)
+          items: taskItems.filter(task => {
+            // Normalize task status to unified format for comparison
+            const normalizedTaskStatus = mapStatusToUnified(task.status);
+            return normalizedTaskStatus === column.status;
+          })
         }))
       );
     });

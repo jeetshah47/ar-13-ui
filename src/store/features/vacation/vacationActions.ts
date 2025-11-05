@@ -76,11 +76,15 @@ export const getVacationStatsAction = () => {
 };
 
 // Update vacation request status
-export const updateVacationRequestStatusAction = (requestId: string, status: "approved" | "rejected") => {
+export const updateVacationRequestStatusAction = (
+  requestId: string, 
+  status: "approved" | "rejected",
+  reviewComments?: string
+) => {
   return async (dispatch: AppDispatch) => {
     dispatch(updateVacationRequestStatusRequest());
     try {
-      await updateVacationRequestStatus(requestId, status);
+      await updateVacationRequestStatus(requestId, status, reviewComments);
       dispatch(updateVacationRequestStatusSuccess({ requestId, status }));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error && 'response' in error 

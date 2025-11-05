@@ -28,9 +28,10 @@ export async function getVacationStats(): Promise<GetVacationStatsResponse> {
 
 export async function updateVacationRequestStatus(
   requestId: string,
-  status: "approved" | "rejected"
+  status: "approved" | "rejected",
+  reviewComments?: string
 ): Promise<{ message: string }> {
-  const url = `http://localhost:3000/api/vacation/requests/${requestId}/status`;
-  const result = await http.patch(url, { status });
+  const url = `http://localhost:3000/api/vacation/update-status/${requestId}`;
+  const result = await http.put(url, { status, reviewComments });
   return result.data;
 }

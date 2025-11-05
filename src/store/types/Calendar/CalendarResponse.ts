@@ -11,6 +11,7 @@ export interface CalendarResponse {
   repeatFrequency?: string;
   repeatDays?: string[];
   createdBy?: string;
+  addToGoogleCalendar?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

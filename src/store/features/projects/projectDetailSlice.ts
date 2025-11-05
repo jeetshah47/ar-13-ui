@@ -3,26 +3,11 @@ import type { ProjectDetailState } from "./projectDetailTypes";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
 import type { ProjectDetailResponse } from "../../types/Project/ProjectDetailResponse";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
+import { mapStatusToUnified, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
-// Map API status values to Chips component status values
-const mapStatusToChipsFormat = (status: string): string => {
-  const statusLower = status.toLowerCase().trim().replace(/-/g, " ");
-  
-  // Map common status values to Chips format
-  const statusMap: Record<string, string> = {
-    "to do": "pending",
-    "todo": "pending",
-    "pending": "pending",
-    "in progress": "progress",
-    "inprogress": "progress",
-    "progress": "progress",
-    "review": "review",
-    "done": "success",
-    "success": "success",
-    "completed": "success",
-  };
-
-  return statusMap[statusLower] || "pending";
+// Map API status values to unified status format
+const mapStatusToUnifiedFormat = (status: string): TaskStatus => {
+  return mapStatusToUnified(status);
 };
 
 const initialState: ProjectDetailState = {
@@ -35,7 +20,7 @@ const initialState: ProjectDetailState = {
     loading: false,
   },
   common: {
-    currentStatus: "pending",
+    currentStatus: "pending" as TaskStatus,
   },
 };
 
@@ -60,7 +45,7 @@ const projectDetailSlice = createSlice({
       state.api.error = "";
       state.api.data.taskDetails = action.payload.taskDetails;
       state.api.data.projectDetails = action.payload.projectDetails;
-      state.common.currentStatus = mapStatusToChipsFormat(action.payload.taskDetails.status);
+      state.common.currentStatus = mapStatusToUnifiedFormat(action.payload.taskDetails.status);
     },
     fetchProjectDetailFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
@@ -68,11 +53,9 @@ const projectDetailSlice = createSlice({
       state.api.data.taskDetails = null;
       state.api.data.projectDetails = null;
     },
-    updateTaskStatus(state, action: PayloadAction<string>) {
+    updateTaskStatus(state, action: PayloadAction<TaskStatus>) {
       if (state.api.data.taskDetails) {
-        // action.payload is the Chips format status (e.g., "progress", "pending")
-        // We need to keep the original status format in taskDetails for API consistency
-        // But map it to Chips format for currentStatus
+        // action.payload is the unified status format
         state.common.currentStatus = action.payload;
       }
     },
@@ -81,7 +64,7 @@ const projectDetailSlice = createSlice({
       state.api.data.projectDetails = null;
       state.api.error = "";
       state.api.loading = false;
-      state.common.currentStatus = "pending";
+      state.common.currentStatus = "pending" as TaskStatus;
     },
   },
 });

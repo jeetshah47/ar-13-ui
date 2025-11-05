@@ -1,63 +1,41 @@
 import { Box, Chip } from "@mui/material";
+import { TASK_STATUS, TASK_STATUSES_ARRAY, getStatusDisplayName, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
 type ChipsProps = {
   selected: string;
-  onChange: (status: string) => void;
+  onChange: (status: TaskStatus) => void;
 };
 
 const Chips = ({ selected, onChange }: ChipsProps) => {
-  const colorMaps = {
-    success: { bg: "#E0F9F2", text: "#00D097" },
+  const colorMaps: Record<TaskStatus, { bg: string; text: string }> = {
     pending: { bg: "rgba(125,133,146,14%)", text: "#7D8592" },
-    progress: { bg: "rgba(63,140,255,11.99%)", text: "#3F8CFF" },
+    todo: { bg: "rgba(125,133,146,14%)", text: "#7D8592" },
     review: { bg: "rgba(196,24,230,11%)", text: "#C418E6" },
+    completed: { bg: "#E0F9F2", text: "#00D097" },
   };
 
-  const handleChangeStatus = (status: string) => {
+  const handleChangeStatus = (status: TaskStatus) => {
     onChange(status);
   };
 
   return (
     <Box sx={{ display: "flex", gap: "10px", alignItems: "center" }}>
-      <Chip
-        label="Pending"
-        sx={{
-          color: selected === "pending" ? colorMaps["pending"].text : "",
-          backgroundColor:
-            selected === "pending" ? colorMaps["pending"].bg : "",
-        }}
-        variant={selected === "pending" ? "filled" : "outlined"}
-        onClick={() => handleChangeStatus("pending")}
-      />
-      <Chip
-        label="In Progress"
-        sx={{
-          color: selected === "progress" ? colorMaps["progress"].text : "",
-          backgroundColor:
-            selected === "progress" ? colorMaps["progress"].bg : "",
-        }}
-        variant={selected === "progress" ? "filled" : "outlined"}
-        onClick={() => handleChangeStatus("progress")}
-      />
-      <Chip
-        label="Success"
-        sx={{
-          color: selected === "success" ? colorMaps["success"].text : "",
-          backgroundColor:
-            selected === "success" ? colorMaps["success"].bg : "",
-        }}
-        variant={selected === "success" ? "filled" : "outlined"}
-        onClick={() => handleChangeStatus("success")}
-      />
-      <Chip
-        label="Review"
-        sx={{
-          color: selected === "review" ? colorMaps["review"].text : "",
-          backgroundColor: selected === "review" ? colorMaps["review"].bg : "",
-        }}
-        variant={selected === "review" ? "filled" : "outlined"}
-        onClick={() => handleChangeStatus("review")}
-      />
+      {TASK_STATUSES_ARRAY.map((status) => {
+        const isSelected = selected === status;
+        const colorMap = colorMaps[status];
+        return (
+          <Chip
+            key={status}
+            label={getStatusDisplayName(status)}
+            sx={{
+              color: isSelected ? colorMap.text : "",
+              backgroundColor: isSelected ? colorMap.bg : "",
+            }}
+            variant={isSelected ? "filled" : "outlined"}
+            onClick={() => handleChangeStatus(status)}
+          />
+        );
+      })}
     </Box>
   );
 };
