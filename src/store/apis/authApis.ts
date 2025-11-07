@@ -5,11 +5,13 @@ export type User = {
   email: string;
   password: string;
 };
-// Simulated login API input/output types
-interface LoginResponse {
-  token: string;
-  user: User;
+// Login API response types
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
+
 export type UserRoles = "Standard" | "Admin";
 export interface SingUpRequest {
   name: string;
@@ -23,22 +25,20 @@ export async function loginApi(
   email: string,
   password: string
 ): Promise<LoginResponse> {
-  // Simulate API delay
-  await new Promise((res) => setTimeout(res, 500));
-
-  if (email === "user" && password === "pass") {
-    return {
-      token: "fake-jwt-token-123",
-      user: {
-        email: "user",
-        first_name: "John Doe",
-        last_name: "wqd",
-        password: "",
+  const url = `http://localhost:3000/api/auth/login`;
+  const result = await axios.post<LoginResponse>(
+    url,
+    {
+      email,
+      password,
+    },
+    {
+      headers: {
+        "content-type": "application/json",
       },
-    };
-  } else {
-    throw new Error("Invalid username or password");
-  }
+    }
+  );
+  return result.data;
 }
 
 export async function logoutApi(): Promise<boolean> {

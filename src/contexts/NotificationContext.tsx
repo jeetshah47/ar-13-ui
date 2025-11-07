@@ -44,20 +44,20 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 interface NotificationProviderProps {
   children: React.ReactNode;
   userId?: string;
-  firebaseToken?: string;
+  authToken?: string;
   websocketUrl?: string;
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
   userId,
-  firebaseToken,
+  authToken,
   websocketUrl = "http://localhost:3000",
 }) => {
   // Get user data from localStorage if not provided
   const userData = getUserFromStorage();
   const actualUserId = userId || userData.userId;
-  const actualAuthToken = firebaseToken || userData.authToken;
+  const actualAuthToken = authToken || userData.authToken;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationCount, setNotificationCount] = useState<NotificationCount>(
     { total: 0, unread: 0 }

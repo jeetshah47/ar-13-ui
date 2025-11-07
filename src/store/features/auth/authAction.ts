@@ -1,5 +1,3 @@
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../../config/firebase";
 import type { AppDispatch } from "../../store";
 import {
   authSignInFailed,
@@ -15,70 +13,93 @@ import {
 import type { AxiosError } from "axios";
 import type { AuthError } from "../../types/Auth/AuthError";
 import toast from "react-hot-toast";
-import { signupApi, type SingUpRequest, validateSignupTokenApi } from "../../apis/authApis";
+import { loginApi, signupApi, type SingUpRequest, validateSignupTokenApi } from "../../apis/authApis";
 import { getUserProfile } from "../../apis/userApis";
-import type { FirebaseError } from "firebase/app";
 import type { UserRole } from "../../types/RBAC";
+
+/**
+ * Decode JWT token to extract payload
+ */
+function decodeJWT(token: string): { userId?: string; sub?: string; email?: string; [key: string]: unknown } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 export const authSignInActions =
   (email: string, password: string, cb?: () => void) =>
   async (dispatch: AppDispatch) => {
     dispatch(authSignInRequest());
     try {
-      signInWithEmailAndPassword(auth, email, password)
-        .then(async (data) => {
-          const user = data.user;
-          const token = await user.getIdToken();
-          const uid = user.uid;
-          
-          // Store auth data in localStorage
-          localStorage.setItem("authToken", token);
-          localStorage.setItem("uid", uid);
-          
-          try {
-            // Fetch user profile from backend API
-            const userProfile = await getUserProfile(uid);
-            
-            // Store user data in localStorage
-            localStorage.setItem("userRole", userProfile.role);
-            localStorage.setItem("userEmail", userProfile.email);
-            localStorage.setItem("userName", userProfile.name);
-            
-            dispatch(authSignInSuccess({ 
-              token, 
-              uid, 
-              role: userProfile.role as UserRole,
-              email: userProfile.email,
-              name: userProfile.name
-            }));
-          } catch {
-            // Fallback to default role if API call fails
-            // This ensures the app continues to work even if the user profile API is unavailable
-            const defaultRole = "Admin";
-            localStorage.setItem("userRole", defaultRole);
-            localStorage.setItem("userEmail", user.email || "");
-            localStorage.setItem("userName", user.displayName || "");
-            
-            dispatch(authSignInSuccess({ 
-              token, 
-              uid, 
-              role: defaultRole as UserRole,
-              email: user.email || undefined,
-              name: user.displayName || undefined
-            }));
-          }
-          
-          if (cb) cb();
-        })
-        .catch((error: FirebaseError) => {
-          if (error?.message) {
-            dispatch(authSignInFailed(error?.message));
-            toast.error(error?.message);
-          }
-        });
-    } catch {
-      dispatch(authSignInFailed("Unkown Error"));
-      toast.error("Login Failed");
+      const loginResponse = await loginApi(email, password);
+      const { accessToken, refreshToken, expiresIn } = loginResponse;
+      
+      // Decode JWT to get user ID
+      const decodedToken = decodeJWT(accessToken);
+      const userIdValue = decodedToken?.userId || decodedToken?.sub || decodedToken?.id;
+      
+      // Ensure userId is a string
+      const userId = typeof userIdValue === 'string' ? userIdValue : String(userIdValue || '');
+      
+      if (!userId || userId === '') {
+        throw new Error("Unable to extract user ID from token");
+      }
+      
+      // Store auth data in localStorage
+      localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("tokenExpiresIn", expiresIn.toString());
+      localStorage.setItem("uid", userId);
+      
+      try {
+        // Fetch user profile from backend API
+        const userProfile = await getUserProfile(userId);
+        
+        // Store user data in localStorage
+        localStorage.setItem("userRole", userProfile.role);
+        localStorage.setItem("userEmail", userProfile.email);
+        localStorage.setItem("userName", userProfile.name);
+        
+        dispatch(authSignInSuccess({ 
+          token: accessToken, 
+          uid: userId, 
+          role: userProfile.role as UserRole,
+          email: userProfile.email,
+          name: userProfile.name
+        }));
+      } catch {
+        // Fallback to default role if API call fails
+        // This ensures the app continues to work even if the user profile API is unavailable
+        const defaultRole = "Admin";
+        const userEmail = decodedToken?.email || email;
+        localStorage.setItem("userRole", defaultRole);
+        localStorage.setItem("userEmail", userEmail);
+        localStorage.setItem("userName", "");
+        
+        dispatch(authSignInSuccess({ 
+          token: accessToken, 
+          uid: userId, 
+          role: defaultRole as UserRole,
+          email: userEmail,
+          name: undefined
+        }));
+      }
+      
+      if (cb) cb();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown Error";
+      dispatch(authSignInFailed(errorMessage));
+      toast.error(errorMessage);
     }
   };
 

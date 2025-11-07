@@ -15,7 +15,6 @@ import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import TaskDetailsHeader, { TaskDetailsContent } from "../components/TaskDetailsHeader";
 import FileAttachmentsSection from "../components/FileAttachmentsSection";
 import ActivityLogsSection from "../components/ActivityLogsSection";
-import { subscribeToTaskActivityLogs } from "../../../services/firebaseActivityLogService";
 import Modal from "../../../common/components/Modal/Modal";
 import { parseFirebaseTimestamp, isImageAttachment } from "../utils/taskUtils";
 import { getActivityIcon } from "../utils/activityLogUtils";
@@ -97,16 +96,9 @@ const ProjectDetail = () => {
     });
   }, [activityLogs, users]);
 
-  // Subscribe to real-time activity logs
-  useEffect(() => {
-    if (!taskId || !projectId) return;
-
-    const unsubscribe = subscribeToTaskActivityLogs(projectId, taskId, (activityLogs) => {
-      dispatch(getActivityLogsSuccess({ activityLogs }));
-    });
-
-    return () => unsubscribe();
-  }, [taskId, projectId, dispatch]);
+  // TODO: Replace with backend API polling or WebSocket for real-time activity logs
+  // Real-time activity logs subscription removed (Firebase dependency)
+  // Activity logs are now fetched via the backend API in fetchProjectDetailAction
 
   // Scroll to activity log when hash is present in URL
   useEffect(() => {

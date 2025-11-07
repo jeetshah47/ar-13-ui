@@ -7,8 +7,9 @@ import {
   CardContent,
   Avatar,
 } from "@mui/material";
-import { subscribeToProjectTasks, updateTaskStatus, type FirebaseTask } from "../../../services/firebaseTaskService";
 import { mapStatusToUnified } from "../constants/taskStatus.constants";
+import { getAllTaskByProjectId, updateTaskStatus } from "../../../store/apis/taskApis";
+import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 
 interface TaskItem {
   id: string;
@@ -34,23 +35,12 @@ interface ProjectBoardProps {
   projectId: string;
 }
 
-// Format duration from Date to string - moved outside component for performance
-const formatDuration = (date: Date | { toDate: () => Date } | string): string => {
-  if (!date) return "0h";
+// Format duration from Date string to readable format
+const formatDuration = (dateString: string): string => {
+  if (!dateString) return "0h";
 
-  let dateObj: Date;
-  
   try {
-    // Check if it's a Firestore timestamp object with toDate method
-    if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
-      dateObj = (date as { toDate: () => Date }).toDate();
-    } else if (typeof date === 'string' || date instanceof Date) {
-      // Handle string dates or regular Date objects
-      dateObj = new Date(date as string | Date);
-    } else {
-      return "0h";
-    }
-    
+    const dateObj = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
 
@@ -99,42 +89,60 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const [draggedFromColumn, setDraggedFromColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  // Convert Firebase task to TaskItem
-  const convertFirebaseTaskToTaskItem = useCallback((firebaseTask: FirebaseTask): TaskItem => {
+  // Convert TaskResponse to TaskItem
+  const convertTaskResponseToTaskItem = useCallback((task: TaskResponse): TaskItem => {
+    const assigneeName = task.assignDetails && task.assignDetails.length > 0 
+      ? task.assignDetails[0].name 
+      : "Unassigned";
+    const assigneeAvatar = task.assignDetails && task.assignDetails.length > 0 
+      ? task.assignDetails[0].avatar || "/api/placeholder/24/24"
+      : "/api/placeholder/24/24";
+
     return {
-      id: firebaseTask.id,
-      title: firebaseTask.subject,
-      code: firebaseTask.code,
-      priority: firebaseTask.priority as "Low" | "Medium" | "High",
-      duration: formatDuration(firebaseTask.duration),
+      id: task.id,
+      title: task.subject,
+      code: task.code,
+      priority: task.priority as "Low" | "Medium" | "High",
+      duration: formatDuration(task.duration),
       assignee: {
-        name: "UI/UX Designer", // You can get this from assignTo array
-        avatar: "/api/placeholder/24/24",
+        name: assigneeName,
+        avatar: assigneeAvatar,
       },
-      status: firebaseTask.status,
+      status: task.status,
     };
   }, []);
 
-  // Subscribe to real-time updates
+  // Fetch tasks from backend API
   useEffect(() => {
     if (!projectId) return;
 
-    const unsubscribe = subscribeToProjectTasks(projectId, (firebaseTasks: FirebaseTask[]) => {
-      const taskItems = firebaseTasks.map(convertFirebaseTaskToTaskItem);
-      setColumns(prevColumns => 
-        prevColumns.map(column => ({
-          ...column,
-          items: taskItems.filter(task => {
-            // Normalize task status to unified format for comparison
-            const normalizedTaskStatus = mapStatusToUnified(task.status);
-            return normalizedTaskStatus === column.status;
-          })
-        }))
-      );
-    });
+    const fetchTasks = async () => {
+      try {
+        const response = await getAllTaskByProjectId(projectId);
+        const taskItems = response.tasks.map(convertTaskResponseToTaskItem);
+        setColumns(prevColumns => 
+          prevColumns.map(column => ({
+            ...column,
+            items: taskItems.filter(task => {
+              // Normalize task status to unified format for comparison
+              const normalizedTaskStatus = mapStatusToUnified(task.status);
+              return normalizedTaskStatus === column.status;
+            })
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+      }
+    };
 
-    return () => unsubscribe();
-  }, [projectId, convertFirebaseTaskToTaskItem]);
+    fetchTasks();
+    
+    // TODO: Replace with WebSocket or polling for real-time updates
+    // Set up polling interval (every 5 seconds) as a temporary solution
+    const intervalId = setInterval(fetchTasks, 5000);
+    
+    return () => clearInterval(intervalId);
+  }, [projectId, convertTaskResponseToTaskItem]);
 
   const handleDragStart = (
     e: DragEvent<HTMLDivElement>,
@@ -185,14 +193,30 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       if (!targetColumn) return;
 
       try {
-        // Update the task status in Firebase
+        // Update the task status via backend API
         await updateTaskStatus(projectId, draggedItem.id, targetColumn.status);
         
-        // The real-time listener will automatically update the UI
-        // so we don't need to manually update the columns state
-      } catch {
-        // You might want to show a toast notification here
-        // For now, we'll silently handle the error
+        // Optimistically update the UI
+        setColumns(prevColumns => 
+          prevColumns.map(column => {
+            if (column.id === draggedFromColumn) {
+              return {
+                ...column,
+                items: column.items.filter(item => item.id !== draggedItem.id)
+              };
+            }
+            if (column.id === targetColumnId) {
+              return {
+                ...column,
+                items: [...column.items, { ...draggedItem, status: targetColumn.status }]
+              };
+            }
+            return column;
+          })
+        );
+      } catch (error) {
+        console.error("Failed to update task status:", error);
+        // TODO: Show toast notification for error
       }
     }
 
