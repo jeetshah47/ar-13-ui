@@ -5,10 +5,12 @@ import SignUp from "../pages/Auth/SignUp";
 import CalendarPage from "../pages/Calendar/CalendarPage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import EmployeesPage from "../pages/Employees/EmployeesPage";
+import EmployeeProfilePage from "../pages/Employees/EmployeeProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
 import ProjectPage from "../pages/Projects/ProjectPage";
 import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
+import BackupPage from "../pages/Backup/BackupPage";
 import { RequireAdmin } from "../common/components/RBAC/RequirePermission";
 import { Navigate } from "react-router";
 
@@ -34,8 +36,12 @@ const authRoutes = [
     ),
   },
   {
-    path: "/employees/*",
+    path: "/employees",
     component: <EmployeesPage />,
+  },
+  {
+    path: "/employees/:userId",
+    component: <EmployeeProfilePage />,
   },
   {
     path: "/profile/*",
@@ -44,6 +50,14 @@ const authRoutes = [
   {
     path: "/info-portal/*",
     component: <InfoPortalPage />,
+  },
+  {
+    path: "/backup",
+    component: (
+      <RequireAdmin fallback={<Navigate to="/dashboard" replace />}>
+        <BackupPage />
+      </RequireAdmin>
+    ),
   },
 ];
 

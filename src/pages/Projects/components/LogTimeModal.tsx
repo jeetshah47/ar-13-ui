@@ -66,16 +66,16 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
       }}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "584px",
           maxHeight: "90vh",
-          backgroundColor: "white",
-          boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.2)",
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: theme.shadows[6],
           borderRadius: "24px",
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
-        }}
+        })}
       >
       {/* Header */}
       <Box
@@ -87,23 +87,23 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
         }}
       >
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontWeight: 700,
             fontSize: "22px",
             lineHeight: "1.36",
-            color: "#0A1629",
-          }}
+            color: theme.palette.text.primary,
+          })}
         >
           Time Tracking
         </Typography>
         <IconButton
           onClick={handleClose}
-          sx={{
-            backgroundColor: "#F4F9FD",
+          sx={(theme) => ({
+            backgroundColor: theme.palette.grey[50],
             borderRadius: "14px",
             width: "44px",
             height: "44px",
-          }}
+          })}
         >
           <Crossicon />
         </IconButton>
@@ -115,13 +115,13 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
         <Box sx={{ display: "flex", gap: "16px" }}>
           <Box sx={{ flex: 1 }}>
             <Typography
-              sx={{
+              sx={(theme) => ({
                 fontWeight: 700,
                 fontSize: "14px",
                 lineHeight: "1.71",
-                color: "#7D8592",
+                color: theme.palette.text.secondary,
                 marginBottom: "7px",
-              }}
+              })}
             >
               Hours
             </Typography>
@@ -154,13 +154,13 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography
-              sx={{
+              sx={(theme) => ({
                 fontWeight: 700,
                 fontSize: "14px",
                 lineHeight: "1.71",
-                color: "#7D8592",
+                color: theme.palette.text.secondary,
                 marginBottom: "7px",
-              }}
+              })}
             >
               Minutes
             </Typography>
@@ -196,13 +196,13 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
         {/* Date field */}
         <Box>
           <Typography
-            sx={{
+            sx={(theme) => ({
               fontWeight: 700,
               fontSize: "14px",
               lineHeight: "1.71",
-              color: "#7D8592",
+              color: theme.palette.text.secondary,
               marginBottom: "7px",
-            }}
+            })}
           >
             Date
           </Typography>
@@ -243,13 +243,13 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
         {/* Description field */}
         <Box sx={{ flex: 1 }}>
           <Typography
-            sx={{
+            sx={(theme) => ({
               fontWeight: 700,
               fontSize: "14px",
               lineHeight: "1.71",
-              color: "#7D8592",
+              color: theme.palette.text.secondary,
               marginBottom: "7px",
-            }}
+            })}
           >
             Work Description
           </Typography>
@@ -299,25 +299,24 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
         <Button
           onClick={handleSave}
           disabled={!date || !description || (hours === 0 && minutes === 0) || loading}
-          sx={{
-            backgroundColor: "#3F8CFF",
-            color: "#FFFFFF",
+          sx={(theme) => ({
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
             borderRadius: "14px",
             padding: "12px 20px",
             fontWeight: 700,
             fontSize: "16px",
             lineHeight: "1.36",
             textTransform: "none",
-            boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.26)",
+            boxShadow: theme.shadows[4],
             "&:hover": {
-              backgroundColor: "#3F8CFF",
-              opacity: 0.9,
+              backgroundColor: theme.palette.primary.dark,
             },
             "&:disabled": {
-              backgroundColor: "#D8E0F0",
-              color: "#7D8592",
+              backgroundColor: theme.palette.action.disabledBackground,
+              color: theme.palette.action.disabled,
             },
-          }}
+          })}
         >
           Save Task
         </Button>

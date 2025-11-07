@@ -25,17 +25,17 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
   return (
     <Modal show={show} onClose={onClose}>
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "584px",
           height: "518px",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.palette.background.paper,
           borderRadius: "24px",
-          boxShadow: "0px 6px 58px 0px rgba(121, 145, 173, 0.2)",
+          boxShadow: theme.shadows[6],
           position: "relative",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-        }}
+        })}
       >
         {/* Close Button */}
         <Box
@@ -48,15 +48,15 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
         >
           <IconButton
             onClick={onClose}
-            sx={{
-              backgroundColor: "#F4F9FD",
+            sx={(theme) => ({
+              backgroundColor: theme.palette.grey[50],
               borderRadius: "14px",
               width: "44px",
               height: "44px",
               "&:hover": {
-                backgroundColor: "#E6EDF5",
+                backgroundColor: theme.palette.grey[100],
               },
-            }}
+            })}
           >
             <SvgIcon component={CloseIcon} />
           </IconButton>
@@ -403,14 +403,14 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
             }}
           >
             <Typography
-              sx={{
+              sx={(theme) => ({
                 fontWeight: 700,
                 fontSize: "22px",
                 lineHeight: 1.364,
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 textAlign: "center",
                 maxWidth: "401px",
-              }}
+              })}
             >
               Are you sure you are claiming this task?
             </Typography>
@@ -428,15 +428,15 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
             }}
           >
             <Typography
-              sx={{
+              sx={(theme) => ({
                 fontWeight: 400,
                 fontSize: "16px",
                 lineHeight: 1.5,
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 textAlign: "center",
                 opacity: 0.7028,
                 maxWidth: "401px",
-              }}
+              })}
             >
               The task will be moved to the Completed section and will be closed.
             </Typography>
@@ -458,9 +458,11 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
               variant="contained"
               onClick={handleReject}
               disabled={isLoading}
-              sx={{
-                backgroundColor: "rgba(63, 140, 255, 0.8)",
-                color: "#FFFFFF",
+              sx={(theme) => ({
+                backgroundColor: theme.palette.mode === "dark" 
+                  ? "rgba(63, 140, 255, 0.8)" 
+                  : "rgba(63, 140, 255, 0.8)",
+                color: theme.palette.primary.contrastText,
                 borderRadius: "14px",
                 padding: "13px 20px",
                 fontWeight: 700,
@@ -468,17 +470,19 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
                 lineHeight: 1.364,
                 minWidth: "141px",
                 height: "48px",
-                boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+                boxShadow: theme.shadows[4],
                 "&:hover": {
-                  backgroundColor: "rgba(63, 140, 255, 0.9)",
-                  boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.42)",
+                  backgroundColor: theme.palette.mode === "dark" 
+                    ? "rgba(63, 140, 255, 0.9)" 
+                    : "rgba(63, 140, 255, 0.9)",
+                  boxShadow: theme.shadows[5],
                 },
                 "&:disabled": {
-                  backgroundColor: "#CED5E0",
-                  color: "#FFFFFF",
+                  backgroundColor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
                   boxShadow: "none",
                 },
-              }}
+              })}
             >
               Reject Task
             </Button>
@@ -486,9 +490,9 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
               variant="contained"
               onClick={handleApprove}
               disabled={isLoading}
-              sx={{
-                backgroundColor: "#3F8CFF",
-                color: "#FFFFFF",
+              sx={(theme) => ({
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
                 borderRadius: "14px",
                 padding: "13px 20px",
                 fontWeight: 700,
@@ -496,17 +500,17 @@ const ClaimTaskModal = ({ show, onClose, onApprove, onReject, isLoading = false 
                 lineHeight: 1.364,
                 minWidth: "141px",
                 height: "48px",
-                boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+                boxShadow: theme.shadows[4],
                 "&:hover": {
-                  backgroundColor: "#3A81EB",
-                  boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.42)",
+                  backgroundColor: theme.palette.primary.dark,
+                  boxShadow: theme.shadows[5],
                 },
                 "&:disabled": {
-                  backgroundColor: "#CED5E0",
-                  color: "#FFFFFF",
+                  backgroundColor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
                   boxShadow: "none",
                 },
-              }}
+              })}
             >
               {isLoading ? "Claiming..." : "Approve Task"}
             </Button>

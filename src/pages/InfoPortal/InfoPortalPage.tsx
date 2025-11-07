@@ -37,12 +37,12 @@ const InfoPortalList = () => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         width: "100%",
         height: "100%",
-        backgroundColor: "#F4F9FD",
+        backgroundColor: theme.palette.grey[50],
         minHeight: "100vh",
-      }}
+      })}
     >
       <PageHeader
         title="Info Portal"
@@ -60,11 +60,11 @@ const InfoPortalList = () => {
                 }}
               />
             }
-            sx={{
+            sx={(theme) => ({
               borderRadius: "14px",
               padding: "11px 16px",
-              boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
-            }}
+              boxShadow: theme.shadows[4],
+            })}
           >
             Add Folder
           </Button>
@@ -138,11 +138,11 @@ const InfoPortalPage = () => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         height: "100%",
         width: "100%",
-        backgroundColor: "#F4F9FD",
-      }}
+        backgroundColor: theme.palette.grey[50],
+      })}
     >
       <AnimatedPage>
         <Routes location={location} key={location.pathname}>

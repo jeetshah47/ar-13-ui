@@ -33,19 +33,19 @@ const ProjectSection = () => {
   const ProjectCard = (project: AnyProject) => (
     <Box sx={{ padding: "12px 0" }}>
       <Box
-        sx={{
+        sx={(theme) => ({
           borderRadius: "24px",
-          boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-          backgroundColor: "white",
-        }}
+          boxShadow: theme.shadows[1],
+          backgroundColor: theme.palette.background.paper,
+        })}
       >
         <Box sx={{ display: "flex" }}>
           <Box
-            sx={{
-              borderRight: "1px solid #E4E6E8",
+            sx={(theme) => ({
+              borderRight: `1px solid ${theme.palette.divider}`,
               width: "50%",
               padding: "24px",
-            }}
+            })}
           >
             <Box
               sx={{

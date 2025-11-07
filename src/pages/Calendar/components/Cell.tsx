@@ -15,8 +15,8 @@ const Cell = ({ date, weekDay, onClickCell, events, hasEvents, onClickEvent }: C
   return (
     <Box
       onClick={() => onClickCell(date)}
-      sx={{
-        border: "1px solid #E6EBF5",
+      sx={(theme) => ({
+        border: `1px solid ${theme.palette.divider}`,
         display: "flex",
         height: "128px",
         flexDirection: "column",
@@ -24,22 +24,24 @@ const Cell = ({ date, weekDay, onClickCell, events, hasEvents, onClickEvent }: C
         padding: "8px",
         cursor: "pointer",
         position: "relative",
-        backgroundColor: hasEvents ? "#F8F9FA" : "transparent",
+        backgroundColor: hasEvents 
+          ? theme.palette.mode === "dark" ? theme.palette.grey[100] : "#F8F9FA"
+          : "transparent",
         ":hover": {
-          backgroundColor: "#F4F9FD"
+          backgroundColor: theme.palette.grey[50]
         }
-      }}
+      })}
     >
       {weekDay && (
         <Box
-          sx={{
-            backgroundColor: "#F4F9FD",
+          sx={(theme) => ({
+            backgroundColor: theme.palette.grey[50],
             display: "flex",
             padding: "4px 8px",
-            color: "#7D8592",
+            color: theme.palette.text.secondary,
             borderRadius: "8px",
             fontSize: "12px",
-          }}
+          })}
         >
           {weekDay}
         </Box>
@@ -65,15 +67,15 @@ const Cell = ({ date, weekDay, onClickCell, events, hasEvents, onClickEvent }: C
         ))}
         {events.length > 3 && (
           <Box
-            sx={{
+            sx={(theme) => ({
               fontSize: "10px",
-              color: "#7D8592",
+              color: theme.palette.text.secondary,
               textAlign: "center",
               padding: "2px",
-              backgroundColor: "#E8F4FD",
+              backgroundColor: theme.palette.primary.light,
               borderRadius: "4px",
               marginTop: "1px"
-            }}
+            })}
           >
             +{events.length - 3} more
           </Box>

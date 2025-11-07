@@ -70,9 +70,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   // Initialize WebSocket client
   useEffect(() => {
+    // Don't create client if we don't have auth token or userId
+    if (!actualAuthToken || !actualUserId) {
+      return;
+    }
+
     const client = new WebSocketClient({
       serverUrl: websocketUrl,
-      authToken: actualAuthToken ?? "",
+      authToken: actualAuthToken,
       autoConnect: true,
     });
 
@@ -82,7 +87,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     client.connect();
 
     // Setup event listeners
-    client.on("connect", () => {
+    const handleConnect = () => {
       setIsConnected(true);
       setError(null);
       
@@ -90,25 +95,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       if (actualUserId) {
         client.joinUserRoom(actualUserId);
       }
-    });
+    };
 
-    client.on("disconnect", () => {
+    const handleDisconnect = () => {
       setIsConnected(false);
-    });
+    };
 
-    client.on("notification", (notification: Notification) => {
+    const handleNotification = (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]);
       setNotificationCount((prev) => ({
         total: prev.total + 1,
         unread: prev.unread + 1,
       }));
-    });
+    };
 
-    client.on("notification_count", (count: NotificationCount) => {
+    const handleNotificationCount = (count: NotificationCount) => {
       setNotificationCount(count);
-    });
+    };
 
-    client.on("authenticated", (data: { success: boolean }) => {
+    const handleAuthenticated = (data: { success: boolean }) => {
       if (data.success) {
         setIsConnected(true);
         setError(null);
@@ -116,24 +121,45 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         setError("Authentication failed");
         setIsConnected(false);
       }
-    });
+    };
 
-    client.on("connect_error", (error: Error) => {
+    const handleConnectError = (error: Error) => {
       setError(`WebSocket connection failed: ${error.message}`);
       setIsConnected(false);
-    });
+    };
 
-    client.on("reconnect", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleReconnect = (_attemptNumber: number) => {
+      // attemptNumber is provided by socket.io but we don't need it
       setIsConnected(true);
       setError(null);
       // Refresh notifications after reconnection
       if (refreshNotificationsRef.current) {
         refreshNotificationsRef.current();
       }
-    });
+    };
+
+    // Register event listeners
+    client.on("connect", handleConnect);
+    client.on("disconnect", handleDisconnect);
+    client.on("notification", handleNotification);
+    client.on("notification_count", handleNotificationCount);
+    client.on("authenticated", handleAuthenticated);
+    client.on("connect_error", handleConnectError);
+    client.on("reconnect", handleReconnect);
 
     return () => {
+      // Clean up event listeners
+      client.off("connect");
+      client.off("disconnect");
+      client.off("notification");
+      client.off("notification_count");
+      client.off("authenticated");
+      client.off("connect_error");
+      client.off("reconnect");
+      // Disconnect the client
       client.disconnect();
+      setWsClient(null);
     };
   }, [websocketUrl, actualAuthToken, actualUserId]);
 
@@ -148,23 +174,28 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // No need for mock service setup
 
   const refreshNotifications = useCallback(async () => {
-    if (!actualUserId) return;
+    if (!actualUserId) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
       const [allNotifications, count] = await Promise.all([
-        notificationService.getAllNotifications(actualUserId),
-        notificationService.getNotificationCount(actualUserId),
+        notificationService.getAllNotifications(actualUserId).catch(() => {
+          return []; // Return empty array on error
+        }),
+        notificationService.getNotificationCount(actualUserId).catch(() => {
+          return { total: 0, unread: 0 }; // Return default count on error
+        }),
       ]);
 
       setNotifications(allNotifications);
       setNotificationCount(count);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load notifications"
-      );
+      const errorMessage = err instanceof Error ? err.message : "Failed to load notifications";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

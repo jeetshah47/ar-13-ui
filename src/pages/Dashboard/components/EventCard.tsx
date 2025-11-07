@@ -90,7 +90,7 @@ const EventCard = ({ event }: EventCardProps) => {
           </Typography>
           <Box
             sx={{
-              backgroundColor: "#F4F9FD",
+              backgroundColor: (theme) => theme.palette.grey[50],
               padding: "8px 10px",
               display: "flex",
               justifyContent: "center",

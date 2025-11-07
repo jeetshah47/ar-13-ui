@@ -46,31 +46,31 @@ const PagesSidebar = ({
         {/* Header */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <Typography
-            sx={{
+            sx={(theme) => ({
               fontSize: "16px",
               fontWeight: 700,
               lineHeight: 1.5,
-              color: "#0A1629",
-            }}
+              color: theme.palette.text.primary,
+            })}
           >
             Pages
           </Typography>
           <Button
             variant="contained"
             onClick={onAddPage}
-            sx={{
+            sx={(theme) => ({
               minWidth: "44px",
               width: "44px",
               height: "44px",
               borderRadius: "14px",
               padding: 0,
-              backgroundColor: "#3F8CFF",
-              boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+              backgroundColor: theme.palette.primary.main,
+              boxShadow: theme.shadows[4],
               "&:hover": {
-                backgroundColor: "#3A81EB",
-                boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.42)",
+                backgroundColor: theme.palette.primary.dark,
+                boxShadow: theme.shadows[5],
               },
-            }}
+            })}
           >
             <SvgIcon
               component={PlusIcon}
@@ -85,12 +85,12 @@ const PagesSidebar = ({
 
         {/* Divider */}
         <Box
-          sx={{
+          sx={(theme) => ({
             width: "100%",
             height: "1px",
-            backgroundColor: "#E4E6E8",
+            backgroundColor: theme.palette.divider,
             marginBottom: "16px",
-          }}
+          })}
         />
 
         {/* Pages List */}
@@ -101,52 +101,52 @@ const PagesSidebar = ({
               <Box
                 key={page.id}
                 onClick={() => onPageClick?.(page.id)}
-                sx={{
+                sx={(theme) => ({
                   position: "relative",
                   padding: isSelected ? "12px 24px 12px 16px" : "12px 24px",
                   marginLeft: isSelected ? "-8px" : "0",
                   marginRight: isSelected ? "-8px" : "0",
                   borderRadius: isSelected ? "14px" : "0",
-                  backgroundColor: isSelected ? "#F4F9FD" : "transparent",
+                  backgroundColor: isSelected ? theme.palette.grey[50] : "transparent",
                   cursor: "pointer",
                   "&:hover": {
-                    backgroundColor: isSelected ? "#F4F9FD" : "rgba(63, 140, 255, 0.04)",
+                    backgroundColor: isSelected ? theme.palette.grey[50] : theme.palette.primary.light,
                     borderRadius: "14px",
                   },
-                }}
+                })}
               >
                 {isSelected && (
                   <Box
-                    sx={{
+                    sx={(theme) => ({
                       position: "absolute",
                       left: 0,
                       top: "50%",
                       transform: "translateY(-50%)",
                       width: "4px",
                       height: "80px",
-                      backgroundColor: "#3F8CFF",
+                      backgroundColor: theme.palette.primary.main,
                       borderRadius: "2px",
-                    }}
+                    })}
                   />
                 )}
                 <Typography
-                  sx={{
+                  sx={(theme) => ({
                     fontSize: "16px",
                     fontWeight: 700,
                     lineHeight: 1.5,
-                    color: "#0A1629",
+                    color: theme.palette.text.primary,
                     marginBottom: "4px",
-                  }}
+                  })}
                 >
                   {page.title}
                 </Typography>
                 <Typography
-                  sx={{
+                  sx={(theme) => ({
                     fontSize: "14px",
                     fontWeight: 400,
                     lineHeight: 1.364,
-                    color: "#91929E",
-                  }}
+                    color: theme.palette.text.secondary,
+                  })}
                 >
                   Last modified {page.lastModified}
                 </Typography>

@@ -2,6 +2,7 @@ import Axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import toast from "react-hot-toast";
 import { store } from "../store/store";
 import { authLogout } from "../store/features/auth/authSlice";
+import { setGlobalNetworkError } from "../contexts/NetworkErrorContext";
 
 const http = Axios.create();
 
@@ -26,6 +27,11 @@ const handleServerError = (rootError: AxiosError<{ message: string }>) => {
   if (rootError?.code === "ERR_NETWORK") {
     toast.dismiss();
     toast.error("Server offline");
+    // Set global network error state to show ServerOffline component
+    setGlobalNetworkError(true);
+  } else {
+    // Clear network error if it's a different type of error
+    setGlobalNetworkError(false);
   }
   if (rootError?.response?.data) {
     const { message } = rootError.response.data;
@@ -39,6 +45,13 @@ const handleServerError = (rootError: AxiosError<{ message: string }>) => {
 };
 
 http.interceptors.request.use(updateHeaders);
-http.interceptors.response.use((response) => response, handleServerError);
+http.interceptors.response.use(
+  (response) => {
+    // Clear network error on successful response
+    setGlobalNetworkError(false);
+    return response;
+  },
+  handleServerError
+);
 
 export { http };

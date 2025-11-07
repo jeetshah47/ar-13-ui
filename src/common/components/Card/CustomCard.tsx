@@ -14,8 +14,8 @@ const CustomCard = ({ children, sx }: CustomCardProps) => {
         paddingY: "32px",
         paddingX: "20px",
         borderRadius: "24px",
-        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-        backgroundColor: "#FFFFFF",
+        boxShadow: (theme) => theme.shadows[1],
+        backgroundColor: "background.paper",
         ...sx,
       }}
     >

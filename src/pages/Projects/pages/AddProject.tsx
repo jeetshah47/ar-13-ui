@@ -95,7 +95,7 @@ const AddProject = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "white",
+        backgroundColor: "background.paper",
         padding: "24px",
         display: "flex",
         flexDirection: "column",
@@ -182,13 +182,13 @@ const AddProject = () => {
           </Box>
         </Box>
         <Box
-          sx={{
-            background: "rgba(255, 255, 255, 0.118253)",
-            border: "1px solid #CED5E0",
+          sx={(theme) => ({
+            background: theme.palette.primary.light,
+            border: `1px solid ${theme.palette.grey[300]}`,
             borderRadius: "24px",
             padding: "24px",
             width: "30%",
-          }}
+          })}
         >
           <Typography sx={{ fontSize: "18px", fontWeight: "bold" }}>
             Select image

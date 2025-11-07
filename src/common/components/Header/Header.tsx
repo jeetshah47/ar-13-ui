@@ -4,6 +4,7 @@ import BellIcon from "../../../assets/icons/general/calendar-2.svg?react";
 import ProfileMenu from "./ProfileMenu";
 import NotificationModal from "../NotificationModal";
 import { useNotificationCount } from "../../../contexts/NotificationContext";
+import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
 const Header = () => {
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -33,6 +34,7 @@ const Header = () => {
           paddingRight: "36px",
         }}
       >
+        <ThemeToggle />
         <Paper
           elevation={0}
           sx={{
@@ -40,10 +42,11 @@ const Header = () => {
             display: "flex",
             justifyContent: "center",
             alignContent: "center",
-            boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+            boxShadow: (theme) => theme.shadows[1],
             cursor: "pointer",
+            backgroundColor: "background.paper",
             "&:hover": {
-              backgroundColor: "#F8FAFC",
+              backgroundColor: "action.hover",
             },
           }}
           onClick={handleNotificationClick}

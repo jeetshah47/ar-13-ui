@@ -382,7 +382,7 @@ export const DateRangePicker = ({
               e.stopPropagation();
               clearSelection();
             }}
-            sx={{
+            sx={(theme) => ({
               position: 'absolute',
               right: '8px',
               top: '50%',
@@ -395,14 +395,18 @@ export const DateRangePicker = ({
               width: '24px',
               height: '24px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              backgroundColor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.08)' 
+                : 'rgba(0, 0, 0, 0.04)',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? 'rgba(255, 255, 255, 0.12)'
+                  : 'rgba(0, 0, 0, 0.08)',
               },
               fontSize: '14px',
-              color: '#6b7280',
+              color: theme.palette.text.secondary,
               fontWeight: 500,
-            }}
+            })}
           >
             ×
           </Box>

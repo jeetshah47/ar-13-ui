@@ -6,7 +6,7 @@ export async function getRecentActivityLogs(
   entityType: "task" | "project" | "user" | "calendarEvent",
   limit?: number
 ): Promise<ActivityLogsResponse> {
-  const url = `http://localhost:3000/api/activity-logs/${entityType}`;
+  const url = `http://localhost:3000/api/activity-log/entity-type/${entityType}`;
   const result = await http.get(url, {
     params: { limit },
   });

@@ -5,7 +5,7 @@ import Tab from "../../common/components/Tab/Tab";
 import EmpVacationCard from "./components/EmpVacationCard";
 import VacationRequestCard from "./components/VacationRequestCard";
 import { useState, useEffect, useMemo } from "react";
-// import VacationsCalender from "./components/VacationCalender";
+import VacationsCalender from "./components/VacationCalender";
 import VacationForm from "../Profile/components/VacationForm";
 import { useVacation } from "../../store/hooks/useVacation";
 import { useAppSelector } from "../../store/store";
@@ -27,7 +27,7 @@ const VacationPage = () => {
   const tabList = useMemo(() => {
     const baseTabs = ["Employee's Vacations"];
     if (isAdmin()) {
-      return ["Vacation Requests", ...baseTabs];
+      return ["Vacation Requests","Calendar", ...baseTabs];
     }
     return baseTabs;
   }, [isAdmin]);
@@ -224,7 +224,16 @@ const VacationPage = () => {
           )}
         </Box>
       )}
-      {/* {currentTab === "Calendar" && <VacationsCalender />} */}
+      {currentTab === "Calendar" && (
+        <Box
+          sx={{
+            padding: "28px 0px",
+            width: "100%",
+          }}
+        >
+          <VacationsCalender />
+        </Box>
+      )}
       
       {/* Vacation Request Modal */}
       <Modal

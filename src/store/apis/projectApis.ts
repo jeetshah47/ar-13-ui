@@ -2,6 +2,7 @@ import type { ProjectResponse } from "../types/Project/ProjectResponse";
 import type { ProjectDetailResponse } from "../types/Project/ProjectDetailResponse";
 import { http } from "../../config/http";
 import type { ProjectRequest } from "../types/Project/ProjectRequest";
+import type { ProjectStatisticsResponse } from "../types/Project/ProjectStatisticsResponse";
 
 
 export async function getAllProjects(): Promise<{
@@ -21,6 +22,12 @@ export async function addProject(project: ProjectRequest): Promise<ProjectRespon
 
 export async function getProjectDetails(projectId: string): Promise<ProjectDetailResponse> {
   const url = `http://localhost:3000/api/project/${projectId}`;
+  const result = await http.get(url);
+  return result.data;
+}
+
+export async function getAllProjectsStatistics(): Promise<ProjectStatisticsResponse> {
+  const url = `http://localhost:3000/api/project/all/statistics`;
   const result = await http.get(url);
   return result.data;
 }

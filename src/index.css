@@ -25,6 +25,12 @@ body {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overflow: hidden; /* Prevent body scrollbar - main container handles scrolling */
+  transition: background-color 0.3s ease;
+}
+
+html.dark,
+html.dark body {
+  background-color: #0A1629;
 }
 
 /* Smooth scrolling performance optimization */
@@ -63,6 +69,30 @@ body {
   --color-background-light: #E6EDF5;
   --color-background-light-alt: #E6EBF5;
   --color-card-gray: #F4F9FD;
+}
+
+:root.dark {
+  /* Primary Colors (same in dark mode) */
+  --color-primary: #3F8CFF;
+  --color-primary-hover: #3A81EB;
+  --color-primary-pressed: #1F6DE0;
+  --color-primary-disabled: #4A5565;
+  --color-primary-light: rgba(63, 140, 255, 0.2);
+  --color-primary-shadow: rgba(63, 140, 255, 0.26);
+  --color-primary-shadow-hover: rgba(63, 140, 255, 0.42);
+
+  /* Text Colors */
+  --color-text-primary: #E6EDF5;
+  --color-text-secondary: #B2B8C2;
+  --color-text-tertiary: #91929E;
+  --color-text-disabled: #B2B8C2;
+
+  /* Background Colors */
+  --color-white: #1A2332;
+  --color-background-default: #0A1629;
+  --color-background-light: #252F3F;
+  --color-background-light-alt: #2E3A4A;
+  --color-card-gray: #1A2332;
 
   /* Border Colors */
   --color-border-default: #D8E0F0;
@@ -106,6 +136,51 @@ body {
   --color-gray-700: #91929E;
   --color-gray-800: #7D8592;
   --color-gray-900: #0A1629;
+}
+
+:root.dark {
+  /* Border Colors */
+  --color-border-default: #3A4555;
+  --color-border-disabled: #3A4555;
+  --color-border-selected: #3F8CFF;
+  --color-border-error: #F65160;
+
+  /* Status Colors */
+  --color-success: #00D097;
+  --color-success-light: rgba(0, 208, 151, 0.2);
+  --color-error: #F65160;
+  --color-error-light: rgba(246, 81, 96, 0.2);
+  --color-warning: #FFBD21;
+  --color-warning-light: #FDC748;
+  --color-info: #3F8CFF;
+  
+  /* Task Status Colors */
+  --color-status-pending: #7D8592;
+  --color-status-pending-bg: rgba(125, 133, 146, 0.2);
+  --color-status-todo: #7D8592;
+  --color-status-todo-bg: rgba(125, 133, 146, 0.2);
+  --color-status-review: #C418E6;
+  --color-status-review-bg: rgba(196, 24, 230, 0.2);
+  --color-status-completed: #00D097;
+  --color-status-completed-bg: rgba(0, 208, 151, 0.2);
+
+  /* Vacation Status Colors */
+  --color-vacation-pending: #FDC748;
+  --color-vacation-approved: #00D097;
+  --color-vacation-pending-bg: rgba(253, 199, 72, 0.2);
+  --color-vacation-approved-bg: rgba(0, 208, 151, 0.2);
+
+  /* Gray Scale */
+  --color-gray-50: #1A2332;
+  --color-gray-100: #252F3F;
+  --color-gray-200: #2E3A4A;
+  --color-gray-300: #3A4555;
+  --color-gray-400: #D8D8D8;
+  --color-gray-500: #4A5565;
+  --color-gray-600: #B2B8C2;
+  --color-gray-700: #91929E;
+  --color-gray-800: #7D8592;
+  --color-gray-900: #E6EDF5;
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -187,4 +262,48 @@ body {
   /* font-weight: <weight>; */
   font-style: normal;
   font-variation-settings: "wdth" 100, "YTLC" 500;
+}
+
+/* Scrollbar Styles - Light Mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F9FD;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CED5E0;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B2B8C2;
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #CED5E0 #F4F9FD;
+}
+
+/* Scrollbar Styles - Dark Mode */
+.dark ::-webkit-scrollbar-track {
+  background: #1A2332;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4A5565;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #5A6575;
+}
+
+.dark * {
+  scrollbar-color: #4A5565 #1A2332;
 }

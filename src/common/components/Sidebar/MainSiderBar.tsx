@@ -14,6 +14,7 @@ import CalenderIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?re
 import VacationsIcon from "../../../assets/icons/sidebar/vacations/inactive.svg?react";
 import EmployeesIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
 import InfoPortalIcon from "../../../assets/icons/sidebar/infoportal/active.svg?react";
+import GearIcon from "../../../assets/icons/general/gear.svg?react";
 import { useLocation, useNavigate } from "react-router";
 import { RequireAdmin } from "../RBAC/RequirePermission";
 
@@ -63,18 +64,29 @@ const MainSiderBar = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "white",
+        backgroundColor: "background.paper",
         height: "100%",
         width: "200px",
+        display: "flex",
+        flexDirection: "column",
         // paddingBottom: "0px",
-        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+        boxShadow: (theme) => theme.shadows[1],
         borderRadius: "24px",
         paddingX: "12px",
       }}
     >
       {/* <Box sx={{ position: "absolute", width: "100%", top: 0}}> */}
       <Box sx={{ width: "50px", paddingTop: "24px" }}>
-        <img style={{ width: "100%" }} src={ARLOGO} />
+        <Box
+          component="img"
+          src={ARLOGO}
+          sx={(theme) => ({
+            width: "100%",
+            filter: theme.palette.mode === "dark" 
+              ? "brightness(0) invert(1)" 
+              : "none",
+          })}
+        />
       </Box>
       <Box>
         <Stack gap={1}>
@@ -170,6 +182,23 @@ const MainSiderBar = () => {
               Info Portal
             </Typography>
           </Item>
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/backup")}
+              active={checkActiveStatus("backup")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={GearIcon}
+                color={checkActiveStatus("backup") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("backup") ? "primary" : "secondary"}
+              >
+                Backup
+              </Typography>
+            </Item>
+          </RequireAdmin>
         </Stack>
       </Box>
     </Box>

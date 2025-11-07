@@ -25,14 +25,14 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       <Box
         sx={{
           borderRadius: "24px",
-          boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-          backgroundColor: "white",
+          boxShadow: (theme) => theme.shadows[1],
+          backgroundColor: "background.paper",
         }}
       >
         <Box sx={{ display: "flex" }}>
           <Box
             sx={{
-              borderRight: "1px solid #E4E6E8",
+              borderRight: (theme) => `1px solid ${theme.palette.divider}`,
               width: "50%",
               padding: "24px",
             }}

@@ -12,6 +12,11 @@ export interface CalendarResponse {
   repeatDays?: string[];
   createdBy?: string;
   addToGoogleCalendar?: boolean;
+  eventType?: "offline" | "online";
+  invitedMemberIds?: string[];
+  duration?: number;
+  googleMeetLink?: string;
+  googleCalendarEventId?: string;
   createdAt?: string;
   updatedAt?: string;
 }

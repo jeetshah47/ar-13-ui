@@ -137,8 +137,12 @@ const ProjectDetail = () => {
 
         // Highlight the element briefly
         targetElement.style.transition = "background-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease";
-        targetElement.style.backgroundColor = "#E8F4FD";
-        targetElement.style.boxShadow = "0 0 0 4px rgba(63, 140, 255, 0.2)";
+        // Use theme-aware colors for highlighting
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const highlightColor = theme === 'dark' ? 'rgba(63, 140, 255, 0.2)' : '#E8F4FD';
+        const shadowColor = theme === 'dark' ? 'rgba(63, 140, 255, 0.3)' : 'rgba(63, 140, 255, 0.2)';
+        targetElement.style.backgroundColor = highlightColor;
+        targetElement.style.boxShadow = `0 0 0 4px ${shadowColor}`;
         targetElement.style.padding = "8px";
         targetElement.style.borderRadius = "8px";
         targetElement.style.margin = "-8px";
@@ -366,7 +370,7 @@ const ProjectDetail = () => {
               position: "relative",
               maxWidth: "90vw",
               maxHeight: "90vh",
-              backgroundColor: "#fff",
+              backgroundColor: "background.paper",
               borderRadius: "24px",
               padding: "20px",
               display: "flex",

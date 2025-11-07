@@ -39,9 +39,9 @@ const Event = ({ event, onClick }: EventProps) => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         padding: "6px",
-        backgroundColor: "#F4F9FD",
+        backgroundColor: theme.palette.grey[50],
         borderRadius: "14px",
         display: "flex",
         overflow: "hidden",
@@ -49,11 +49,11 @@ const Event = ({ event, onClick }: EventProps) => {
         cursor: onClick ? "pointer" : "default",
         marginBottom: "2px",
         "&:hover": onClick ? {
-          backgroundColor: "#E8F4FD",
+          backgroundColor: theme.palette.primary.light,
           transform: "scale(1.02)",
           transition: "all 0.2s ease-in-out"
         } : {}
-      }}
+      })}
       onClick={handleClick}
     >
       <Box 
@@ -66,22 +66,22 @@ const Event = ({ event, onClick }: EventProps) => {
         <Typography 
           fontSize={"12px"} 
           fontWeight="600"
-          sx={{ 
-            color: "#2C3E50",
+          sx={(theme) => ({ 
+            color: theme.palette.text.primary,
             lineHeight: 1.2,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap"
-          }}
+          })}
         >
           {event.title || "Untitled Event"}
         </Typography>
         <Typography 
           fontSize={"10px"} 
-          sx={{ 
-            color: "#7D8592",
+          sx={(theme) => ({ 
+            color: theme.palette.text.secondary,
             lineHeight: 1.2
-          }}
+          })}
         >
           {formatTime(event.time)}
         </Typography>

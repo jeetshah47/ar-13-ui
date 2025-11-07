@@ -44,7 +44,7 @@ export async function getGoogleAccountStatus(): Promise<GoogleAccountStatusRespo
 }
 
 export async function getAllLinkedAccounts(): Promise<GetAllLinkedAccountsResponse> {
-  const url = `${BASE_URL}/links`;
+  const url = `${BASE_URL}/all`;
   const result = await http.get<GetAllLinkedAccountsResponse>(url);
   return result.data;
 }

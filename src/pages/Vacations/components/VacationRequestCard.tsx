@@ -111,13 +111,13 @@ const VacationRequestCard = ({
 
   return (
     <Box
-      sx={{
-        background: "#FFFFFF",
-        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+      sx={(theme) => ({
+        background: theme.palette.background.paper,
+        boxShadow: theme.shadows[1],
         borderRadius: "24px",
         padding: "28px",
         marginTop: "20px",
-      }}
+      })}
     >
       {/* Header with user info and status */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
@@ -130,22 +130,22 @@ const VacationRequestCard = ({
           </Avatar>
           <Box>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontWeight: 700, 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 marginBottom: "2px"
-              }}
+              })}
             >
               {userName}
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E"
-              }}
+                color: theme.palette.text.secondary
+              })}
             >
               {userEmail}
             </Typography>
@@ -153,12 +153,12 @@ const VacationRequestCard = ({
         </Box>
         <Chip
           label={request.status.toUpperCase()}
-          sx={{
+          sx={(theme) => ({
             backgroundColor: getStatusColor(request.status),
-            color: "#FFFFFF",
+            color: theme.palette.getContrastText(getStatusColor(request.status)),
             fontWeight: 600,
             fontSize: "12px",
-          }}
+          })}
         />
       </Box>
 
@@ -167,44 +167,44 @@ const VacationRequestCard = ({
         <Box sx={{ display: "flex", gap: "24px", marginBottom: "12px", flexWrap: "wrap" }}>
           <Box>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "4px"
-              }}
+              })}
             >
               Request Type
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 500
-              }}
+              })}
             >
               {getRequestTypeLabel(request.requestType)}
             </Typography>
           </Box>
           <Box>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "4px"
-              }}
+              })}
             >
               Start Date
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 500
-              }}
+              })}
             >
               {formatDate(request.startDate as any)}
             </Typography>
@@ -212,22 +212,22 @@ const VacationRequestCard = ({
           {request.endDate && (
             <Box>
               <Typography 
-                sx={{ 
+                sx={(theme) => ({ 
                   fontSize: "14px", 
                   lineHeight: "19px",
-                  color: "#91929E",
+                  color: theme.palette.text.secondary,
                   marginBottom: "4px"
-                }}
+                })}
               >
                 End Date
               </Typography>
               <Typography 
-                sx={{ 
+                sx={(theme) => ({ 
                   fontSize: "16px", 
                   lineHeight: "24px",
-                  color: "#0A1629",
+                  color: theme.palette.text.primary,
                   fontWeight: 500
-                }}
+                })}
               >
                 {formatDate(request.endDate as any)}
               </Typography>
@@ -235,22 +235,22 @@ const VacationRequestCard = ({
           )}
           <Box>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "4px"
-              }}
+              })}
             >
               Duration
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 500
-              }}
+              })}
             >
               {request.duration} {request.durationType}
             </Typography>
@@ -258,22 +258,22 @@ const VacationRequestCard = ({
           {request.workingHours && (
             <Box>
               <Typography 
-                sx={{ 
+                sx={(theme) => ({ 
                   fontSize: "14px", 
                   lineHeight: "19px",
-                  color: "#91929E",
+                  color: theme.palette.text.secondary,
                   marginBottom: "4px"
-                }}
+                })}
               >
                 Working Hours
               </Typography>
               <Typography 
-                sx={{ 
+                sx={(theme) => ({ 
                   fontSize: "16px", 
                   lineHeight: "24px",
-                  color: "#0A1629",
+                  color: theme.palette.text.primary,
                   fontWeight: 500
-                }}
+                })}
               >
                 {request.workingHours.from} - {request.workingHours.to}
               </Typography>
@@ -284,21 +284,21 @@ const VacationRequestCard = ({
         {request.comments && (
           <Box sx={{ marginTop: "16px" }}>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "4px"
-              }}
+              })}
             >
               Comments
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
-              }}
+                color: theme.palette.text.primary,
+              })}
             >
               {request.comments}
             </Typography>
@@ -347,16 +347,16 @@ const VacationRequestCard = ({
                 variant="outlined"
                 onClick={() => setShowCommentField(true)}
                 disabled={isLoading}
-                sx={{
+                sx={(theme) => ({
                   textTransform: "none",
                   fontWeight: 600,
-                  borderColor: "#91929E",
-                  color: "#91929E",
+                  borderColor: theme.palette.text.secondary,
+                  color: theme.palette.text.secondary,
                   "&:hover": {
-                    borderColor: "#0A1629",
-                    color: "#0A1629",
+                    borderColor: theme.palette.text.primary,
+                    color: theme.palette.text.primary,
                   },
-                }}
+                })}
               >
                 Add Comment
               </Button>

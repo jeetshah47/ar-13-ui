@@ -11,13 +11,13 @@ export async function addCalendarEvent(event: CalendarRequest): Promise<Calendar
 export async function getCalendarEventsByMonth(year: number, month: number): Promise<{
   events: CalendarResponse[];
 }> {
-  const url = `http://localhost:3000/api/calendar/${year}/${month}`;
+  const url = `http://localhost:3000/api/calendar/month/${year}/${month}`;
   const result = await http.get(url);
   return result.data;
 }
 
 export async function getCalendarEventById(eventId: string): Promise<CalendarResponse> {
-  const url = `http://localhost:3000/api/calendar/${eventId}`;
+  const url = `http://localhost:3000/api/calendar/event/${eventId}`;
   const result = await http.get(url);
   return result.data;
 }

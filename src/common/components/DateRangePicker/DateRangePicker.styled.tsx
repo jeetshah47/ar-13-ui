@@ -48,14 +48,14 @@ interface TriggerButtonProps extends ButtonProps, BaseComponentProps {}
 
 export const TriggerButton: React.FC<TriggerButtonProps> = ({ children, ...props }) => (
   <Button
-    sx={{
+    sx={(theme) => ({
       width: '100%',
       maxWidth: '28rem',
       padding: '6px 10px',
-      background: 'white',
-      border: '2px solid #E6EDF5',
+      background: theme.palette.background.paper,
+      border: `2px solid ${theme.palette.grey[200]}`,
       borderRadius: '0.75rem',
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      boxShadow: theme.shadows[3],
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -64,9 +64,9 @@ export const TriggerButton: React.FC<TriggerButtonProps> = ({ children, ...props
       color: 'inherit',
       textTransform: 'none',
       '&:hover': {
-        borderColor: '#93c5fd',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        background: 'white'
+        borderColor: theme.palette.primary.light,
+        boxShadow: theme.shadows[4],
+        background: theme.palette.background.paper
       },
       '&:focus': {
         outline: 'none'
@@ -74,7 +74,7 @@ export const TriggerButton: React.FC<TriggerButtonProps> = ({ children, ...props
       '@media (max-width: 1280px)': {
         padding: '0.625rem 0.75rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -104,14 +104,14 @@ interface TriggerTextProps extends TypographyProps {
 export const TriggerText: React.FC<TriggerTextProps> = ({ hasDate, children, ...props }) => (
   <Typography
     component="span"
-    sx={{
+    sx={(theme) => ({
        fontSize: '14px',
-      color: hasDate ? '#111827' : '#6b7280',
+      color: hasDate ? theme.palette.text.primary : theme.palette.text.secondary,
       fontWeight: 500,
       '@media (max-width: 1280px)': {
         fontSize: '12px'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -122,16 +122,16 @@ interface ClearButtonProps extends IconButtonProps, BaseComponentProps {}
 
 export const ClearButton: React.FC<ClearButtonProps> = ({ children, ...props }) => (
   <IconButton
-    sx={{
+    sx={(theme) => ({
       borderRadius: '9999px',
       transition: 'background-color 0.2s ease',
       border: 'none',
       background: 'transparent',
       fontSize:"14px",
       '&:hover': {
-        backgroundColor: '#f3f4f6'
+        backgroundColor: theme.palette.action.hover
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -143,18 +143,18 @@ interface PickerDropdownProps extends PaperProps, BaseComponentProps {}
 
 export const PickerDropdown: React.FC<PickerDropdownProps> = ({ children, ...props }) => (
   <Paper
-    sx={{
+    sx={(theme) => ({
       position: 'absolute',
       top: '100%',
       right: 0,
       marginTop: '0.5rem',
-      background: 'white',
-      border: '1px solid #e5e7eb',
+      background: theme.palette.background.paper,
+      border: `1px solid ${theme.palette.divider}`,
       borderRadius: '1rem',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      boxShadow: theme.shadows[6],
       zIndex: 50,
       animation: `${fadeIn} 0.2s ease`
-    }}
+    })}
     {...props}
   >
     {children}
@@ -174,14 +174,14 @@ interface PresetsSidebarProps extends BoxProps, BaseComponentProps {}
 
 export const PresetsSidebar: React.FC<PresetsSidebarProps> = ({ children, ...props }) => (
   <Box
-    sx={{
+    sx={(theme) => ({
       width: '12rem',
-      background: '#f9fafb',
+      background: theme.palette.grey[50],
       padding: '1rem',
       borderTopLeftRadius: '1rem',
       borderBottomLeftRadius: '1rem',
-      borderRight: '1px solid #e5e7eb'
-    }}
+      borderRight: `1px solid ${theme.palette.divider}`
+    })}
     {...props}
   >
     {children}
@@ -193,10 +193,10 @@ interface PresetTitleProps extends TypographyProps, BaseComponentProps {}
 export const PresetTitle: React.FC<PresetTitleProps> = ({ children, ...props }) => (
   <Typography
     variant="h6"
-    sx={{
+    sx={(theme) => ({
       fontSize: '1rem',
       fontWeight: 600,
-      color: '#374151',
+      color: theme.palette.text.primary,
       marginBottom: '0.75rem',
       display: 'flex',
       alignItems: 'center',
@@ -204,7 +204,7 @@ export const PresetTitle: React.FC<PresetTitleProps> = ({ children, ...props }) 
       '@media (max-width: 1280px)': {
         fontSize: '14px'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -233,7 +233,7 @@ interface PresetButtonProps extends ButtonProps {
 
 export const PresetButton: React.FC<PresetButtonProps> = ({ isSelected, children, ...props }) => (
   <Button
-    sx={{
+    sx={(theme) => ({
       width: '100%',
       textAlign: 'left',
       padding: '0.5rem 0.75rem',
@@ -246,23 +246,23 @@ export const PresetButton: React.FC<PresetButtonProps> = ({ isSelected, children
       justifyContent: 'flex-start',
       ...(isSelected
         ? {
-            background: '#007bff',
-            color: 'white',
+            background: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
             '&:hover': {
-              background: '#007bff'
+              background: theme.palette.primary.main
             }
           }
         : {
             background: 'transparent',
-            color: '#374151',
+            color: theme.palette.text.primary,
             '&:hover': {
-              background: '#f3f4f6'
+              background: theme.palette.action.hover
             }
           }),
       '@media (max-width: 1280px)': {
         fontSize: '12px'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -310,16 +310,16 @@ interface NavButtonProps extends IconButtonProps, BaseComponentProps {}
 
 export const NavButton: React.FC<NavButtonProps> = ({ children, ...props }) => (
   <IconButton
-    sx={{
+    sx={(theme) => ({
       padding: '0.5rem',
       borderRadius: '0.5rem',
       border: 'none',
       background: 'transparent',
       transition: 'background-color 0.2s ease',
       '&:hover': {
-        background: '#f3f4f6'
+        background: theme.palette.action.hover
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -330,10 +330,10 @@ interface MonthYearButtonProps extends ButtonProps, BaseComponentProps {}
 
 export const MonthYearButton: React.FC<MonthYearButtonProps> = ({ children, ...props }) => (
   <Button
-    sx={{
+    sx={(theme) => ({
       fontSize: '1.125rem',
       fontWeight: 600,
-      color: '#111827',
+      color: theme.palette.text.primary,
       padding: '0.5rem 1rem',
       borderRadius: '0.5rem',
       border: 'none',
@@ -342,13 +342,13 @@ export const MonthYearButton: React.FC<MonthYearButtonProps> = ({ children, ...p
       transition: 'all 0.2s ease',
       textTransform: 'none',
       '&:hover': {
-        color: '#2563eb',
-        background: '#f9fafb'
+        color: theme.palette.primary.main,
+        background: theme.palette.action.hover
       },
       '@media (max-width: 1280px)': {
         fontSize: '0.9rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -360,15 +360,15 @@ interface YearPickerProps extends BoxProps, BaseComponentProps {}
 
 export const YearPicker: React.FC<YearPickerProps> = ({ children, ...props }) => (
   <Box
-    sx={{
+    sx={(theme) => ({
       marginBottom: '1.5rem',
       padding: '1rem',
-      background: '#f9fafb',
+      background: theme.palette.grey[50],
       borderRadius: '0.5rem',
       '@media (max-width: 1280px)': {
         marginBottom: '0.625rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -380,15 +380,15 @@ interface YearPickerTitleProps extends TypographyProps, BaseComponentProps {}
 export const YearPickerTitle: React.FC<YearPickerTitleProps> = ({ children, ...props }) => (
   <Typography
     variant="h6"
-    sx={{
+    sx={(theme) => ({
       fontSize: '1rem',
       fontWeight: 500,
-      color: '#374151',
+      color: theme.palette.text.primary,
       marginBottom: '0.75rem',
       '@media (max-width: 1280px)': {
         fontSize: '0.875rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -419,7 +419,7 @@ interface YearButtonProps extends ButtonProps {
 
 export const YearButton: React.FC<YearButtonProps> = ({ isSelected, children, ...props }) => (
   <Button
-    sx={{
+    sx={(theme) => ({
       padding: '0.5rem',
       fontSize: '1rem',
       borderRadius: '0.5rem',
@@ -430,23 +430,23 @@ export const YearButton: React.FC<YearButtonProps> = ({ isSelected, children, ..
       minWidth: 'auto',
       ...(isSelected
         ? {
-            background: '#007bff',
-            color: 'white',
+            background: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
             '&:hover': {
-              background: '#007bff'
+              background: theme.palette.primary.main
             }
           }
         : {
             background: 'transparent',
-            color: '#374151',
+            color: theme.palette.text.primary,
             '&:hover': {
-              background: '#e5e7eb'
+              background: theme.palette.action.hover
             }
           }),
       '@media (max-width: 1280px)': {
         fontSize: '0.875rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -491,14 +491,14 @@ interface DayHeaderTextProps extends TypographyProps, BaseComponentProps {}
 export const DayHeaderText: React.FC<DayHeaderTextProps> = ({ children, ...props }) => (
   <Typography
     component="span"
-    sx={{
+    sx={(theme) => ({
       fontSize: '0.875rem',
       fontWeight: 500,
-      color: '#6b7280',
+      color: theme.palette.text.secondary,
       '@media (max-width: 1280px)': {
         fontSize: '0.75rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -553,60 +553,62 @@ export const DayButton: React.FC<DayButtonProps> = ({
   children, 
   ...props 
 }) => {
-  let buttonStyles = {};
-  
-  if (isRangeStart || isRangeEnd) {
-    buttonStyles = {
-      background: '#007bff',
-      color: 'white',
-      '&:hover': {
-        background: '#2563eb'
-      }
-    };
-  } else if (isInRange) {
-    buttonStyles = {
-      background: '#eff6ff',
-      color: '#1d4ed8',
-      '&:hover': {
-        background: '#eff6ff'
-      }
-    };
-  } else {
-    buttonStyles = {
-      background: 'transparent',
-      color: '#374151',
-      '&:hover': {
-        background: '#dbeafe',
-        color: '#2563eb'
-      }
-    };
-  }
-
   return (
     <Button
-      sx={{
-        width: '2.5rem',
-        height: '2.5rem',
-        borderRadius: '0.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        border: 'none',
-        textTransform: 'none',
-        minWidth: 'auto',
-        ...buttonStyles,
-        ...(isToday && {
-          boxShadow: '0 0 0 2px #93c5fd'
-        }),
-        '@media (max-width: 1280px)': {
-          fontSize: '0.75rem',
-          width: '2rem',
-          height: '2rem'
+      sx={(theme) => {
+        let buttonStyles: Record<string, unknown> = {};
+        
+        if (isRangeStart || isRangeEnd) {
+          buttonStyles = {
+            background: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+            '&:hover': {
+              background: theme.palette.primary.dark
+            }
+          };
+        } else if (isInRange) {
+          buttonStyles = {
+            background: theme.palette.primary.light,
+            color: theme.palette.primary.main,
+            '&:hover': {
+              background: theme.palette.primary.light
+            }
+          };
+        } else {
+          buttonStyles = {
+            background: 'transparent',
+            color: theme.palette.text.primary,
+            '&:hover': {
+              background: theme.palette.action.hover,
+              color: theme.palette.primary.main
+            }
+          };
         }
+
+        return {
+          width: '2.5rem',
+          height: '2.5rem',
+          borderRadius: '0.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          border: 'none',
+          textTransform: 'none',
+          minWidth: 'auto',
+          ...buttonStyles,
+          ...(isToday && {
+            boxShadow: `0 0 0 2px ${theme.palette.primary.light}`
+          }),
+          '@media (max-width: 1280px)': {
+            fontSize: '0.75rem',
+            width: '2rem',
+            height: '2rem'
+          }
+        };
       }}
       {...props}
     >
@@ -620,13 +622,13 @@ interface ActionButtonsProps extends BoxProps, BaseComponentProps {}
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ children, ...props }) => (
   <Box
-    sx={{
+    sx={(theme) => ({
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingTop: '1rem',
-      borderTop: '1px solid #f3f4f6'
-    }}
+      borderTop: `1px solid ${theme.palette.divider}`
+    })}
     {...props}
   >
     {children}
@@ -637,11 +639,11 @@ interface ClearActionButtonProps extends ButtonProps, BaseComponentProps {}
 
 export const ClearActionButton: React.FC<ClearActionButtonProps> = ({ children, ...props }) => (
   <Button
-    sx={{
+    sx={(theme) => ({
       padding: '0.5rem 1rem',
       fontSize: '1rem',
       fontWeight: 500,
-      color: '#6b7280',
+      color: theme.palette.text.secondary,
       border: 'none',
       background: 'transparent',
       borderRadius: '0.5rem',
@@ -649,13 +651,13 @@ export const ClearActionButton: React.FC<ClearActionButtonProps> = ({ children, 
       transition: 'all 0.2s ease',
       textTransform: 'none',
       '&:hover': {
-        color: '#111827',
-        background: '#f9fafb'
+        color: theme.palette.text.primary,
+        background: theme.palette.action.hover
       },
       '@media (max-width: 1280px)': {
         fontSize: '0.75rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}
@@ -670,10 +672,10 @@ interface ApplyButtonProps extends ButtonProps {
 export const ApplyButton: React.FC<ApplyButtonProps> = ({ disabled = false, children, ...props }) => (
   <Button
     disabled={disabled}
-    sx={{
+    sx={(theme) => ({
       padding: '0.5rem 1.5rem',
-      background: '#007bff',
-      color: 'white',
+      background: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText,
       fontSize: '1rem',
       fontWeight: 500,
       borderRadius: '0.5rem',
@@ -682,17 +684,17 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({ disabled = false, chil
       transition: 'background-color 0.2s ease',
       textTransform: 'none',
       '&:hover': {
-        background: disabled ? '#d1d5db' : '#2563eb'
+        background: disabled ? theme.palette.action.disabledBackground : theme.palette.primary.dark
       },
       '&:disabled': {
-        background: '#d1d5db',
+        background: theme.palette.action.disabledBackground,
         cursor: 'not-allowed',
-        color: 'white'
+        color: theme.palette.action.disabled
       },
       '@media (max-width: 1280px)': {
         fontSize: '0.75rem'
       }
-    }}
+    })}
     {...props}
   >
     {children}

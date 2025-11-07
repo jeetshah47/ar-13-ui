@@ -60,24 +60,24 @@ const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps)
         {/* Folder Name */}
         <Typography
           variant="h4"
-          sx={{
+          sx={(theme) => ({
             fontWeight: 700,
             fontSize: "18px",
             lineHeight: 1.44,
-            color: "#0A1629",
-          }}
+            color: theme.palette.text.primary,
+          })}
         >
           {name}
         </Typography>
 
         {/* Page Count */}
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "14px",
             fontWeight: 400,
             lineHeight: 1.364,
-            color: "#91929E",
-          }}
+            color: theme.palette.text.secondary,
+          })}
         >
           {pageCount} {pageCount === 1 ? "page" : "pages"}
         </Typography>

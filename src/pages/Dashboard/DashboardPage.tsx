@@ -3,7 +3,7 @@ import PageHeader from "../../common/components/PageHeader/PageHeader";
 import RangeSelector from "../Landing/components/RangeSelector";
 import CustomCard from "../../common/components/Card/CustomCard";
 import CardHeader from "../../common/components/Card/CardHeader";
-import EmployeeCard from "./components/EmployeeCard";
+// import EmployeeCard from "./components/EmployeeCard";
 import EventCard from "./components/EventCard";
 import ProjectCard from "./components/ProjectCard";
 import ActivityCard from "./components/ActivityCard";
@@ -15,9 +15,13 @@ import {
 } from "../../store/store";
 import { getDashboardActions } from "../../store/features/dashboard/dashboardAction";
 import { fetchCalendarEvents } from "../../store/features/calendar/calendarAction";
+import { getProjectStatisticsAction } from "../../store/features/projects/projectStatisticsAction";
+import ProjectStatisticsOverview from "./components/ProjectStatisticsOverview";
+import ProjectStatisticsWidget from "./components/ProjectStatisticsWidget";
+import ProjectStatusChart from "./components/ProjectStatusChart";
 import Modal from "../../common/components/Modal/Modal";
 import SupportModal from "../../common/components/SupportModal/SupportModal";
-import type { UserResponse } from "../../store/types/User/UserResponse";
+// import type { DashboardEmployeeResponse } from "../../store/types/Dashboard/DashboardResponse";
 import type { ProjectResponse } from "../../store/types/Project/ProjectResponse";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
@@ -30,6 +34,7 @@ const DashboardPage = () => {
     end_date: new Date(),
   });
   const [showSupportModal, setShowSupportModal] = useState(false);
+  // const [workloadTab, setWorkloadTab] = useState("Overall");
 
   // Dashboard data selector
   const dashboardData = useAppSelector(
@@ -39,6 +44,11 @@ const DashboardPage = () => {
   // Calendar data selector
   const calendarData = useAppSelector(
     (state: RootState) => state.calendarReducer.api
+  );
+
+  // Project statistics data selector
+  const projectStatisticsData = useAppSelector(
+    (state: RootState) => state.projectStatisticsReducer.api.data
   );
 
   // User data selector
@@ -70,7 +80,7 @@ const DashboardPage = () => {
   };
 
   // Extract data from dashboard state
-  const employees: UserResponse[] = dashboardData.data.datas.employees || [];
+  // const employees: DashboardEmployeeResponse[] = dashboardData.data.datas.employees || [];
   const projects: ProjectResponse[] = dashboardData.data.datas.projects || [];
   const isLoading = dashboardData.loading;
   const error = dashboardData.error;
@@ -88,6 +98,9 @@ const DashboardPage = () => {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
     dispatch(fetchCalendarEvents(currentYear, currentMonth));
+    
+    // Fetch project statistics
+    dispatch(getProjectStatisticsAction());
   }, [dispatch]);
 
   // Show loading state
@@ -132,29 +145,57 @@ const DashboardPage = () => {
         }
       />
      
-      <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px" }}>
-        <Box sx={{ width: "70%" }}>
-          <CustomCard>
-            <CardHeader title="Workload" link="/#" />
-            <Box
-              sx={{
-                display: "flex",
-                gap: "16px",
-                paddingTop: "16px",
-                flexWrap: "wrap",
-                alignItems: "flex-start",
-              }}
-            >
-              {employees.length > 0 ? (
-                employees.map((employee) => (
-                  <EmployeeCard key={employee.id} employee={employee} />
+      {/* Main Content: Side by Side Layout */}
+      <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px", minHeight: "calc(100vh - 200px)" }}>
+        {/* Left Side: Project Statistics with Scroll */}
+        <Box
+          sx={{
+            width: "70%",
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto",
+            paddingRight: "10px",
+            "&::-webkit-scrollbar": {
+              width: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderRadius: "4px",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.3)",
+              },
+            },
+          }}
+        >
+          {/* Project Statistics Overview */}
+          <Box sx={{ paddingBottom: "28px" }}>
+            <ProjectStatisticsOverview />
+          </Box>
+
+          {/* Charts Section */}
+          <Box sx={{ paddingBottom: "28px" }}>
+            <ProjectStatusChart />
+          </Box>
+
+          {/* Individual Project Statistics */}
+          <Box sx={{ paddingBottom: "28px" }}>
+            <CardHeader title="Project Statistics" link="/#" />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "20px" }}>
+              {projectStatisticsData?.projects && projectStatisticsData.projects.length > 0 ? (
+                projectStatisticsData.projects.map((project) => (
+                  <ProjectStatisticsWidget key={project.id} project={project} />
                 ))
               ) : (
-                <Typography color="secondary">No employees found</Typography>
+                <Typography color="secondary">No project statistics available</Typography>
               )}
             </Box>
-          </CustomCard>
-          <Box sx={{ paddingTop: "36px" }}>
+          </Box>
+          
+          {/* Original Projects List */}
+          <Box sx={{ paddingBottom: "28px" }}>
             <CardHeader title="Projects" link="/#" />
             {projects.length > 0 ? (
               projects.map((project) => (
@@ -165,7 +206,34 @@ const DashboardPage = () => {
             )}
           </Box>
         </Box>
-        <Box sx={{ width: "30%" }}>
+
+        {/* Right Side: Fixed Calendar Events and Activity Stream */}
+        <Box
+          sx={{
+            width: "30%",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            position: "sticky",
+            top: "20px",
+            alignSelf: "flex-start",
+            maxHeight: "calc(100vh - 220px)",
+            overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              width: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderRadius: "4px",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.3)",
+              },
+            },
+          }}
+        >
           <CustomCard>
             <CardHeader title="Calendar Event" link="/#" />
             {isCalendarLoading ? (
@@ -186,9 +254,7 @@ const DashboardPage = () => {
               </Typography>
             )}
           </CustomCard>
-          <Box sx={{ pt: "10px" }}>
-            <ActivityCard />
-          </Box>
+          <ActivityCard />
         </Box>
       </Box>
 

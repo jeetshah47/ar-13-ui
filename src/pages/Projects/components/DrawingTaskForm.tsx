@@ -213,21 +213,21 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
   const customList = (items: DrawingItem[], title: string) => (
     <Paper
       variant="outlined"
-      sx={{
+      sx={(theme) => ({
         width: "100%",
         height: "400px",
         overflow: "auto",
-        backgroundColor: "#fafafa",
-      }}
+        backgroundColor: theme.palette.grey[50],
+      })}
     >
       <Typography
         variant="subtitle2"
-        sx={{
+        sx={(theme) => ({
           p: 2,
           fontWeight: "bold",
-          backgroundColor: "white",
-          borderBottom: "1px solid #e0e0e0",
-        }}
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        })}
       >
         {title} ({items.length})
       </Typography>
@@ -239,12 +239,12 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
               <ListItemButton
                 role="listitem"
                 onClick={handleToggle(item)}
-                sx={{
-                  borderBottom: "1px solid #e0e0e0",
+                sx={(theme) => ({
+                  borderBottom: `1px solid ${theme.palette.divider}`,
                   "&:hover": {
-                    backgroundColor: "#f0f0f0",
+                    backgroundColor: theme.palette.action.hover,
                   },
-                }}
+                })}
               >
                 <ListItemText
                   id={labelId}
@@ -271,20 +271,20 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         position: "absolute",
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        backgroundColor: "white",
+        backgroundColor: theme.palette.background.paper,
         p: 4,
-        boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.195504)",
+        boxShadow: theme.shadows[6],
         borderRadius: "24px",
         width: "90%",
         maxWidth: "1000px",
         maxHeight: "90vh",
         overflow: "auto",
-      }}
+      })}
     >
       <Box
         sx={{
@@ -378,26 +378,33 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
             >
               Time Spend
             </Typography>
-            <input
+            <Box
+              component="input"
               type="datetime-local"
               name="duration"
               value={duration}
               onChange={handleChange}
               min={new Date().toISOString().slice(0, 16)}
-              style={{
+              sx={(theme) => ({
                 width: "100%",
                 height: "56px",
                 padding: "0 14px",
-                border: "1px solid #D8E0F0",
+                border: `1px solid ${theme.palette.grey[300]}`,
                 borderRadius: "14px",
                 fontSize: "14px",
                 fontFamily: '"Nunito Sans", sans-serif',
-                color: "#000000",
+                color: theme.palette.text.primary,
                 outline: "none",
-                backgroundColor: "white",
+                backgroundColor: theme.palette.background.paper,
                 boxSizing: "border-box",
                 margin: 0,
-              }}
+                "&:focus": {
+                  borderColor: theme.palette.primary.main,
+                },
+                "&:hover": {
+                  borderColor: theme.palette.grey[400],
+                },
+              })}
             />
           </Box>
           <Box sx={{ flex: { xs: "1", sm: "0 1 50%" } }}>

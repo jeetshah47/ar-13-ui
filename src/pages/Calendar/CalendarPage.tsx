@@ -7,8 +7,10 @@ import LeftIcon from "../../assets/icons/general/left.svg?react";
 import RightIcon from "../../assets/icons/general/calendar-14.svg?react";
 import Modal from "../../common/components/Modal/Modal";
 import EventForm from "./components/EventForm";
+import EventDetailsModal from "./components/EventDetailsModal";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { fetchCalendarEvents } from "../../store/features/calendar/calendarAction";
+import { getUsersAction } from "../../store/features/user/userAction";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
 const CalendarPage = () => {
@@ -18,8 +20,10 @@ const CalendarPage = () => {
   
   const [dateState, setDateState] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
+  const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
   const [selectedCellDate, setSelectedCellDate] = useState<Date | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarResponse | null>(null);
 
   // Fetch calendar events when month changes
   useEffect(() => {
@@ -28,8 +32,25 @@ const CalendarPage = () => {
     dispatch(fetchCalendarEvents(year, month));
   }, [dispatch, dateState]);
 
+  // Fetch users on mount
+  useEffect(() => {
+    dispatch(getUsersAction());
+  }, [dispatch]);
+
+  const handleAddEvent = () => {
+    setSelectedCellDate(new Date());
+    setSelectedEventId(null);
+    setSelectedEvent(null);
+    setShowEventDetailsModal(false);
+    setShowDateModal(true);
+  };
+
   const AddButton = (
-    <Button variant="contained" startIcon={<SvgIcon component={PlusIcon} />}>
+    <Button 
+      variant="contained" 
+      startIcon={<SvgIcon component={PlusIcon} />}
+      onClick={handleAddEvent}
+    >
       Add Events
     </Button>
   );
@@ -146,19 +167,31 @@ const CalendarPage = () => {
     // Open blank form for the selected date
     setSelectedCellDate(date);
     setSelectedEventId(null);
+    setSelectedEvent(null);
+    setShowEventDetailsModal(false);
     setShowDateModal(true);
   };
 
   const handleOnEventClick = (event: CalendarResponse) => {
-    // Open prefilled form for the clicked event
+    // Show event details modal first
+    setSelectedEvent(event);
     setSelectedCellDate(new Date(event.start));
     setSelectedEventId(event.id);
-    setShowDateModal(true);
+    setShowEventDetailsModal(true);
   };
+
   const handleOnCrossClick = () => {
     setSelectedCellDate(null);
     setSelectedEventId(null);
+    setSelectedEvent(null);
     setShowDateModal(false);
+    setShowEventDetailsModal(false);
+  };
+
+  const handleEditEvent = () => {
+    // Switch from details modal to form modal
+    setShowEventDetailsModal(false);
+    setShowDateModal(true);
   };
 
   return (
@@ -181,31 +214,33 @@ const CalendarPage = () => {
         }}
       >
         <Box
-          sx={{
+          sx={(theme) => ({
             width: "100%",
-            background: "#FFFFFF",
+            background: theme.palette.background.paper,
             borderRadius: "24px",
-            boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+            boxShadow: theme.shadows[1],
             height: "100%",
             position: "relative",
-          }}
+          })}
         >
           {/* Loading Overlay */}
           {loading && (
             <Box
-              sx={{
+              sx={(theme) => ({
                 position: "absolute",
                 top: 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                backgroundColor: theme.palette.mode === "dark" 
+                  ? "rgba(26, 35, 50, 0.8)" 
+                  : "rgba(255, 255, 255, 0.8)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 zIndex: 1000,
                 borderRadius: "24px",
-              }}
+              })}
             >
               <CircularProgress />
             </Box>
@@ -243,6 +278,18 @@ const CalendarPage = () => {
           </Grid>
         </Box>
         
+        {/* Event Details Modal */}
+        {selectedEvent && (
+          <Modal show={showEventDetailsModal} onClose={handleOnCrossClick}>
+            <EventDetailsModal
+              event={selectedEvent}
+              onClose={handleOnCrossClick}
+              onEdit={handleEditEvent}
+            />
+          </Modal>
+        )}
+
+        {/* Event Form Modal */}
         <Modal show={showDateModal} onClose={handleOnCrossClick}>
           <EventForm 
             onClose={handleOnCrossClick} 

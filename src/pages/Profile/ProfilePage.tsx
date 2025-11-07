@@ -94,23 +94,24 @@ const ProfilePage = () => {
         }}
       >
         <Box
-          sx={{
+          sx={(theme) => ({
             width: "264px",
             height: "100%",
-            backgroundColor: "white",
+            backgroundColor: theme.palette.background.paper,
             borderRadius: "24px",
             padding: "24px 18px",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <Avatar 
-            sx={{ 
+            sx={(theme) => ({ 
               width: "64px", 
               height: "64px",
-              bgcolor: "#E0E0E0",
-              color: "#666666",
+              bgcolor: theme.palette.grey[300],
+              color: theme.palette.text.secondary,
               fontSize: "24px",
               fontWeight: "bold",
-            }}
+            })}
           >
             {avatarInitials}
           </Avatar>
@@ -120,7 +121,7 @@ const ProfilePage = () => {
           <Typography fontSize={"14px"} color="secondary.main">
             UI/UX Designer
           </Typography>
-          <Box sx={{ borderTop: "1px solid #E4E6E8", paddingTop: "26px" }}>
+          <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: "26px" })}>
             <Typography fontWeight={700}>Main Info</Typography>
             <Box sx={{ width: "100%", paddingTop: "10px" }}>
               <Typography

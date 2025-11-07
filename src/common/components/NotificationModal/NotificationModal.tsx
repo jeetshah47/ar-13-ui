@@ -70,15 +70,15 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
       }}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "400px",
           maxHeight: "500px",
-          backgroundColor: "#FFFFFF",
-          boxShadow: "0px 8px 32px rgba(0, 0, 0, 0.12)",
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: theme.shadows[6],
           borderRadius: "12px",
           margin: "20px",
           overflow: "hidden",
-        }}
+        })}
       >
           {/* Header */}
           <Box
@@ -87,31 +87,31 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
               justifyContent: "space-between",
               alignItems: "center",
               padding: "16px 20px",
-              borderBottom: "1px solid #F1F5F9",
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             }}
           >
             <Typography
               variant="h6"
-              sx={{
+              sx={(theme) => ({
                 fontSize: "16px",
                 fontWeight: 600,
-                color: "#1E293B",
+                color: theme.palette.text.primary,
                 margin: 0,
-              }}
+              })}
             >
               Notifications
             </Typography>
             <IconButton
               onClick={onClose}
               size="small"
-              sx={{
+              sx={(theme) => ({
                 padding: "4px",
                 "&:hover": {
-                  backgroundColor: "#F8FAFC",
+                  backgroundColor: theme.palette.action.hover,
                 },
-              }}
+              })}
             >
-              <CloseIcon sx={{ fontSize: "20px", color: "#64748B" }} />
+              <CloseIcon sx={(theme) => ({ fontSize: "20px", color: theme.palette.text.secondary })} />
             </IconButton>
           </Box>
   
@@ -142,7 +142,7 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
             }}
           >
             <CircularProgress size={24} />
-            <Typography variant="body2" sx={{ marginLeft: "12px", color: "#64748B" }}>
+            <Typography variant="body2" sx={(theme) => ({ marginLeft: "12px", color: theme.palette.text.secondary })}>
               Loading notifications...
             </Typography>
           </Box>
@@ -160,10 +160,10 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                 width: "6px",
               },
               "&::-webkit-scrollbar-track": {
-                background: "#F1F5F9",
+                background: (theme) => theme.palette.grey[50],
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#CBD5E1",
+                background: (theme) => theme.palette.grey[300],
                 borderRadius: "3px",
               },
             }}
@@ -179,10 +179,10 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                   textAlign: "center",
                 }}
               >
-                <Typography variant="body2" sx={{ color: "#64748B", marginBottom: "8px" }}>
+                <Typography variant="body2" sx={(theme) => ({ color: theme.palette.text.secondary, marginBottom: "8px" })}>
                   No notifications yet
                 </Typography>
-                <Typography variant="caption" sx={{ color: "#94A3B8" }}>
+                <Typography variant="caption" sx={(theme) => ({ color: theme.palette.text.secondary })}>
                   You'll see notifications here when they arrive
                 </Typography>
               </Box>
@@ -195,9 +195,11 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                       alignItems: "flex-start",
                       padding: "16px 20px",
                       gap: "12px",
-                      backgroundColor: notification.isRead ? "transparent" : "#F8FAFC",
+                      backgroundColor: (theme) => notification.isRead 
+                        ? "transparent" 
+                        : theme.palette.grey[50],
                       "&:hover": {
-                        backgroundColor: "#F8FAFC",
+                        backgroundColor: (theme) => theme.palette.grey[50],
                       },
                       cursor: "pointer",
                     }}
@@ -220,25 +222,25 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography
                         variant="body2"
-                        sx={{
+                        sx={(theme) => ({
                           fontSize: "14px",
                           lineHeight: "20px",
-                          color: "#1E293B",
+                          color: theme.palette.text.primary,
                           marginBottom: "4px",
                           fontWeight: notification.isRead ? 400 : 500,
-                        }}
+                        })}
                       >
                         {notification.title}
                       </Typography>
                       
                       <Typography
                         variant="body2"
-                        sx={{
+                        sx={(theme) => ({
                           fontSize: "13px",
                           lineHeight: "18px",
-                          color: "#64748B",
+                          color: theme.palette.text.secondary,
                           marginBottom: "8px",
-                        }}
+                        })}
                       >
                         {formatNotificationMessage(notification)}
                       </Typography>
@@ -252,10 +254,10 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                       >
                         <Typography
                           variant="caption"
-                          sx={{
+                          sx={(theme) => ({
                             fontSize: "12px",
-                            color: "#64748B",
-                          }}
+                            color: theme.palette.text.secondary,
+                          })}
                         >
                           {(() => {
                             try {
@@ -271,19 +273,19 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                         </Typography>
                         <Typography
                           variant="caption"
-                          sx={{
+                          sx={(theme) => ({
                             fontSize: "12px",
-                            color: "#64748B",
-                          }}
+                            color: theme.palette.text.secondary,
+                          })}
                         >
                           •
                         </Typography>
                         <Typography
                           variant="caption"
-                          sx={{
+                          sx={(theme) => ({
                             fontSize: "12px",
-                            color: "#64748B",
-                          }}
+                            color: theme.palette.text.secondary,
+                          })}
                         >
                           {getNotificationIcon(notification.type)}
                         </Typography>
@@ -305,7 +307,7 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                   </Box>
                   
                   {index < notifications.length - 1 && (
-                    <Divider sx={{ borderColor: "#F1F5F9" }} />
+                    <Divider sx={{ borderColor: (theme) => theme.palette.divider }} />
                   )}
                 </Box>
               ))
@@ -317,8 +319,8 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
           <Box
             sx={{
               padding: "16px 20px",
-              borderTop: "1px solid #F1F5F9",
-              backgroundColor: "#F8FAFC",
+              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              backgroundColor: (theme) => theme.palette.grey[50],
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -326,15 +328,15 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
           >
             <Link
               href="#"
-              sx={{
+              sx={(theme) => ({
                 fontSize: "14px",
                 fontWeight: 500,
-                color: "#3B82F6",
+                color: theme.palette.primary.main,
                 textDecoration: "none",
                 "&:hover": {
                   textDecoration: "underline",
                 },
-              }}
+              })}
             >
               View all notifications
             </Link>
@@ -344,15 +346,15 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                 variant="text"
                 size="small"
                 onClick={handleMarkAllAsRead}
-                sx={{
+                sx={(theme) => ({
                   fontSize: "12px",
-                  color: "#64748B",
+                  color: theme.palette.text.secondary,
                   textTransform: "none",
                   "&:hover": {
                     backgroundColor: "transparent",
-                    color: "#3B82F6",
+                    color: theme.palette.primary.main,
                   },
-                }}
+                })}
               >
                 Mark all as read
               </Button>

@@ -1,6 +1,6 @@
 import CardHeader from "../../../common/components/Card/CardHeader";
 import CustomCard from "../../../common/components/Card/CustomCard";
-import { Avatar, Box, CircularProgress, Typography } from "@mui/material";
+import { Avatar, Box, CircularProgress, Typography, alpha } from "@mui/material";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
@@ -75,17 +75,17 @@ const ActivityCard = () => {
                       sx={{
                         width: 50,
                         height: 50,
-                        bgcolor: "#E0E0E0",
+                        bgcolor: (theme) => theme.palette.grey[300],
                       }}
                     >
                       {userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
                     </Avatar>
                     <Box sx={{ flex: 1, pt: "4px" }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: "#0A1629", mb: "4px" }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: "text.primary", mb: "4px" }}>
                         {userName}
                       </Typography>
                       {userDesignation && (
-                        <Typography variant="caption" sx={{ color: "#91929E", fontSize: "14px" }}>
+                        <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "14px" }}>
                           {userDesignation}
                         </Typography>
                       )}
@@ -96,7 +96,7 @@ const ActivityCard = () => {
                   <Box
                     onClick={() => handleActivityClick(log)}
                     sx={{
-                      bgcolor: "#F4F9FD",
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                       borderRadius: "14px",
                       p: "15px",
                       pl: "20px",
@@ -107,9 +107,9 @@ const ActivityCard = () => {
                       transition: "all 0.2s ease",
                       ...(log.entityType === "task" && {
                         "&:hover": {
-                          bgcolor: "#E8F4FD",
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
                           transform: "translateY(-1px)",
-                          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+                          boxShadow: (theme) => theme.shadows[3],
                         },
                       }),
                     }}
@@ -128,7 +128,7 @@ const ActivityCard = () => {
                     <Typography
                       variant="body2"
                       sx={{
-                        color: "#0A1629",
+                        color: "text.primary",
                         fontSize: "16px",
                         lineHeight: 1.5,
                         flex: 1,

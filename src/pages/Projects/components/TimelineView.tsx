@@ -48,11 +48,11 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
   [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: "white",
-    color: "rgba(0, 0, 0, 0.87)",
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
     maxWidth: 120,
     fontSize: theme.typography.pxToRem(12),
-    boxShadow: "0px 6px 40px rgba(121, 145, 173, 0.3)",
+    boxShadow: theme.shadows[6],
     borderRadius: "14px",
   },
 }));
@@ -111,11 +111,11 @@ const TaskTimelineFlex: React.FC = () => {
       <Typography variant="h6" gutterBottom>
         Tasks Timeline
       </Typography>
-      <Paper sx={{ p: 2 }}>
+      <Paper sx={{ p: 2, backgroundColor: "background.paper" }}>
         <Box sx={{ display: "flex" }}>
           {/* Fixed Task Name Sidebar */}
-          <Box sx={{ minWidth: "215px", borderRight: "1px solid #E6EBF5", flexShrink: 0 }}>
-            <Box height={"78px"} sx={{ borderBottom: "1px solid #E6EBF5" }}>
+          <Box sx={(theme) => ({ minWidth: "215px", borderRight: `1px solid ${theme.palette.divider}`, flexShrink: 0 })}>
+            <Box height={"78px"} sx={(theme) => ({ borderBottom: `1px solid ${theme.palette.divider}` })}>
               <Typography variant="subtitle2" sx={{ p: 1 }}>
                 Task Name
               </Typography>
@@ -123,14 +123,14 @@ const TaskTimelineFlex: React.FC = () => {
             {tasks.map((task) => (
               <Box
                 key={task.id}
-                sx={{
-                  color: "#222",
+                sx={(theme) => ({
+                  color: theme.palette.text.primary,
                   height: "52px",
-                  borderBottom: "1px solid #E6EBF5",
+                  borderBottom: `1px solid ${theme.palette.divider}`,
                   display: "flex",
                   alignItems: "center",
                   px: 1,
-                }}
+                })}
               >
                 <Typography sx={{ fontSize: "14px" }}>{task.subject}</Typography>
               </Box>
@@ -139,7 +139,7 @@ const TaskTimelineFlex: React.FC = () => {
           
           {/* Scrollable Time Spent Section */}
           <Box sx={{ overflowX: "auto", flex: 1 }}>
-            <Box height={"78px"} sx={{ borderBottom: "1px solid #E6EBF5" }}>
+            <Box height={"78px"} sx={(theme) => ({ borderBottom: `1px solid ${theme.palette.divider}` })}>
               <Typography variant="subtitle2" sx={{ p: 1 }}>
                 Time Spent (Current Month)
               </Typography>
@@ -147,19 +147,19 @@ const TaskTimelineFlex: React.FC = () => {
                 {days.map((day) => (
                   <Box
                     key={day}
-                    sx={{
+                    sx={(theme) => ({
                       width: "28px",
                       height: "28px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#7D8593",
+                      color: theme.palette.text.secondary,
                       fontWeight: 700,
-                      backgroundColor: "#F4F9FD",
+                      backgroundColor: theme.palette.grey[50],
                       fontSize: "13px",
                       borderRadius: "7px",
                       flexShrink: 0,
-                    }}
+                    })}
                   >
                     {day}
                   </Box>
@@ -178,17 +178,17 @@ const TaskTimelineFlex: React.FC = () => {
                   return (
                     <Box
                       key={day}
-                      sx={{
+                      sx={(theme) => ({
                         width: "28px",
                         height: "44px",
                         borderRadius: "7px",
-                        backgroundColor: "#F4F9FD",
+                        backgroundColor: theme.palette.grey[50],
                         margin: "0 2px",
                         transition: "all 0.2s ease",
                         position: "relative",
                         flexShrink: 0,
                         overflow: "hidden",
-                      }}
+                      })}
                     >
                       <HtmlTooltip
                         title={

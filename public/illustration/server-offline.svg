@@ -1,0 +1,22 @@
+<svg width="300" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Server/Computer -->
+  <rect x="80" y="100" width="140" height="100" rx="8" fill="#E8EAF6" stroke="#9FA8DA" stroke-width="2"/>
+  <rect x="90" y="110" width="120" height="60" rx="4" fill="#C5CAE9"/>
+  <circle cx="110" cy="180" r="4" fill="#9FA8DA"/>
+  <circle cx="130" cy="180" r="4" fill="#9FA8DA"/>
+  <circle cx="150" cy="180" r="4" fill="#9FA8DA"/>
+  
+  <!-- Signal/Waves (disconnected) -->
+  <path d="M 50 80 Q 30 60, 10 80" stroke="#EF5350" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 50 100 Q 20 70, 10 100" stroke="#EF5350" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 50 120 Q 25 95, 10 120" stroke="#EF5350" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- X mark for offline -->
+  <line x1="250" y1="80" x2="270" y2="100" stroke="#EF5350" stroke-width="4" stroke-linecap="round"/>
+  <line x1="270" y1="80" x2="250" y2="100" stroke="#EF5350" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Warning icon -->
+  <circle cx="260" cy="90" r="20" fill="#FFE082" opacity="0.3"/>
+  <path d="M 260 75 L 260 95 M 260 100 L 260 105" stroke="#FFA726" stroke-width="2" stroke-linecap="round"/>
+</svg>
+

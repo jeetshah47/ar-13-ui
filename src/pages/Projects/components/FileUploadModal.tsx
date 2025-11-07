@@ -114,16 +114,16 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
       }}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "584px",
           maxHeight: "90vh",
-          backgroundColor: "white",
-          boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.2)",
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: theme.shadows[6],
           borderRadius: "24px",
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
-        }}
+        })}
       >
         {/* Header */}
         <Box
@@ -135,23 +135,23 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
           }}
         >
           <Typography
-            sx={{
+            sx={(theme) => ({
               fontWeight: 700,
               fontSize: "20px",
               lineHeight: "1.2",
-              color: "#2D3748",
-            }}
+              color: theme.palette.text.primary,
+            })}
           >
             Upload Files
           </Typography>
           <IconButton
             onClick={handleClose}
-            sx={{
-              backgroundColor: "#F4F9FD",
+            sx={(theme) => ({
+              backgroundColor: theme.palette.grey[50],
               borderRadius: "14px",
               width: "44px",
               height: "44px",
-            }}
+            })}
           >
             <Crossicon />
           </IconButton>
@@ -161,19 +161,23 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
         <Box sx={{ padding: "30px", flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
           {/* Drag and Drop Area */}
           <Box
-            sx={{
-              border: dragActive ? "2px dashed #3F8CFF" : "2px dashed #D8E0F0",
+            sx={(theme) => ({
+              border: dragActive 
+                ? `2px dashed ${theme.palette.primary.main}` 
+                : `2px dashed ${theme.palette.grey[300]}`,
               borderRadius: "14px",
               padding: "40px",
               textAlign: "center",
-              backgroundColor: dragActive ? "#F4F9FD" : "#FAFBFC",
+              backgroundColor: dragActive 
+                ? theme.palette.grey[50] 
+                : theme.palette.mode === "dark" ? theme.palette.grey[100] : "#FAFBFC",
               cursor: "pointer",
               transition: "all 0.2s ease",
               "&:hover": {
-                borderColor: "#3F8CFF",
-                backgroundColor: "#F4F9FD",
+                borderColor: theme.palette.primary.main,
+                backgroundColor: theme.palette.grey[50],
               },
-            }}
+            })}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -182,21 +186,21 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
           >
             <UploadIcon />
             <Typography
-              sx={{
+              sx={(theme) => ({
                 marginTop: "16px",
                 fontWeight: 700,
                 fontSize: "16px",
-                color: "#2D3748",
-              }}
+                color: theme.palette.text.primary,
+              })}
             >
               Drag & drop files here, or click to select
             </Typography>
             <Typography
-              sx={{
+              sx={(theme) => ({
                 marginTop: "8px",
                 fontSize: "14px",
-                color: "#7D8592",
-              }}
+                color: theme.palette.text.secondary,
+              })}
             >
               Supports: Images, PDFs, Documents (Max 10MB per file)
             </Typography>
@@ -214,12 +218,12 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
           {selectedFiles.length > 0 && (
             <Box>
               <Typography
-                sx={{
+                sx={(theme) => ({
                   fontWeight: 700,
                   fontSize: "14px",
-                  color: "#7D8592",
+                  color: theme.palette.text.secondary,
                   marginBottom: "12px",
-                }}
+                })}
               >
                 Selected Files ({selectedFiles.length})
               </Typography>
@@ -227,32 +231,32 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
                 {selectedFiles.map((file, index) => (
                   <Box
                     key={index}
-                    sx={{
+                    sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "12px",
-                      backgroundColor: "#F4F9FD",
+                      backgroundColor: theme.palette.grey[50],
                       borderRadius: "8px",
-                    }}
+                    })}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <UploadIcon />
                       <Box>
                         <Typography
-                          sx={{
+                          sx={(theme) => ({
                             fontSize: "14px",
                             fontWeight: 600,
-                            color: "#2D3748",
-                          }}
+                            color: theme.palette.text.primary,
+                          })}
                         >
                           {file.name}
                         </Typography>
                         <Typography
-                          sx={{
+                          sx={(theme) => ({
                             fontSize: "12px",
-                            color: "#7D8592",
-                          }}
+                            color: theme.palette.text.secondary,
+                          })}
                         >
                           {formatFileSize(file.size)}
                         </Typography>
@@ -260,12 +264,12 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
                     </Box>
                     <IconButton
                       onClick={() => handleRemoveFile(index)}
-                      sx={{
-                        color: "#E53E3E",
+                      sx={(theme) => ({
+                        color: theme.palette.error.main,
                         "&:hover": {
-                          backgroundColor: "#FED7D7",
+                          backgroundColor: theme.palette.error.light,
                         },
-                      }}
+                      })}
                     >
                       ×
                     </IconButton>
@@ -279,33 +283,33 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
           {uploading && (
             <Box>
               <Typography
-                sx={{
+                sx={(theme) => ({
                   fontWeight: 700,
                   fontSize: "14px",
-                  color: "#7D8592",
+                  color: theme.palette.text.secondary,
                   marginBottom: "8px",
-                }}
+                })}
               >
                 Uploading...
               </Typography>
               <LinearProgress
                 variant="determinate"
                 value={uploadProgress}
-                sx={{
+                sx={(theme) => ({
                   height: "8px",
                   borderRadius: "4px",
-                  backgroundColor: "#E2E8F0",
+                  backgroundColor: theme.palette.grey[300],
                   "& .MuiLinearProgress-bar": {
-                    backgroundColor: "#3F8CFF",
+                    backgroundColor: theme.palette.primary.main,
                   },
-                }}
+                })}
               />
               <Typography
-                sx={{
+                sx={(theme) => ({
                   fontSize: "12px",
-                  color: "#7D8592",
+                  color: theme.palette.text.secondary,
                   marginTop: "4px",
-                }}
+                })}
               >
                 {Math.round(uploadProgress)}% complete
               </Typography>
@@ -325,35 +329,35 @@ const FileUploadModal = ({ onClose, projectId, taskId }: FileUploadModalProps) =
           <Button
             onClick={handleClose}
             disabled={uploading}
-            sx={{
-              color: "#7D8592",
+            sx={(theme) => ({
+              color: theme.palette.text.secondary,
               fontWeight: 600,
               padding: "12px 20px",
               borderRadius: "14px",
               "&:hover": {
-                backgroundColor: "#F4F9FD",
+                backgroundColor: theme.palette.grey[50],
               },
-            }}
+            })}
           >
             Cancel
           </Button>
           <Button
             onClick={handleUpload}
             disabled={selectedFiles.length === 0 || uploading || loading}
-            sx={{
-              backgroundColor: "#3F8CFF",
-              color: "#FFFFFF",
+            sx={(theme) => ({
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
               borderRadius: "14px",
               padding: "12px 20px",
               fontWeight: 700,
               "&:hover": {
-                backgroundColor: "#2B77E5",
+                backgroundColor: theme.palette.primary.dark,
               },
               "&:disabled": {
-                backgroundColor: "#D8E0F0",
-                color: "#A0AEC0",
+                backgroundColor: theme.palette.action.disabledBackground,
+                color: theme.palette.action.disabled,
               },
-            }}
+            })}
           >
             {uploading ? "Uploading..." : `Upload ${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}`}
           </Button>

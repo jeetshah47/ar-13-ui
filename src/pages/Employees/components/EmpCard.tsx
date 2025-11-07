@@ -1,5 +1,6 @@
 import React from "react";
 import { Avatar, Box, Typography, Chip } from "@mui/material";
+import { useNavigate } from "react-router";
 import type { EmployeeResponse } from "../../../store/types/Employee/EmployeeResponse";
 
 interface EmpCardProps {
@@ -7,11 +8,18 @@ interface EmpCardProps {
 }
 
 const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/app/employees/${employee.userId}`);
+  };
+
   return (
     <Box
-      sx={{
-        background: "#FFFFFF",
-        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+      onClick={handleCardClick}
+      sx={(theme) => ({
+        background: theme.palette.background.paper,
+        boxShadow: theme.shadows[1],
         borderRadius: "24px",
         padding: "20px 28px",
         display: "flex",
@@ -19,7 +27,13 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
         alignItems: "center",
         marginTop: "20px",
         minHeight: "80px",
-      }}
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        "&:hover": {
+          boxShadow: theme.shadows[4],
+          transform: "translateY(-2px)",
+        },
+      })}
     >
       <Box sx={{ 
         display: "flex", 
@@ -139,6 +153,22 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
         </Typography>
         <Typography variant="h6" color="success.main" sx={{ textAlign: "center" }}>
           {employee.tasksInReview}
+        </Typography>
+      </Box>
+      
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center", 
+        gap: "8px",
+        minWidth: "80px",
+        justifyContent: "center"
+      }}>
+        <Typography fontSize={"14px"} color="secondary.main" sx={{ textAlign: "center" }}>
+          Pending
+        </Typography>
+        <Typography variant="h6" color="text.secondary" sx={{ textAlign: "center" }}>
+          {employee.pendingTasks}
         </Typography>
       </Box>
       

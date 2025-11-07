@@ -4,6 +4,7 @@ import { useDispatch, type TypedUseSelectorHook } from "react-redux";
 import { useSelector } from "react-redux";
 import { projectListReducer } from "./features/projects/projectSlice";
 import { projectDetailReducer } from "./features/projects/projectDetailSlice";
+import { projectStatisticsReducer } from "./features/projects/projectStatisticsSlice";
 import { taskListReducer } from "./features/task/taskSlice";
 import { timeTrackingReducer } from "./features/task/timeTrackingSlice";
 import { dashboardReducer } from "./features/dashboard/dashboardSlice";
@@ -20,6 +21,7 @@ export const store = configureStore({
     authReducer,
     projectListReducer,
     projectDetailReducer,
+    projectStatisticsReducer,
     taskListReducer,
     timeTrackingReducer,
     dashboardReducer,

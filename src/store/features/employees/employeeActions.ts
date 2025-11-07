@@ -9,8 +9,11 @@ import {
   inviteEmployeeRequest,
   inviteEmployeeSuccess,
   inviteEmployeeFailed,
+  getEmployeeStatsRequest,
+  getEmployeeStatsSuccess,
+  getEmployeeStatsFailed,
 } from "./employeeSlice";
-import { getAllEmployees, getEmployeeById } from "../../apis/employeesApi";
+import { getAllEmployees, getEmployeeTaskCounts, getEmployeeStats } from "../../apis/employeesApi";
 import type { AxiosError } from "axios";
 import type { EmployeeErrorResponse } from "../../types/Employee/EmployeeResponse";
 import toast from "react-hot-toast";
@@ -50,8 +53,13 @@ export const getAllEmployeesAction = () => async (dispatch: AppDispatch) => {
 export const getEmployeeByIdAction = (userId: string) => async (dispatch: AppDispatch) => {
   dispatch(getEmployeeByIdRequest());
   try {
-    const response = await getEmployeeById(userId);
-    dispatch(getEmployeeByIdSuccess(response.employee));
+    const response = await getEmployeeTaskCounts(userId);
+    // API returns { employee: EmployeeResponse } according to EMPLOYEE_API.md
+    if (response.employee) {
+      dispatch(getEmployeeByIdSuccess(response.employee));
+    } else {
+      throw new Error("Invalid response structure: employee data not found");
+    }
   } catch (error) {
     let errorMessage = "Failed to fetch employee details";
     
@@ -107,6 +115,46 @@ export const inviteEmployeeAction = (email: string, cb?: () => void) => async (d
     }
     
     dispatch(inviteEmployeeFailed(errorMessage));
+    toast.error(errorMessage);
+  }
+};
+
+export const getEmployeeStatsAction = (
+  userId: string,
+  period: "month" | "quarter" | "year",
+  periodValue: string,
+  projectId?: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(getEmployeeStatsRequest());
+  try {
+    const response = await getEmployeeStats(userId, period, periodValue, projectId);
+    if (response.stats) {
+      dispatch(getEmployeeStatsSuccess(response.stats));
+    } else {
+      throw new Error("Invalid response structure: stats data not found");
+    }
+  } catch (error) {
+    let errorMessage = "Failed to fetch employee statistics";
+    
+    // Handle string errors (from HTTP interceptor)
+    if (typeof error === "string") {
+      errorMessage = error;
+    }
+    // Handle Error objects
+    else if (error instanceof Error) {
+      errorMessage = error.message || errorMessage;
+    }
+    // Handle AxiosError objects
+    else if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+      errorMessage = 
+        axiosError.response?.data?.message || 
+        axiosError.response?.data?.error || 
+        axiosError.message || 
+        errorMessage;
+    }
+    
+    dispatch(getEmployeeStatsFailed(errorMessage));
     toast.error(errorMessage);
   }
 };

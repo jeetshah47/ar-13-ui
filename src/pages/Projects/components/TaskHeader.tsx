@@ -60,7 +60,7 @@ const TaskHeader = ({
               key={option.key}
               onClick={() => onChangeViewOptions(option.key)}
               sx={{
-                backgroundColor: "white",
+                backgroundColor: "background.paper",
                 borderRadius: "14px",
                 padding: "12px",
                 display: "flex",
@@ -69,24 +69,26 @@ const TaskHeader = ({
             >
               <SvgIcon
                 component={option.icon}
-                sx={{
+                sx={(theme) => ({
                   color:
-                    currentViewOption === option.key ? "primary.main" : "black",
-                }}
+                    currentViewOption === option.key 
+                      ? theme.palette.primary.main 
+                      : theme.palette.text.primary,
+                })}
               />
             </Box>
           ))}
         </Box>
         <Box
           onClick={onClickFilterShow}
-          sx={{
-            background: "#FFFFFF",
-            boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+          sx={(theme) => ({
+            background: theme.palette.background.paper,
+            boxShadow: theme.shadows[1],
             borderRadius: "14px",
             padding: "12px",
             display: "flex",
             cursor: "pointer",
-          }}
+          })}
         >
           <SvgIcon component={FilterIcon} />
         </Box>

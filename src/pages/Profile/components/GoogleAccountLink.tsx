@@ -79,60 +79,62 @@ const GoogleAccountLink = () => {
 
   return (
     <Box
-      sx={{
-        borderTop: "1px solid #E4E6E8",
+      sx={(theme) => ({
+        borderTop: `1px solid ${theme.palette.divider}`,
         paddingTop: "26px",
         marginTop: "26px",
-      }}
+      })}
     >
       <Typography fontWeight={700} sx={{ marginBottom: "16px" }}>
         Linked Accounts
       </Typography>
       
       <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
+        sx={(theme) => ({
           padding: "12px",
-          backgroundColor: "#f5f5f5",
+          backgroundColor: theme.palette.grey[50],
           borderRadius: "8px",
-        }}
+          width: "100%",
+          boxSizing: "border-box",
+        })}
       >
-        <SvgIcon
-          component={GoogleIcon}
-          sx={{
-            width: "24px",
-            height: "24px",
-          }}
-        />
-        <Box sx={{ flex: 1 }}>
-          {linked && link ? (
-            <>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+          <SvgIcon
+            component={GoogleIcon}
+            sx={{
+              width: "24px",
+              height: "24px",
+              flexShrink: 0,
+            }}
+          />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {linked && link ? (
+              <>
+                <Typography
+                  fontSize="14px"
+                  fontWeight={600}
+                  sx={{ fontWeight: "bold" }}
+                >
+                  Google Account Linked
+                </Typography>
+                <Typography
+                  fontSize="12px"
+                  color="secondary.main"
+                  sx={{ fontSize: "14px", paddingTop: "4px" }}
+                >
+                  {link.providerEmail}
+                </Typography>
+              </>
+            ) : (
               <Typography
                 fontSize="14px"
-                fontWeight={600}
-                sx={{ fontWeight: "bold" }}
-              >
-                Google Account Linked
-              </Typography>
-              <Typography
-                fontSize="12px"
                 color="secondary.main"
-                sx={{ fontSize: "14px", paddingTop: "4px" }}
+                sx={{ fontSize: "14px" }}
               >
-                {link.providerEmail}
+                No Google account linked
               </Typography>
-            </>
-          ) : (
-            <Typography
-              fontSize="14px"
-              color="secondary.main"
-              sx={{ fontSize: "14px" }}
-            >
-              No Google account linked
-            </Typography>
-          )}
+            )}
+          </Box>
         </Box>
         {linked ? (
           <Button
@@ -141,7 +143,10 @@ const GoogleAccountLink = () => {
             size="small"
             onClick={handleUnlinkGoogleAccount}
             disabled={unlinking || loading}
-            sx={{ minWidth: "100px", textTransform: "none" }}
+            sx={{ 
+              textTransform: "none",
+              width: "100%",
+            }}
           >
             {unlinking ? "Unlinking..." : "Unlink"}
           </Button>
@@ -151,7 +156,10 @@ const GoogleAccountLink = () => {
             size="small"
             onClick={handleLinkGoogleAccount}
             disabled={loading || linking}
-            sx={{ minWidth: "100px", textTransform: "none" }}
+            sx={{ 
+              textTransform: "none",
+              width: "100%",
+            }}
           >
             {linking ? "Starting..." : "Link Google"}
           </Button>

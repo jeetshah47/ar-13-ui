@@ -48,24 +48,24 @@ const Banner = () => {
         >
           <Typography
             variant="h2"
-            sx={{
+            sx={(theme) => ({
               fontWeight: 700,
               fontSize: "22px",
               lineHeight: 1.364,
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               marginBottom: "16px",
-            }}
+            })}
           >
             Your project data warehouse
           </Typography>
           <Typography
-            sx={{
+            sx={(theme) => ({
               fontSize: "16px",
               fontWeight: 400,
               lineHeight: 1.5,
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               opacity: 0.7,
-            }}
+            })}
           >
             Add project data, create thematic pages, edit data, share information
             with team members

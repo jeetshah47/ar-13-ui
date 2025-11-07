@@ -26,12 +26,12 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
   };
   return (
     <Box
-      sx={{
-        background: "#FFFFFF",
-        boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.195504)",
+      sx={(theme) => ({
+        background: theme.palette.background.paper,
+        boxShadow: theme.shadows[6],
         borderRadius: "24px",
         padding: "28px",
-      }}
+      })}
     >
       <Box
         sx={{
@@ -46,13 +46,13 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
           Add Employee
         </Typography>
         <Box
-          sx={{
-            background: "#F4F9FD",
+          sx={(theme) => ({
+            background: theme.palette.grey[50],
             borderRadius: "14px",
             display: "flex",
             padding: "8px",
             cursor: "pointer",
-          }}
+          })}
           // onClick={(handleCrossClick)}
         >
           <SvgIcon fontSize="small" component={CrossIcon} onClick={onClose} />

@@ -21,9 +21,9 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
   if (employee) {
     return (
       <Box
-        sx={{
-          background: "#FFFFFF",
-          boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+        sx={(theme) => ({
+          background: theme.palette.background.paper,
+          boxShadow: theme.shadows[1],
           borderRadius: "24px",
           padding: "20px 28px",
           display: "flex",
@@ -31,7 +31,7 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           alignItems: "center",
           marginTop: "20px",
           height: "91px",
-        }}
+        })}
       >
         <Box sx={{ display: "flex", gap: "18px", alignItems: "center" }}>
           <Avatar 
@@ -42,22 +42,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Avatar>
           <Box>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontWeight: 700, 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 marginBottom: "2px"
-              }}
+              })}
             >
               {employee.name}
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E"
-              }}
+                color: theme.palette.text.secondary
+              })}
             >
               {employee.email}
             </Typography>
@@ -67,22 +67,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         <Box sx={{ display: "flex", gap: "48px", alignItems: "center" }}>
           <Box sx={{ textAlign: "center" }}>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "2px"
-              }}
+              })}
             >
               Vacations
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 400
-              }}
+              })}
             >
               {employee.vacationStats.vacations}
             </Typography>
@@ -90,22 +90,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           
           <Box sx={{ textAlign: "center" }}>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "2px"
-              }}
+              })}
             >
               Sick Leave
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 400
-              }}
+              })}
             >
               {employee.vacationStats.sickLeave}
             </Typography>
@@ -113,22 +113,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           
           <Box sx={{ textAlign: "center" }}>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "14px", 
                 lineHeight: "19px",
-                color: "#91929E",
+                color: theme.palette.text.secondary,
                 marginBottom: "2px"
-              }}
+              })}
             >
               Work remotely
             </Typography>
             <Typography 
-              sx={{ 
+              sx={(theme) => ({ 
                 fontSize: "16px", 
                 lineHeight: "24px",
-                color: "#0A1629",
+                color: theme.palette.text.primary,
                 fontWeight: 400
-              }}
+              })}
             >
               {employee.vacationStats.workRemotely}
             </Typography>
@@ -141,9 +141,9 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
   // If no employee data, show placeholder with sample data
   return (
     <Box
-      sx={{
-        background: "#FFFFFF",
-        boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+      sx={(theme) => ({
+        background: theme.palette.background.paper,
+        boxShadow: theme.shadows[1],
         borderRadius: "24px",
         padding: "20px 28px",
         display: "flex",
@@ -151,28 +151,28 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         alignItems: "center",
         marginTop: "20px",
         height: "91px",
-      }}
+      })}
     >
       <Box sx={{ display: "flex", gap: "18px", alignItems: "center" }}>
         <Avatar sx={{ width: "50px", height: "50px" }}>RT</Avatar>
         <Box>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontWeight: 700, 
               fontSize: "16px", 
               lineHeight: "24px",
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               marginBottom: "2px"
-            }}
+            })}
           >
             Ryan Thompson
           </Typography>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "14px", 
               lineHeight: "19px",
-              color: "#91929E"
-            }}
+              color: theme.palette.text.secondary
+            })}
           >
             ryanthom@gmail.com
           </Typography>
@@ -182,22 +182,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
       <Box sx={{ display: "flex", gap: "48px", alignItems: "center" }}>
         <Box sx={{ textAlign: "center" }}>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "14px", 
               lineHeight: "19px",
-              color: "#91929E",
+              color: theme.palette.text.secondary,
               marginBottom: "2px"
-            }}
+            })}
           >
             Vacations
           </Typography>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "16px", 
               lineHeight: "24px",
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               fontWeight: 400
-            }}
+            })}
           >
             15
           </Typography>
@@ -205,22 +205,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         
         <Box sx={{ textAlign: "center" }}>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "14px", 
               lineHeight: "19px",
-              color: "#91929E",
+              color: theme.palette.text.secondary,
               marginBottom: "2px"
-            }}
+            })}
           >
             Sick Leave
           </Typography>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "16px", 
               lineHeight: "24px",
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               fontWeight: 400
-            }}
+            })}
           >
             3
           </Typography>
@@ -228,22 +228,22 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         
         <Box sx={{ textAlign: "center" }}>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "14px", 
               lineHeight: "19px",
-              color: "#91929E",
+              color: theme.palette.text.secondary,
               marginBottom: "2px"
-            }}
+            })}
           >
             Work remotely
           </Typography>
           <Typography 
-            sx={{ 
+            sx={(theme) => ({ 
               fontSize: "16px", 
               lineHeight: "24px",
-              color: "#0A1629",
+              color: theme.palette.text.primary,
               fontWeight: 400
-            }}
+            })}
           >
             50
           </Typography>

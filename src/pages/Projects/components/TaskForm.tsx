@@ -157,16 +157,16 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         position: "absolute",
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        backgroundColor: "white",
+        backgroundColor: theme.palette.background.paper,
         p: 4,
-        boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.195504)",
+        boxShadow: theme.shadows[6],
         borderRadius: "24px",
-      }}
+      })}
     >
       <Box
         sx={{
@@ -230,26 +230,33 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
             >
               Time Spend
             </Typography>
-            <input
+            <Box
+              component="input"
               type="datetime-local"
               name="duration"
               value={duration}
               onChange={handleChange}
               min={new Date().toISOString().slice(0, 16)}
-              style={{
+              sx={(theme) => ({
                 width: "100%",
                 height: "56px",
                 padding: "0 14px",
-                border: "1px solid #D8E0F0",
+                border: `1px solid ${theme.palette.grey[300]}`,
                 borderRadius: "14px",
                 fontSize: "14px",
                 fontFamily: '"Nunito Sans", sans-serif',
-                color: "#000000",
+                color: theme.palette.text.primary,
                 outline: "none",
-                backgroundColor: "white",
+                backgroundColor: theme.palette.background.paper,
                 boxSizing: "border-box",
                 margin: 0,
-              }}
+                "&:focus": {
+                  borderColor: theme.palette.primary.main,
+                },
+                "&:hover": {
+                  borderColor: theme.palette.grey[400],
+                },
+              })}
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>

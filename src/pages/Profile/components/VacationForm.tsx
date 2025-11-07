@@ -113,14 +113,14 @@ const VacationForm = ({ onClose }: VacationFormProps) => {
 
   return (
     <Box
-      sx={{
-        background: "#FFFFFF",
-        boxShadow: "0px 6px 58px rgba(121, 145, 173, 0.195504)",
+      sx={(theme) => ({
+        background: theme.palette.background.paper,
+        boxShadow: theme.shadows[6],
         borderRadius: "24px",
         padding: "28px",
         overflow: "auto",
         height: "inherit",
-      }}
+      })}
     >
       <Box
         sx={{
@@ -135,13 +135,13 @@ const VacationForm = ({ onClose }: VacationFormProps) => {
           Add Vacation Request
         </Typography>
         <Box
-          sx={{
-            background: "#F4F9FD",
+          sx={(theme) => ({
+            background: theme.palette.grey[50],
             borderRadius: "14px",
             display: "flex",
             padding: "8px",
             cursor: "pointer",
-          }}
+          })}
           onClick={onClose}
         >
           <SvgIcon fontSize="small" component={CrossIcon} onClick={onClose} />
@@ -181,31 +181,31 @@ const VacationForm = ({ onClose }: VacationFormProps) => {
               value="Vacation"
               control={<Radio />}
               label="Vacation"
-              sx={{
-                border: "1px solid #D8E0F0",
+              sx={(theme) => ({
+                border: `1px solid ${theme.palette.grey[300]}`,
                 borderRadius: "10px",
                 paddingX: "18px",
-              }}
+              })}
             />
             <FormControlLabel
               value="Sick Leave"
               control={<Radio />}
               label="Sick Leave"
-              sx={{
-                border: "1px solid #D8E0F0",
+              sx={(theme) => ({
+                border: `1px solid ${theme.palette.grey[300]}`,
                 borderRadius: "10px",
                 paddingX: "18px",
-              }}
+              })}
             />
             <FormControlLabel
               value="Work remotely"
               control={<Radio />}
               label="Work remotely"
-              sx={{
-                border: "1px solid #D8E0F0",
+              sx={(theme) => ({
+                border: `1px solid ${theme.palette.grey[300]}`,
                 borderRadius: "10px",
                 paddingX: "18px",
-              }}
+              })}
             />
           </RadioGroup>
         </FormControl>

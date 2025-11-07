@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, Typography } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, type Theme } from "@mui/material";
 import Modal from "../../../common/components/Modal/Modal";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
@@ -23,12 +23,12 @@ import { getTaskListAction } from "../../../store/features/task/projectAction";
 import NoTaskMessage from "../components/NoTaskMessage";
 import { RequirePermission } from "../../../common/components/RBAC";
 
-const activeCardStyles = {
-  borderRight: "4px solid #3F8CFF",
+const getActiveCardStyles = (theme: Theme) => ({
+  borderRight: `4px solid ${theme.palette.primary.main}`,
   borderRadius: "2px",
-  background: "#F4F9FD",
+  background: theme.palette.grey[50],
   padding: "8px",
-};
+});
 
 const ProjectList = () => {
   const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
@@ -96,6 +96,17 @@ const ProjectList = () => {
     dispatch(updateSelectedProjectId(projectId));
   };
 
+  // Auto-select first project if none is selected
+  useEffect(() => {
+    const projects = projectListState.api.data.projects;
+    const selectedProjectId = projectListState.common.selectedProjectId;
+    
+    // If no project is selected and there are projects available, select the first one
+    if (!selectedProjectId && projects.length > 0) {
+      dispatch(updateSelectedProjectId(projects[0].id));
+    }
+  }, [dispatch, projectListState.api.data.projects, projectListState.common.selectedProjectId]);
+
   useEffect(() => {
     const project_id = projectListState.common.selectedProjectId;
     if (project_id) {
@@ -115,11 +126,11 @@ const ProjectList = () => {
         }}
       >
         <Box
-          sx={{
+          sx={(theme) => ({
             width: "15%",
-            background: "#FFFFFF",
+            background: theme.palette.background.paper,
             borderRadius: "24px",
-            boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
+            boxShadow: theme.shadows[1],
             overflow: "auto",
             scrollBehavior: "smooth",
             WebkitOverflowScrolling: "touch",
@@ -127,13 +138,13 @@ const ProjectList = () => {
               width: "3px",
             },
             "::-webkit-scrollbar-thumb": {
-              background: "#e1dcdc",
+              background: theme.palette.mode === "dark" ? theme.palette.grey[500] : "#e1dcdc",
               borderRadius: "10px",
             },
             cursor: "pointer",
-          }}
+          })}
         >
-          <Box sx={{ padding: "20px 22px", borderBottom: "1px solid #E4E6E8" }}>
+          <Box sx={{ padding: "20px 22px", borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
             <Typography sx={{ fontWeight: "bold" }}>
               Current Projects
             </Typography>
@@ -143,9 +154,9 @@ const ProjectList = () => {
               <Box
                 onClick={() => handleSelectCurrentProjectId(project.id)}
                 key={project.id}
-                sx={
+                sx={(theme) =>
                   projectListState.common.selectedProjectId === project.id
-                    ? activeCardStyles
+                    ? getActiveCardStyles(theme)
                     : { padding: "8px" }
                 }
               >
@@ -199,7 +210,7 @@ const ProjectList = () => {
         <Box
           onClick={(e) => e.stopPropagation()}
           sx={{
-            backgroundColor: "#fff",
+            backgroundColor: "background.paper",
             borderRadius: "24px",
             padding: "24px",
             maxWidth: "90vw",
@@ -214,7 +225,7 @@ const ProjectList = () => {
         <Box
           onClick={(e) => e.stopPropagation()}
           sx={{
-            backgroundColor: "#fff",
+            backgroundColor: "background.paper",
             borderRadius: "24px",
             padding: "24px",
             maxWidth: "90vw",

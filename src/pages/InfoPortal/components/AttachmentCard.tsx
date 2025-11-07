@@ -16,24 +16,24 @@ interface AttachmentCardProps {
 const AttachmentCard = ({ attachment }: AttachmentCardProps) => {
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         position: "relative",
         width: "156px",
         height: "144px",
         borderRadius: "14px",
-        border: "1px solid #D8DDE5",
+        border: `1px solid ${theme.palette.grey[300]}`,
         overflow: "hidden",
         cursor: "pointer",
-      }}
+      })}
     >
       {/* Image */}
       <Box
-        sx={{
+        sx={(theme) => ({
           position: "relative",
           width: "100%",
           height: "100%",
-          backgroundColor: "#F5F8FC",
-        }}
+          backgroundColor: theme.palette.grey[50],
+        })}
       >
         <img
           src={attachment.imageUrl}
@@ -59,39 +59,39 @@ const AttachmentCard = ({ attachment }: AttachmentCardProps) => {
 
       {/* Info Card */}
       <Box
-        sx={{
+        sx={(theme) => ({
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "white",
+          backgroundColor: theme.palette.background.paper,
           borderRadius: "13px",
           padding: "12px",
           display: "flex",
           flexDirection: "column",
           gap: "4px",
-        }}
+        })}
       >
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "14px",
             fontWeight: 700,
             lineHeight: 1.5,
-            color: "#0A1629",
+            color: theme.palette.text.primary,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-          }}
+          })}
         >
           {attachment.name}
         </Typography>
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "12px",
             fontWeight: 400,
             lineHeight: 1.364,
-            color: "#91929E",
-          }}
+            color: theme.palette.text.secondary,
+          })}
         >
           {attachment.date}
         </Typography>
@@ -99,26 +99,26 @@ const AttachmentCard = ({ attachment }: AttachmentCardProps) => {
 
       {/* Attachment Icon */}
       <Box
-        sx={{
+        sx={(theme) => ({
           position: "absolute",
           top: "5px",
           right: "5px",
           width: "44px",
           height: "44px",
-          backgroundColor: "#F5F8FC",
+          backgroundColor: theme.palette.grey[50],
           borderRadius: "14px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-        }}
+        })}
       >
         <SvgIcon
           component={AttachmentIcon}
-          sx={{
+          sx={(theme) => ({
             width: "24px",
             height: "24px",
-            color: "#0A1629",
-          }}
+            color: theme.palette.text.primary,
+          })}
         />
       </Box>
     </Box>

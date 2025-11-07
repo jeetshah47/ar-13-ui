@@ -239,14 +239,14 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         display: "flex",
         gap: "16px",
         padding: "16px",
-        backgroundColor: "#F4F9FD",
+        backgroundColor: theme.palette.grey[50],
         minHeight: "100%",
         overflowX: "auto",
-      }}
+      })}
     >
       {columns.map((column) => (
         <Box
@@ -260,22 +260,22 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
         >
           {/* Column Header */}
           <Box
-            sx={{
-              backgroundColor: "#FFFFFF",
+            sx={(theme) => ({
+              backgroundColor: theme.palette.background.paper,
               borderRadius: "20px",
               padding: "12px 16px",
               marginBottom: "12px",
-              boxShadow: "0px 6px 58px 0px rgba(196, 203, 214, 0.1)",
+              boxShadow: theme.shadows[1],
               textAlign: "center",
-            }}
+            })}
           >
             <Typography
-              sx={{
+              sx={(theme) => ({
                 fontFamily: "Nunito Sans",
                 fontWeight: 700,
                 fontSize: "14px",
-                color: "#0A1629",
-              }}
+                color: theme.palette.text.primary,
+              })}
             >
               {column.title}
             </Typography>
@@ -287,13 +287,15 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
             onDragEnter={(e) => handleDragEnter(e, column.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, column.id)}
-            sx={{
+            sx={(theme) => ({
               minHeight: "300px",
-              backgroundColor: dragOverColumn === column.id ? "#E8F2FF" : "transparent",
+              backgroundColor: dragOverColumn === column.id 
+                ? theme.palette.primary.light 
+                : "transparent",
               borderRadius: "12px",
               padding: "6px",
               transition: "background-color 0.2s ease",
-            }}
+            })}
           >
             {column.items.map((item) => (
               <Card
@@ -308,49 +310,49 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
                     handleTaskClick(item.id);
                   }
                 }}
-                sx={{
-                  backgroundColor: "#FFFFFF",
+                sx={(theme) => ({
+                  backgroundColor: theme.palette.background.paper,
                   borderRadius: "20px",
                   marginBottom: "12px",
-                  boxShadow: "0px 6px 58px 0px rgba(196, 203, 214, 0.1)",
+                  boxShadow: theme.shadows[1],
                   cursor: draggedItem ? "grabbing" : "pointer",
                   transform: draggedItem?.id === item.id ? "rotate(2deg)" : "none",
                   opacity: draggedItem?.id === item.id ? 0.8 : 1,
                   transition: "all 0.2s ease",
                   "&:hover": {
                     transform: draggedItem ? "none" : "translateY(-2px)",
-                    boxShadow: draggedItem ? "0px 6px 58px 0px rgba(196, 203, 214, 0.1)" : "0px 8px 64px 0px rgba(196, 203, 214, 0.15)",
+                    boxShadow: draggedItem ? theme.shadows[1] : theme.shadows[2],
                   },
                   "&:active": {
                     cursor: "grabbing",
                   },
-                }}
+                })}
               >
                 <CardContent sx={{ padding: "16px" }}>
                   {/* Task Code */}
                   <Typography
-                    sx={{
+                    sx={(theme) => ({
                       fontFamily: "Nunito Sans",
                       fontWeight: 400,
                       fontSize: "11px",
-                      color: "#91929E",
+                      color: theme.palette.text.secondary,
                       marginBottom: "2px",
-                    }}
+                    })}
                   >
                     {item.code}
                   </Typography>
 
                   {/* Task Title */}
                   <Typography
-                    sx={{
+                    sx={(theme) => ({
                       fontFamily: "Nunito Sans",
                       fontWeight: 400,
                       fontSize: "13px",
-                      color: "#0A1629",
+                      color: theme.palette.text.primary,
                       marginBottom: "12px",
                       lineHeight: 1.4,
                       whiteSpace: "pre-line",
-                    }}
+                    })}
                   >
                     {item.title}
                   </Typography>
@@ -365,21 +367,21 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
                   >
                     {/* Duration */}
                     <Box
-                      sx={{
-                        backgroundColor: "#F4F9FD",
+                      sx={(theme) => ({
+                        backgroundColor: theme.palette.grey[50],
                         borderRadius: "6px",
                         padding: "4px 8px",
                         display: "flex",
                         alignItems: "center",
-                      }}
+                      })}
                     >
                       <Typography
-                        sx={{
+                        sx={(theme) => ({
                           fontFamily: "Nunito Sans",
                           fontWeight: 700,
                           fontSize: "11px",
-                          color: "#7D8592",
-                        }}
+                          color: theme.palette.text.secondary,
+                        })}
                       >
                         {item.duration}
                       </Typography>
@@ -411,11 +413,11 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
 
                       {/* Avatar */}
                       <Avatar
-                        sx={{
+                        sx={(theme) => ({
                           width: "20px",
                           height: "20px",
-                          border: "2px solid #FFFFFF",
-                        }}
+                          border: `2px solid ${theme.palette.background.paper}`,
+                        })}
                         src={item.assignee.avatar}
                         alt={item.assignee.name}
                       />
@@ -428,22 +430,22 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
             {/* Empty State */}
             {column.items.length === 0 && (
               <Box
-                sx={{
-                  backgroundColor: "#FFFFFF",
+                sx={(theme) => ({
+                  backgroundColor: theme.palette.background.paper,
                   borderRadius: "20px",
                   padding: "30px 16px",
                   textAlign: "center",
-                  boxShadow: "0px 6px 58px 0px rgba(196, 203, 214, 0.1)",
-                  border: "2px dashed #E4E6E8",
-                }}
+                  boxShadow: theme.shadows[1],
+                  border: `2px dashed ${theme.palette.divider}`,
+                })}
               >
                 <Typography
-                  sx={{
+                  sx={(theme) => ({
                     fontFamily: "Nunito Sans",
                     fontWeight: 400,
                     fontSize: "13px",
-                    color: "#7D8592",
-                  }}
+                    color: theme.palette.text.secondary,
+                  })}
                 >
                   No tasks
                 </Typography>

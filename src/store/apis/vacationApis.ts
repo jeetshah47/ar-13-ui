@@ -9,13 +9,13 @@ import type {
 export async function createVacationRequest(
   request: VacationRequest
 ): Promise<CreateVacationRequestResponse> {
-  const url = `http://localhost:3000/api/vacation/create-request`;
+  const url = `http://localhost:3000/api/vacation/create`;
   const result = await http.post(url, request);
   return result.data;
 }
 
 export async function getAllVacationRequests(): Promise<GetAllVacationRequestsResponse> {
-  const url = `http://localhost:3000/api/vacation/all-requests`;
+  const url = `http://localhost:3000/api/vacation/all`;
   const result = await http.get(url);
   return result.data;
 }

@@ -99,41 +99,41 @@ const EmployeesPage = () => {
               }}
             >
               <Lock
-                sx={{
+                sx={(theme) => ({
                   fontSize: "80px",
-                  color: "#d32f2f",
+                  color: theme.palette.error.main,
                   zIndex: 1,
-                }}
+                })}
               />
             </Box>
           </Box>
           <Typography
             variant="h5"
-            sx={{
+            sx={(theme) => ({
               fontWeight: "bold",
-              color: "#2C3E50",
+              color: theme.palette.text.primary,
               marginBottom: "12px",
-            }}
+            })}
           >
             Admin Access Required
           </Typography>
           <Typography
             variant="body1"
-            sx={{
-              color: "#7F8C8D",
+            sx={(theme) => ({
+              color: theme.palette.text.secondary,
               maxWidth: "500px",
               lineHeight: 1.6,
               marginBottom: "8px",
-            }}
+            })}
           >
             You need administrator privileges to access the employees section.
           </Typography>
           <Typography
             variant="body2"
-            sx={{
-              color: "#95A5A6",
+            sx={(theme) => ({
+              color: theme.palette.text.secondary,
               maxWidth: "500px",
-            }}
+            })}
           >
             Please contact your administrator if you believe this is an error.
           </Typography>

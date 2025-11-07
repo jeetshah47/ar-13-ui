@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { EmployeeState } from "./employeeTypes";
 import type { EmployeeResponse, EmployeeListResponse } from "../../types/Employee/EmployeeResponse";
+import type { EmployeeStats } from "../../types/Employee/EmployeeStatsResponse";
 
 const initialState: EmployeeState = {
   employees: [],
@@ -10,6 +11,9 @@ const initialState: EmployeeState = {
   error: "",
   inviting: false,
   inviteError: "",
+  stats: null,
+  statsLoading: false,
+  statsError: "",
 };
 
 const employeeSlice = createSlice({
@@ -61,6 +65,23 @@ const employeeSlice = createSlice({
       state.inviting = false;
       state.inviteError = action.payload;
     },
+    getEmployeeStatsRequest(state) {
+      state.statsLoading = true;
+      state.statsError = "";
+    },
+    getEmployeeStatsSuccess(state, action: PayloadAction<EmployeeStats>) {
+      state.statsLoading = false;
+      state.stats = action.payload;
+      state.statsError = "";
+    },
+    getEmployeeStatsFailed(state, action: PayloadAction<string>) {
+      state.statsLoading = false;
+      state.statsError = action.payload;
+    },
+    clearEmployeeStats(state) {
+      state.stats = null;
+      state.statsError = "";
+    },
   },
 });
 
@@ -76,6 +97,10 @@ export const {
   inviteEmployeeRequest,
   inviteEmployeeSuccess,
   inviteEmployeeFailed,
+  getEmployeeStatsRequest,
+  getEmployeeStatsSuccess,
+  getEmployeeStatsFailed,
+  clearEmployeeStats,
 } = employeeSlice.actions;
 
 export const employeeReducer = employeeSlice.reducer;

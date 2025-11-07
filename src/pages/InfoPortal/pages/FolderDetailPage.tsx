@@ -56,15 +56,15 @@ const FolderDetailPage = () => {
   if (loading || !currentFolder) {
     return (
       <Box
-        sx={{
+        sx={(theme) => ({
           width: "100%",
           height: "100%",
-          backgroundColor: "#F4F9FD",
+          backgroundColor: theme.palette.grey[50],
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-        }}
+        })}
       >
         <Typography>Loading...</Typography>
       </Box>
@@ -80,24 +80,24 @@ const FolderDetailPage = () => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         width: "100%",
         height: "100%",
-        backgroundColor: "#F4F9FD",
+        backgroundColor: theme.palette.grey[50],
         minHeight: "100vh",
-      }}
+      })}
     >
       {/* Back Button */}
       <Link
-        sx={{
+        sx={(theme) => ({
           alignItems: "center",
           display: "flex",
           cursor: "pointer",
-          color: "#3F8CFF",
+          color: theme.palette.primary.main,
           textDecoration: "none",
           gap: "8px",
           marginBottom: "27px",
-        }}
+        })}
         onClick={handleBack}
       >
         <SvgIcon component={LeftArrowIcon} sx={{ width: "16px", height: "12px" }} />
@@ -115,13 +115,13 @@ const FolderDetailPage = () => {
       {/* Folder Title */}
       <Typography
         variant="h1"
-        sx={{
+        sx={(theme) => ({
           fontWeight: 700,
           fontSize: "36px",
           lineHeight: 1.364,
-          color: "#0A1629",
+          color: theme.palette.text.primary,
           marginBottom: "28px",
-        }}
+        })}
       >
         {folderData.name}
       </Typography>
@@ -151,24 +151,24 @@ const FolderDetailPage = () => {
               <Box sx={{ display: "flex", flexDirection: "column", gap: "24px", padding: "40px" }}>
                 <Typography
                   variant="h2"
-                  sx={{
+                  sx={(theme) => ({
                     fontWeight: 700,
                     fontSize: "22px",
                     lineHeight: 1.364,
-                    color: "#0A1629",
+                    color: theme.palette.text.primary,
                     marginBottom: "10px",
-                  }}
+                  })}
                 >
                   No pages yet
                 </Typography>
                 <Typography
-                  sx={{
+                  sx={(theme) => ({
                     fontSize: "16px",
                     fontWeight: 400,
                     lineHeight: 1.5,
-                    color: "#0A1629",
+                    color: theme.palette.text.primary,
                     opacity: 0.7,
-                  }}
+                  })}
                 >
                   Click the "+" button to add your first page to this folder.
                 </Typography>

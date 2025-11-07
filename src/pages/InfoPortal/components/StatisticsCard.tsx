@@ -29,24 +29,24 @@ const StatisticsCard = ({
       >
         {/* Title */}
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "14px",
             fontWeight: 700,
             lineHeight: 1.714,
-            color: "#7D8592",
-          }}
+            color: theme.palette.text.secondary,
+          })}
         >
           {title}
         </Typography>
 
         {/* Value */}
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "54px",
             fontWeight: 700,
             lineHeight: 1.074,
-            color: "#0A1629",
-          }}
+            color: theme.palette.text.primary,
+          })}
         >
           {value}
         </Typography>
@@ -67,27 +67,28 @@ const StatisticsCard = ({
 
         {/* Subtitle */}
         <Typography
-          sx={{
+          sx={(theme) => ({
             fontSize: "12px",
             fontWeight: 400,
             lineHeight: 1.364,
-            color: "#91929E",
+            color: theme.palette.text.secondary,
             marginTop: "8px",
-          }}
+          })}
         >
           {subtitle}
         </Typography>
 
         {/* Statistics Icon */}
         <Box
-          sx={{
+          sx={(theme) => ({
             position: "absolute",
             right: "28px",
             bottom: "62px",
             width: "104.9px",
             height: "61.76px",
             opacity: 0.8,
-          }}
+            color: theme.palette.background.paper,
+          })}
         >
           <svg
             width="105"
@@ -101,7 +102,7 @@ const StatisticsCard = ({
               cy="31"
               rx="52.5"
               ry="31"
-              fill="#FFFFFF"
+              fill="currentColor"
               stroke="#0AC947"
               strokeWidth="2"
             />

@@ -246,12 +246,12 @@ const SectionEditor = ({ sections, onSave, loading = false }: SectionEditorProps
         editableSections.map((section, index) => (
           <Box
             key={section.id || `new-${index}`}
-            sx={{
-              border: "1px solid #E4E6E8",
+            sx={(theme) => ({
+              border: `1px solid ${theme.palette.divider}`,
               borderRadius: "14px",
               padding: "24px",
-              backgroundColor: "#FFFFFF",
-            }}
+              backgroundColor: theme.palette.background.paper,
+            })}
           >
             {section.isEditing ? (
               // Edit Mode
@@ -558,13 +558,13 @@ const SectionEditForm = ({
           Section Content
         </Typography>
         <Box
-          sx={{
-            border: "1px solid #D8E0F0",
+          sx={(theme) => ({
+            border: `1px solid ${theme.palette.grey[300]}`,
             borderRadius: "14px",
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.palette.background.paper,
             minHeight: "300px",
             overflow: "hidden",
-          }}
+          })}
         >
           <RichTextEditor
             key={`editor-${section.id || index}-${section.isEditing}`}

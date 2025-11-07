@@ -33,7 +33,21 @@ class NotificationAPIService {
       return new Date(); // Return current date as fallback
     }
     
-    const date = new Date(dateValue);
+    // Handle string dates, timestamps, and Date objects
+    let date: Date;
+    if (typeof dateValue === 'string') {
+      // Try parsing ISO string or timestamp
+      date = new Date(dateValue);
+    } else if (typeof dateValue === 'number') {
+      // Handle timestamp (seconds or milliseconds)
+      date = new Date(dateValue > 1000000000000 ? dateValue : dateValue * 1000);
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else {
+      // Try to convert to string first
+      date = new Date(String(dateValue));
+    }
+    
     if (isNaN(date.getTime())) {
       return new Date(); // Return current date as fallback
     }
@@ -49,14 +63,19 @@ class NotificationAPIService {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Failed to fetch notifications: ${errorText || response.statusText}`);
       }
       
       const data = await response.json();
-      return data.notifications.map((notification: any) => ({
+      
+      // Handle case where API returns notifications directly or wrapped in data
+      const notifications = data.notifications || data || [];
+      
+      return notifications.map((notification: any) => ({
         ...notification,
-        createdAt: this.parseDate(notification.createdAt),
-        created: this.parseDate(notification.created)
+        createdAt: this.parseDate(notification.createdAt || notification.created),
+        created: this.parseDate(notification.created || notification.createdAt)
       }));
     } catch (error) {
       throw error;
@@ -71,14 +90,19 @@ class NotificationAPIService {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch unread notifications: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Failed to fetch unread notifications: ${errorText || response.statusText}`);
       }
       
       const data = await response.json();
-      return data.notifications.map((notification: any) => ({
+      
+      // Handle case where API returns notifications directly or wrapped in data
+      const notifications = data.notifications || data || [];
+      
+      return notifications.map((notification: any) => ({
         ...notification,
-        createdAt: this.parseDate(notification.createdAt),
-        created: this.parseDate(notification.created)
+        createdAt: this.parseDate(notification.createdAt || notification.created),
+        created: this.parseDate(notification.created || notification.createdAt)
       }));
     } catch (error) {
       throw error;
@@ -93,13 +117,28 @@ class NotificationAPIService {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch notification count: ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Failed to fetch notification count: ${errorText || response.statusText}`);
       }
       
       const data = await response.json();
-      return data.count;
-    } catch (error) {
-      throw error;
+      
+      // Handle different response formats
+      if (data.count) {
+        return data.count;
+      }
+      if (data.total !== undefined || data.unread !== undefined) {
+        return {
+          total: data.total || 0,
+          unread: data.unread || 0
+        };
+      }
+      
+      // Default fallback
+      return { total: 0, unread: 0 };
+    } catch {
+      // Return default count on error instead of throwing
+      return { total: 0, unread: 0 };
     }
   }
 

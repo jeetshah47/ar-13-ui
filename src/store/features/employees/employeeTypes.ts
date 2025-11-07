@@ -1,4 +1,5 @@
 import type { EmployeeResponse, EmployeeListResponse, EmployeeErrorResponse } from "../../types/Employee/EmployeeResponse";
+import type { EmployeeStats } from "../../types/Employee/EmployeeStatsResponse";
 
 export interface EmployeeState {
   employees: EmployeeResponse[];
@@ -8,6 +9,9 @@ export interface EmployeeState {
   error: string;
   inviting?: boolean;
   inviteError?: string;
+  stats: EmployeeStats | null;
+  statsLoading: boolean;
+  statsError: string;
 }
 
 export interface EmployeeActionTypes {

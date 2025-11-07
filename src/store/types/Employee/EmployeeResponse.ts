@@ -3,11 +3,13 @@ export interface EmployeeResponse {
   name: string;
   email: string;
   role: "Admin" | "Standard";
-  designation: string;
+  designation?: string;
   backlogTasks: number;
   tasksInProgress: number;
   tasksInReview: number;
+  pendingTasks: number;
   totalTasks: number;
+  activeTasks?: number;
 }
 
 export interface EmployeeListResponse {

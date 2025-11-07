@@ -12,13 +12,13 @@ const TileView = () => {
   return (
     <>
       <Box
-        sx={{
-          background: "#E6EDF5",
+        sx={(theme) => ({
+          background: theme.palette.grey[50],
           borderRadius: "14px",
           padding: "10px",
           textAlign: "center",
           marginTop: "12px",
-        }}
+        })}
       >
         <Typography sx={{ fontWeight: "bold" }}>Active Tasks</Typography>
       </Box>

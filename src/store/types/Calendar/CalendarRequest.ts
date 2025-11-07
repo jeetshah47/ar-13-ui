@@ -3,7 +3,7 @@ export interface CalendarRequest {
   category: string;
   priority: string;
   start: string;
-  end: string;
+  end?: string;
   time: string;
   description: string;
   isRepeating: boolean;
@@ -11,4 +11,7 @@ export interface CalendarRequest {
   repeatDays: string[];
   createdBy: string;
   addToGoogleCalendar?: boolean;
+  eventType?: "offline" | "online";
+  invitedMemberIds?: string[];
+  duration?: number;
 }

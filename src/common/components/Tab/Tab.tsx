@@ -40,6 +40,7 @@ const Tab = ({ tabList, currentTab, onChangeTab }: TabProps) => {
     >
       {tabList.map((tab) => (
         <Box
+          key={tab}
           sx={tab === currentTab ? activeStyle : inActiveStyle}
           onClick={() => onChangeTab(tab)}
         >
