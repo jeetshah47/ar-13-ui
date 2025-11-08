@@ -128,7 +128,7 @@ const WebSocketDebugger: React.FC = () => {
             5. Check CORS settings on backend<br/>
             6. Verify WebSocketAuthMiddleware is configured<br/>
             7. Check if user is properly authenticated via middleware<br/>
-            8. Ensure user room joining works: user_${userId}
+            8. Ensure user room joining works: user_&lt;userId&gt;
           </Typography>
         </Box>
       </CardContent>

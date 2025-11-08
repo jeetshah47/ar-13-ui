@@ -74,8 +74,9 @@ export const updateTaskStatusAction =
       // Call the new API endpoint
       await updateTaskStatusApi(projectId, taskId, apiStatus);
       
-      // Update the local state
-      dispatch(updateTaskStatus(newStatus));
+      // Update the local state - convert to TaskStatus type
+      const unifiedStatus = mapStatusToUnified(newStatus);
+      dispatch(updateTaskStatus(unifiedStatus));
       
       // Refresh task details to get the latest status from server
       dispatch(fetchProjectDetailAction(taskId, projectId));

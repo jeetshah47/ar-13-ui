@@ -11,7 +11,6 @@ interface Page {
 
 interface PagesSidebarProps {
   pages: Page[];
-  folderColor: string;
   onAddPage: () => void;
   onPageClick?: (pageId: string) => void;
   selectedPageId?: string;
@@ -19,7 +18,6 @@ interface PagesSidebarProps {
 
 const PagesSidebar = ({
   pages,
-  folderColor,
   onAddPage,
   onPageClick,
   selectedPageId,
@@ -95,7 +93,7 @@ const PagesSidebar = ({
 
         {/* Pages List */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: "0px" }}>
-          {pages.map((page, index) => {
+          {pages.map((page) => {
             const isSelected = selectedPageId === page.id || page.isActive;
             return (
               <Box

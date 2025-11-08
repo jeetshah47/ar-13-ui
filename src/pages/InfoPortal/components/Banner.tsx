@@ -26,9 +26,7 @@ const Banner = () => {
             zIndex: 1,
           }}
         >
-          <img
-            src={InfoPortalIllustration}
-            alt="Info Portal Illustration"
+          <InfoPortalIllustration
             style={{
               width: "100%",
               height: "100%",

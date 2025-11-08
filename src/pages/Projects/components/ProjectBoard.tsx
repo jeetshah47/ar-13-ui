@@ -94,9 +94,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     const assigneeName = task.assignDetails && task.assignDetails.length > 0 
       ? task.assignDetails[0].name 
       : "Unassigned";
-    const assigneeAvatar = task.assignDetails && task.assignDetails.length > 0 
-      ? task.assignDetails[0].avatar || "/api/placeholder/24/24"
-      : "/api/placeholder/24/24";
+    const assigneeAvatar = "/api/placeholder/24/24";
 
     return {
       id: task.id,

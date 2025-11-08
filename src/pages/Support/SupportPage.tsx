@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import { useState } from "react";
 import Modal from "../../common/components/Modal/Modal";

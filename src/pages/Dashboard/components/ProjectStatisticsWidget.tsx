@@ -6,7 +6,6 @@ import {
   Grid,
 } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
-import CardHeader from "../../../common/components/Card/CardHeader";
 import type { ProjectWithStatistics } from "../../../store/types/Project/ProjectStatisticsResponse";
 import { useTheme, alpha } from "@mui/material/styles";
 import CompletionRateChart from "./CompletionRateChart";

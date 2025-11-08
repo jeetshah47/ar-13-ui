@@ -9,6 +9,8 @@ const initialState: DashboardState = {
       datas: {
         employees: [],
         projects: [],
+        totalProjects: 0,
+        totalEmployees: 0,
       },
     },
     error: "",
@@ -23,7 +25,7 @@ const dashboardStatsSlice = createSlice({
     getDashboardStatsRequest(state) {
       state.api.loading = true;
       state.api.error = "";
-      state.api.data.datas = { employees: [], projects: [] };
+      state.api.data.datas = { employees: [], projects: [], totalProjects: 0, totalEmployees: 0 };
     },
     getDashboardStatsSuccess(
       state,
@@ -39,7 +41,7 @@ const dashboardStatsSlice = createSlice({
     ) {
       state.api.loading = false;
       state.api.error = action.payload.error;
-      state.api.data.datas = { employees: [], projects: [] };
+      state.api.data.datas = { employees: [], projects: [], totalProjects: 0, totalEmployees: 0 };
     },
   },
 });

@@ -208,7 +208,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.vacationDays} label="Vacation" />
+          <CircularProgressCust value={stats.vacationDays} />
           <Typography fontWeight={700}>Vacation</Typography>
           <Typography color="secondary.main">{stats.vacationDays} days used</Typography>
         </Box>
@@ -224,7 +224,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.sickLeaveDays} label="Sick Leave" />
+          <CircularProgressCust value={stats.sickLeaveDays} />
           <Typography fontWeight={700}>Sick Leave</Typography>
           <Typography color="secondary.main">{stats.sickLeaveDays} days used</Typography>
         </Box>
@@ -240,7 +240,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.remoteWorkDays} label="Remote Work" />
+          <CircularProgressCust value={stats.remoteWorkDays} />
           <Typography fontWeight={700}>Remote Work</Typography>
           <Typography color="secondary.main">{stats.remoteWorkDays} days used</Typography>
         </Box>

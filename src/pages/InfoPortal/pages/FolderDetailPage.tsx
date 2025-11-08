@@ -132,7 +132,6 @@ const FolderDetailPage = () => {
         <Box sx={{ width: "265px", flexShrink: 0 }}>
           <PagesSidebar
             pages={folderData.pages}
-            folderColor={folderData.color}
             onAddPage={handleAddPage}
             onPageClick={handlePageClick}
             selectedPageId={selectedPageId || undefined}

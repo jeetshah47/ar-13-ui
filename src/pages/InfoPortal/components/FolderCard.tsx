@@ -46,9 +46,7 @@ const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps)
             borderRadius: "12px",
           }}
         >
-          <img
-            src={FolderIcon}
-            alt="Folder"
+          <FolderIcon
             style={{
               width: "44px",
               height: "39px",

@@ -1,4 +1,4 @@
-import type { EmployeeResponse, EmployeeListResponse, EmployeeErrorResponse } from "../../types/Employee/EmployeeResponse";
+import type { EmployeeResponse, EmployeeListResponse } from "../../types/Employee/EmployeeResponse";
 import type { EmployeeStats } from "../../types/Employee/EmployeeStatsResponse";
 
 export interface EmployeeState {

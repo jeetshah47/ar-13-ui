@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import CardHeader from "../../../common/components/Card/CardHeader";
 import {
@@ -13,6 +13,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  type PieLabelRenderProps,
 } from "recharts";
 import { useAppSelector, type RootState } from "../../../store/store";
 import { useTheme, alpha } from "@mui/material/styles";
@@ -127,9 +128,10 @@ const ProjectStatusChart = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={(props: PieLabelRenderProps) => {
+                    const percent = typeof props.percent === 'number' ? props.percent : 0;
+                    return `${props.name}: ${(percent * 100).toFixed(0)}%`;
+                  }}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"

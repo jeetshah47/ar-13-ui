@@ -1,21 +1,25 @@
 // WebSocket Notification Service Types
 
-export enum NotificationType {
-  PROJECT_CREATED = "PROJECT_CREATED",
-  TASK_CREATED = "TASK_CREATED",
-  TASK_ASSIGNED = "TASK_ASSIGNED",
-  PROJECT_UPDATED = "PROJECT_UPDATED",
-  TASK_UPDATED = "TASK_UPDATED",
-  LEAVE_REQUEST_CREATED = "LEAVE_REQUEST_CREATED",
-  LEAVE_REQUEST_APPROVED = "LEAVE_REQUEST_APPROVED",
-  LEAVE_REQUEST_REJECTED = "LEAVE_REQUEST_REJECTED",
-}
+export const NotificationType = {
+  PROJECT_CREATED: "PROJECT_CREATED",
+  TASK_CREATED: "TASK_CREATED",
+  TASK_ASSIGNED: "TASK_ASSIGNED",
+  PROJECT_UPDATED: "PROJECT_UPDATED",
+  TASK_UPDATED: "TASK_UPDATED",
+  LEAVE_REQUEST_CREATED: "LEAVE_REQUEST_CREATED",
+  LEAVE_REQUEST_APPROVED: "LEAVE_REQUEST_APPROVED",
+  LEAVE_REQUEST_REJECTED: "LEAVE_REQUEST_REJECTED",
+} as const;
 
-export enum RelatedEntityType {
-  PROJECT = "PROJECT",
-  TASK = "TASK",
-  LEAVE_REQUEST = "LEAVE_REQUEST",
-}
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+export const RelatedEntityType = {
+  PROJECT: "PROJECT",
+  TASK: "TASK",
+  LEAVE_REQUEST: "LEAVE_REQUEST",
+} as const;
+
+export type RelatedEntityType = typeof RelatedEntityType[keyof typeof RelatedEntityType];
 
 export interface Notification {
   id: string;

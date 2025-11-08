@@ -29,6 +29,7 @@ export class MockNotificationService {
         relatedEntityType: RelatedEntityType.TASK,
         isRead: false,
         createdAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+        created: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
       },
       {
         id: "2",
@@ -40,6 +41,7 @@ export class MockNotificationService {
         relatedEntityType: RelatedEntityType.PROJECT,
         isRead: false,
         createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+        created: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
       },
       {
         id: "3",
@@ -51,6 +53,7 @@ export class MockNotificationService {
         relatedEntityType: RelatedEntityType.TASK,
         isRead: true,
         createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+        created: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
       },
       {
         id: "4",
@@ -62,6 +65,7 @@ export class MockNotificationService {
         relatedEntityType: RelatedEntityType.LEAVE_REQUEST,
         isRead: true,
         createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        created: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       },
       {
         id: "5",
@@ -73,6 +77,7 @@ export class MockNotificationService {
         relatedEntityType: RelatedEntityType.TASK,
         isRead: false,
         createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+        created: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
       },
     ];
 
@@ -128,6 +133,7 @@ export class MockNotificationService {
       relatedEntityType: RelatedEntityType.TASK,
       isRead: false,
       createdAt: new Date(),
+      created: new Date(),
     };
 
     this.notifications.unshift(newNotification);

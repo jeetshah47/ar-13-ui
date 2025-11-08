@@ -188,7 +188,7 @@ const EmployeeProfilePage = () => {
                 <Typography color="secondary" fontSize={"14px"}>Pending</Typography>
                 <Typography fontWeight={600} color="text.secondary">{selectedEmployee.pendingTasks}</Typography>
               </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", borderTop: `1px solid ${theme => theme.palette.divider}` }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", borderTop: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <Typography color="secondary" fontSize={"14px"} fontWeight={600}>Total</Typography>
                 <Typography fontWeight={700} fontSize={"16px"}>{selectedEmployee.totalTasks}</Typography>
               </Box>

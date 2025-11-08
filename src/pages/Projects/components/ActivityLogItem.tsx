@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { InsertEmoticon, AlternateEmail, Send } from "@mui/icons-material";
-import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import EmojiPicker, { type EmojiClickData, Theme } from "emoji-picker-react";
 import AttachIcon from "../../../assets/icons/general/attach/dark.svg?react";
 import AddLinkIcon from "../../../assets/icons/general/addlink/dark.svg?react";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
@@ -420,7 +420,7 @@ const ActivityLogItem = ({
                       onEmojiClick={handleEmojiClick}
                       width={350}
                       height={400}
-                      theme="light"
+                      theme={Theme.LIGHT}
                       previewConfig={{
                         showPreview: false,
                       }}

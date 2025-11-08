@@ -5,7 +5,6 @@ import { useParams, useNavigate, useLocation } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
 import { claimTaskAction } from "../../../store/features/task/projectAction";
-import { getActivityLogsSuccess } from "../../../store/features/task/taskSlice";
 import type { FileAttachment, ActivityLog } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";

@@ -1,7 +1,6 @@
 import { Box, Typography, Grid, CircularProgress, Alert } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import { useAppSelector, type RootState } from "../../../store/store";
-import type { ProjectStatistics } from "../../../store/types/Project/ProjectStatisticsResponse";
 
 const ProjectStatisticsOverview = () => {
   const statisticsState = useAppSelector(
@@ -149,12 +148,12 @@ const ProjectStatisticsOverview = () => {
                 </Typography>
 
                 <Typography
-                  sx={(theme) => ({
+                  sx={{
                     fontSize: "42px",
                     fontWeight: 700,
                     lineHeight: 1.1,
                     color: stat.color,
-                  })}
+                  }}
                 >
                   {stat.value}
                 </Typography>

@@ -11,7 +11,6 @@ const AccountLinked = () => {
 
   const success = searchParams.get("success");
   const error = searchParams.get("error");
-  const userId = searchParams.get("userId");
 
   useEffect(() => {
     // Refresh the account status after linking

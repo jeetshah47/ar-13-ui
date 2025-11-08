@@ -214,11 +214,11 @@ export class NotificationService {
     this.apiService.setAuthToken(token);
   }
 
-  async getAllNotifications(userId: string): Promise<INotification[]> {
+  async getAllNotifications(userId: string): Promise<Notification[]> {
     return this.apiService.getAllNotifications(userId);
   }
 
-  async getUnreadNotifications(userId: string): Promise<INotification[]> {
+  async getUnreadNotifications(userId: string): Promise<Notification[]> {
     return this.apiService.getUnreadNotifications(userId);
   }
 
@@ -262,7 +262,8 @@ export class NotificationService {
       relatedEntityId,
       relatedEntityType,
       isRead,
-      createdAt: new Date()
+      createdAt: new Date(),
+      created: new Date()
     };
   }
 
@@ -292,7 +293,7 @@ export class NotificationService {
 
   // Format notification message for display
   formatNotificationMessage(notification: Notification): string {
-    const { title, message, type } = notification;
+    const { message, type } = notification;
     
     switch (type) {
       case NotificationType.TASK_ASSIGNED:
