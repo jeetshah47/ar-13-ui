@@ -1,4 +1,4 @@
-import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, Alert } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography, CircularProgress } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
@@ -16,7 +16,7 @@ import type { CalendarResponse } from "../../store/types/Calendar/CalendarRespon
 const CalendarPage = () => {
   const dispatch = useAppDispatch();
   const { events } = useAppSelector((state) => state.calendarReducer.api.data);
-  const { loading, error } = useAppSelector((state) => state.calendarReducer.api);
+  const { loading } = useAppSelector((state) => state.calendarReducer.api);
   
   const [dateState, setDateState] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
@@ -197,13 +197,6 @@ const CalendarPage = () => {
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Calendar" endElement={AddButton} />
-      
-      {/* Error Display */}
-      {error && (
-        <Alert severity="error" sx={{ margin: "16px", borderRadius: "12px" }}>
-          {error}
-        </Alert>
-      )}
       
       <Box
         sx={{

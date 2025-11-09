@@ -12,15 +12,21 @@ import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?re
 import { SvgIcon } from "@mui/material";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { addTimeSpentAction } from "../../../store/features/task/projectAction";
+import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
+import { usePermissions } from "../../../store/hooks/usePermissions";
+import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
+import toast from "react-hot-toast";
+import { MSG_CANNOT_MODIFY_TIME_LOG } from "../../../constants/messages";
 
 interface LogTimeModalProps {
   onClose?: () => void;
   projectId?: string;
   taskId?: string;
+  task?: TaskResponse;
 }
 
 
-const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
+const LogTimeModal = ({ onClose, projectId, taskId, task }: LogTimeModalProps) => {
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [hours, setHours] = useState(0);
@@ -29,17 +35,28 @@ const LogTimeModal = ({ onClose, projectId, taskId }: LogTimeModalProps) => {
   const dispatch = useAppDispatch();
   const taskListState = useAppSelector((state: RootState) => state.taskListReducer);
   const { loading } = taskListState.api;
+  const { canLogTime } = useResourceAccess();
+  const { isAdmin } = usePermissions();
 
   const handleSave = async () => {
-    if (date && description && (hours > 0 || minutes > 0) && projectId && taskId) {
-      await dispatch(addTimeSpentAction(projectId, taskId, {
-        date,
-        hours,
-        minutes,
-        description,
-      }));
-      handleClose();
+    if (!date || !description || (hours === 0 && minutes === 0) || !projectId || !taskId) {
+      return;
     }
+
+    // Permission check: Admins have full access, skip check for them
+    // For other users: must be assigned to the task to log time
+    if (!isAdmin() && task && !canLogTime(task)) {
+      toast.error(MSG_CANNOT_MODIFY_TIME_LOG);
+      return;
+    }
+
+    await dispatch(addTimeSpentAction(projectId, taskId, {
+      date,
+      hours,
+      minutes,
+      description,
+    }));
+    handleClose();
   };
 
   const handleClose = () => {

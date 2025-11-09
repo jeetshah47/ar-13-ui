@@ -9,6 +9,8 @@ import {
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import LogTimeModal from "./LogTimeModal";
+import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
+import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 
 // Time icon matching the Figma design
 const TimeIcon = () => (
@@ -33,6 +35,7 @@ type TaskInfoProps = {
   originalEstimate?: string;
   projectId?: string;
   taskId?: string;
+  task?: TaskResponse;
   onLogTime?: () => void;
 };
 
@@ -45,9 +48,12 @@ const TaskInfo = ({
   originalEstimate = "Original Estimate 3d 8h",
   projectId,
   taskId,
+  task,
   onLogTime,
 }: TaskInfoProps) => {
   const [showLogTimeModal, setShowLogTimeModal] = React.useState(false);
+  const { canLogTime } = useResourceAccess();
+  const canLogTimeForTask = task ? canLogTime(task) : false;
 
   const handleLogTimeClick = () => {
     setShowLogTimeModal(true);
@@ -250,32 +256,34 @@ const TaskInfo = ({
         </Typography>
       </Box>
 
-      {/* Log Time Button */}
-      <Button
-        onClick={handleLogTimeClick}
-        sx={{
-          backgroundColor: "#3F8CFF",
-          color: "#FFFFFF",
-          borderRadius: "14px",
-          padding: "12px 16px",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontWeight: 700,
-          fontSize: "16px",
-          lineHeight: "1.36",
-          textTransform: "none",
-          boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.26)",
-          "&:hover": {
+      {/* Log Time Button - Only show if user can log time for this task */}
+      {canLogTimeForTask && (
+        <Button
+          onClick={handleLogTimeClick}
+          sx={{
             backgroundColor: "#3F8CFF",
-            opacity: 0.9,
-          },
-        }}
-      >
-        <TimeIcon />
-        Log time
-      </Button>
+            color: "#FFFFFF",
+            borderRadius: "14px",
+            padding: "12px 16px",
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontWeight: 700,
+            fontSize: "16px",
+            lineHeight: "1.36",
+            textTransform: "none",
+            boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.26)",
+            "&:hover": {
+              backgroundColor: "#3F8CFF",
+              opacity: 0.9,
+            },
+          }}
+        >
+          <TimeIcon />
+          Log time
+        </Button>
+      )}
 
       {/* Created Date */}
       <Box
@@ -305,6 +313,7 @@ const TaskInfo = ({
           onClose={handleCloseLogTimeModal}
           projectId={projectId}
           taskId={taskId}
+          task={task}
         />
       )}
     </Box>

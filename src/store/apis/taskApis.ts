@@ -53,14 +53,53 @@ export async function getTaskDetailById(projectId: string, taskId: string): Prom
 
 // Additional task API functions based on the provided routes
 
+/**
+ * Update task deadline (replaces deprecated updateTaskDuration)
+ * @param projectId - The project ID
+ * @param taskId - The task ID
+ * @param deadline - The deadline in RFC3339 format (ISO 8601) string
+ * @returns Promise with success message
+ */
+export async function updateTaskDeadline(
+  projectId: string,
+  taskId: string,
+  deadline: string
+): Promise<{ message: string }> {
+  const url = `http://localhost:3000/api/tasks/update-deadline/${projectId}/${taskId}`;
+  const result = await http.put(url, { deadline });
+  return result.data;
+}
+
+/**
+ * Update task progress (completion percentage)
+ * @param projectId - The project ID
+ * @param taskId - The task ID
+ * @param progress - The progress percentage (0-100)
+ * @returns Promise with success message
+ */
+export async function updateTaskProgress(
+  projectId: string,
+  taskId: string,
+  progress: number
+): Promise<{ message: string }> {
+  // Clamp progress to 0-100 range
+  const clampedProgress = Math.max(0, Math.min(100, Math.round(progress)));
+  const url = `http://localhost:3000/api/tasks/update-progress/${projectId}/${taskId}`;
+  const result = await http.put(url, { progress: clampedProgress });
+  return result.data;
+}
+
+/**
+ * @deprecated Use updateTaskDeadline instead. This function is kept for backward compatibility.
+ */
 export async function updateTaskDuration(
   projectId: string,
   taskId: string,
   duration: Date
 ): Promise<{ message: string }> {
-  const url = `http://localhost:3000/api/tasks/update-duration/${projectId}/${taskId}`;
-  const result = await http.put(url, { duration });
-  return result.data;
+  // Convert Date to RFC3339 format string
+  const deadline = duration.toISOString();
+  return updateTaskDeadline(projectId, taskId, deadline);
 }
 
 export async function updateTaskDescription(

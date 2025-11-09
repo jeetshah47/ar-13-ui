@@ -1,13 +1,13 @@
-import { Box, Typography, Button, CircularProgress, Alert } from "@mui/material";
+import { Box, Typography, Button, CircularProgress, Alert, Skeleton } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
-import RangeSelector from "../Landing/components/RangeSelector";
 import CustomCard from "../../common/components/Card/CustomCard";
 import CardHeader from "../../common/components/Card/CardHeader";
 // import EmployeeCard from "./components/EmployeeCard";
 import EventCard from "./components/EventCard";
 import ProjectCard from "./components/ProjectCard";
 import ActivityCard from "./components/ActivityCard";
-import { useEffect, useState } from "react";
+import CalendarEventsWidget from "./components/CalendarEventsWidget";
+import { useEffect, useState, Suspense, lazy } from "react";
 import {
   useAppDispatch,
   useAppSelector,
@@ -18,22 +18,18 @@ import { fetchCalendarEvents } from "../../store/features/calendar/calendarActio
 import { getProjectStatisticsAction } from "../../store/features/projects/projectStatisticsAction";
 import ProjectStatisticsOverview from "./components/ProjectStatisticsOverview";
 import ProjectStatisticsWidget from "./components/ProjectStatisticsWidget";
-import ProjectStatusChart from "./components/ProjectStatusChart";
 import Modal from "../../common/components/Modal/Modal";
-import SupportModal from "../../common/components/SupportModal/SupportModal";
 // import type { DashboardEmployeeResponse } from "../../store/types/Dashboard/DashboardResponse";
 import type { ProjectResponse } from "../../store/types/Project/ProjectResponse";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
+// Lazy load heavy components
+const ProjectStatusChart = lazy(() => import("./components/ProjectStatusChart"));
+const SupportModal = lazy(() => import("../../common/components/SupportModal/SupportModal"));
+
 const DashboardPage = () => {
-  const [calenderState, setCalendarState] = useState<{
-    start_date: Date | null;
-    end_date: Date | null;
-  }>({
-    start_date: new Date(),
-    end_date: new Date(),
-  });
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   // const [workloadTab, setWorkloadTab] = useState("Overall");
 
   // Dashboard data selector
@@ -64,13 +60,6 @@ const DashboardPage = () => {
   // Get display name for welcome message
   const displayName = userName || userEmail?.split("@")[0] || "there";
 
-  const handleStartDateChange = (date: Date | null) => {
-    setCalendarState({ ...calenderState, start_date: date });
-  };
-  const handleEndDateChange = (date: Date | null) => {
-    setCalendarState({ ...calenderState, end_date: date });
-  };
-
   const handleOnCloseSupportModal = () => {
     setShowSupportModal(false);
   };
@@ -91,28 +80,21 @@ const DashboardPage = () => {
   const calendarError = calendarData.error;
 
   useEffect(() => {
+    // Load critical dashboard data immediately
     dispatch(getDashboardActions("10", "5"));
-    
-    // Fetch calendar events for current month
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
-    dispatch(fetchCalendarEvents(currentYear, currentMonth));
     
     // Fetch project statistics
     dispatch(getProjectStatisticsAction());
   }, [dispatch]);
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Fetch calendar events when selected month/year changes
+  useEffect(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+    dispatch(fetchCalendarEvents(year, month));
+  }, [dispatch, selectedMonth]);
 
-  // Show error state
+  // Show error state only for critical dashboard data
   if (error) {
     return (
       <Box sx={{ padding: "20px" }}>
@@ -135,11 +117,10 @@ const DashboardPage = () => {
             >
               Get Support
             </Button>
-            <RangeSelector
-              startDate={calenderState.start_date}
-              endDate={calenderState.end_date}
-              setEndDate={handleEndDateChange}
-              setStartDate={handleStartDateChange}
+            <CalendarEventsWidget 
+              events={calendarEvents} 
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
             />
           </Box>
         }
@@ -172,12 +153,37 @@ const DashboardPage = () => {
         >
           {/* Project Statistics Overview */}
           <Box sx={{ paddingBottom: "28px" }}>
-            <ProjectStatisticsOverview />
+            {projectStatisticsData ? (
+              <ProjectStatisticsOverview />
+            ) : (
+              <Box>
+                <Skeleton variant="text" width="40%" height={40} sx={{ marginBottom: "24px" }} />
+                <Box sx={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Box key={i} sx={{ flex: "1 1 calc(33.333% - 16px)", minWidth: "200px" }}>
+                      <Skeleton variant="rectangular" height={140} sx={{ borderRadius: "12px" }} />
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
 
-          {/* Charts Section */}
+          {/* Charts Section - Lazy Loaded */}
           <Box sx={{ paddingBottom: "28px" }}>
-            <ProjectStatusChart />
+            <Suspense
+              fallback={
+                <CustomCard>
+                  <CardHeader title="Project Status Charts" />
+                  <Box sx={{ padding: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <Skeleton variant="rectangular" height={300} sx={{ borderRadius: "12px" }} />
+                    <Skeleton variant="rectangular" height={300} sx={{ borderRadius: "12px" }} />
+                  </Box>
+                </CustomCard>
+              }
+            >
+              <ProjectStatusChart />
+            </Suspense>
           </Box>
 
           {/* Individual Project Statistics */}
@@ -188,6 +194,13 @@ const DashboardPage = () => {
                 projectStatisticsData.projects.map((project) => (
                   <ProjectStatisticsWidget key={project.id} project={project} />
                 ))
+              ) : projectStatisticsData === undefined ? (
+                // Show skeleton while loading
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} variant="rectangular" height={200} sx={{ borderRadius: "12px" }} />
+                  ))}
+                </>
               ) : (
                 <Typography color="secondary">No project statistics available</Typography>
               )}
@@ -197,7 +210,14 @@ const DashboardPage = () => {
           {/* Original Projects List */}
           <Box sx={{ paddingBottom: "28px" }}>
             <CardHeader title="Projects" link="/#" />
-            {projects.length > 0 ? (
+            {isLoading ? (
+              // Show skeleton while loading projects
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} variant="rectangular" height={120} sx={{ borderRadius: "24px", marginBottom: "12px" }} />
+                ))}
+              </>
+            ) : projects.length > 0 ? (
               projects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))
@@ -242,7 +262,7 @@ const DashboardPage = () => {
               </Box>
             ) : calendarError ? (
               <Typography color="error" sx={{ padding: "20px", textAlign: "center" }}>
-                {calendarError}
+                {/* {calendarError} */}
               </Typography>
             ) : calendarEvents.length > 0 ? (
               calendarEvents.slice(0, 2).map((event) => (
@@ -259,7 +279,9 @@ const DashboardPage = () => {
       </Box>
 
       <Modal onClose={handleOnCloseSupportModal} show={showSupportModal}>
-        <SupportModal onClose={handleOnCloseSupportModal} />
+        <Suspense fallback={<Box sx={{ padding: "40px", textAlign: "center" }}><CircularProgress /></Box>}>
+          <SupportModal onClose={handleOnCloseSupportModal} />
+        </Suspense>
       </Modal>
     </Box>
   );

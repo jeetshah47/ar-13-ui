@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, type DragEvent } from "react";
+import React, { useState, useEffect, useCallback, useRef, type DragEvent } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -8,15 +8,16 @@ import {
   Avatar,
 } from "@mui/material";
 import { mapStatusToUnified } from "../constants/taskStatus.constants";
-import { getAllTaskByProjectId, updateTaskStatus } from "../../../store/apis/taskApis";
+import { getAllTaskByProjectId } from "../../../store/apis/taskApis";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
+import { useNotifications } from "../../../contexts/NotificationContext";
 
 interface TaskItem {
   id: string;
   title: string;
   code: string;
   priority: "Low" | "Medium" | "High";
-  duration: string;
+  deadline: string; // Deadline in readable format
   assignee: {
     name: string;
     avatar: string;
@@ -58,6 +59,7 @@ const formatDuration = (dateString: string): string => {
 
 const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const navigate = useNavigate();
+  const { emit, onEvent, offEvent, isConnected } = useNotifications();
   const [columns, setColumns] = useState<Column[]>([
     {
       id: "pending",
@@ -88,6 +90,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const [draggedItem, setDraggedItem] = useState<TaskItem | null>(null);
   const [draggedFromColumn, setDraggedFromColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const pendingUpdatesRef = useRef<Map<string, { fromColumn: string; toColumn: string; task: TaskItem }>>(new Map());
 
   // Convert TaskResponse to TaskItem
   const convertTaskResponseToTaskItem = useCallback((task: TaskResponse): TaskItem => {
@@ -101,7 +104,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       title: task.subject,
       code: task.code,
       priority: task.priority as "Low" | "Medium" | "High",
-      duration: formatDuration(task.duration),
+      deadline: formatDuration(task.deadline),
       assignee: {
         name: assigneeName,
         avatar: assigneeAvatar,
@@ -134,13 +137,136 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     };
 
     fetchTasks();
-    
-    // TODO: Replace with WebSocket or polling for real-time updates
-    // Set up polling interval (every 5 seconds) as a temporary solution
-    const intervalId = setInterval(fetchTasks, 5000);
-    
-    return () => clearInterval(intervalId);
   }, [projectId, convertTaskResponseToTaskItem]);
+
+  // Listen for task status updates from WebSocket
+  useEffect(() => {
+    if (!isConnected || !projectId) return;
+
+    // Listen for task status updates from other users
+    const handleTaskStatusUpdated = (messageData: {
+      projectId: string;
+      taskId: string;
+      status: string;
+      updatedBy?: string;
+      task?: TaskResponse;
+    }) => {
+      // Only process updates for this project
+      if (messageData.projectId !== projectId) return;
+
+      console.log('Task status updated via WebSocket:', messageData);
+
+      // If we have a pending update for this task, remove it (server confirmed)
+      pendingUpdatesRef.current.delete(messageData.taskId);
+
+      // Update the task in the columns
+      setColumns(prevColumns => {
+        const updatedColumns = prevColumns.map(column => {
+          // Remove task from all columns first
+          const filteredItems = column.items.filter(item => item.id !== messageData.taskId);
+          
+          // If this column matches the new status, add the task
+          const normalizedStatus = mapStatusToUnified(messageData.status);
+          if (normalizedStatus === column.status) {
+            // Find the task in any column to get its details
+            let taskToMove: TaskItem | null = null;
+            prevColumns.forEach(col => {
+              const found = col.items.find(item => item.id === messageData.taskId);
+              if (found) {
+                taskToMove = { ...found, status: messageData.status };
+              }
+            });
+
+            // If task not found in any column, convert from TaskResponse if provided
+            if (!taskToMove && messageData.task) {
+              taskToMove = convertTaskResponseToTaskItem(messageData.task);
+            }
+
+            if (taskToMove) {
+              return {
+                ...column,
+                items: [...filteredItems, taskToMove]
+              };
+            }
+          }
+
+          return {
+            ...column,
+            items: filteredItems
+          };
+        });
+
+        return updatedColumns;
+      });
+    };
+
+    // Listen for success response to our own updates
+    const handleUpdateSuccess = (messageData: {
+      projectId: string;
+      taskId: string;
+      status: string;
+      updatedBy?: string;
+      task?: TaskResponse;
+    }) => {
+      // Only process updates for this project
+      if (messageData.projectId !== projectId) return;
+
+      console.log('Task status update successful:', messageData);
+      
+      // Remove from pending updates
+      pendingUpdatesRef.current.delete(messageData.taskId);
+    };
+
+    // Listen for error response to our own updates
+    const handleUpdateError = (errorData: {
+      projectId: string;
+      taskId: string;
+      error: string;
+    }) => {
+      // Only process errors for this project
+      if (errorData.projectId !== projectId) return;
+
+      console.error('Task status update failed:', errorData);
+
+      // Revert the optimistic update
+      const pendingUpdate = pendingUpdatesRef.current.get(errorData.taskId);
+      if (pendingUpdate) {
+        setColumns(prevColumns => 
+          prevColumns.map(column => {
+            if (column.id === pendingUpdate.toColumn) {
+              return {
+                ...column,
+                items: column.items.filter(item => item.id !== errorData.taskId)
+              };
+            }
+            if (column.id === pendingUpdate.fromColumn) {
+              return {
+                ...column,
+                items: [...column.items, pendingUpdate.task]
+              };
+            }
+            return column;
+          })
+        );
+        pendingUpdatesRef.current.delete(errorData.taskId);
+      }
+
+      // Show error notification (you can add a toast here)
+      alert(`Failed to update task status: ${errorData.error}`);
+    };
+
+    // Register event listeners
+    onEvent('task:status-updated', handleTaskStatusUpdated);
+    onEvent('task:update-status:success', handleUpdateSuccess);
+    onEvent('task:update-status:error', handleUpdateError);
+
+    // Cleanup
+    return () => {
+      offEvent('task:status-updated', handleTaskStatusUpdated);
+      offEvent('task:update-status:success', handleUpdateSuccess);
+      offEvent('task:update-status:error', handleUpdateError);
+    };
+  }, [isConnected, projectId, onEvent, offEvent, convertTaskResponseToTaskItem]);
 
   const handleDragStart = (
     e: DragEvent<HTMLDivElement>,
@@ -172,10 +298,10 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     }
   };
 
-  const handleDrop = async (
+  const handleDrop = (
     e: DragEvent<HTMLDivElement>,
     targetColumnId: string
-  ): Promise<void> => {
+  ): void => {
     e.preventDefault();
 
     if (draggedItem && draggedFromColumn) {
@@ -190,32 +316,52 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       const targetColumn = columns.find(col => col.id === targetColumnId);
       if (!targetColumn) return;
 
-      try {
-        // Update the task status via backend API
-        await updateTaskStatus(projectId, draggedItem.id, targetColumn.status);
-        
-        // Optimistically update the UI
-        setColumns(prevColumns => 
-          prevColumns.map(column => {
-            if (column.id === draggedFromColumn) {
-              return {
-                ...column,
-                items: column.items.filter(item => item.id !== draggedItem.id)
-              };
-            }
-            if (column.id === targetColumnId) {
-              return {
-                ...column,
-                items: [...column.items, { ...draggedItem, status: targetColumn.status }]
-              };
-            }
-            return column;
-          })
-        );
-      } catch (error) {
-        console.error("Failed to update task status:", error);
-        // TODO: Show toast notification for error
+      // Check if WebSocket is connected
+      if (!isConnected) {
+        console.error("WebSocket not connected. Cannot update task status.");
+        alert("WebSocket not connected. Please refresh the page.");
+        return;
       }
+
+      // Store the original state for potential rollback
+      const originalTask = { ...draggedItem };
+      pendingUpdatesRef.current.set(draggedItem.id, {
+        fromColumn: draggedFromColumn,
+        toColumn: targetColumnId,
+        task: originalTask,
+      });
+
+      // Optimistically update the UI
+      setColumns(prevColumns => 
+        prevColumns.map(column => {
+          if (column.id === draggedFromColumn) {
+            return {
+              ...column,
+              items: column.items.filter(item => item.id !== draggedItem.id)
+            };
+          }
+          if (column.id === targetColumnId) {
+            return {
+              ...column,
+              items: [...column.items, { ...draggedItem, status: targetColumn.status }]
+            };
+          }
+          return column;
+        })
+      );
+
+      // Emit WebSocket event to update task status
+      emit('task:update-status', {
+        projectId: projectId,
+        taskId: draggedItem.id,
+        status: targetColumn.status,
+      });
+
+      console.log('Emitted task:update-status event:', {
+        projectId: projectId,
+        taskId: draggedItem.id,
+        status: targetColumn.status,
+      });
     }
 
     setDraggedItem(null);
@@ -405,7 +551,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
                           color: theme.palette.text.secondary,
                         })}
                       >
-                        {item.duration}
+                        {item.deadline}
                       </Typography>
                     </Box>
 

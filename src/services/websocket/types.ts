@@ -51,12 +51,12 @@ export interface WebSocketConfig {
 
 export interface NotificationClientEvents {
   connect: () => void;
-  disconnect: () => void;
+  disconnect: (reason?: string) => void;
   notification: (notification: Notification) => void;
   project_notification: (notification: Notification) => void;
   global_notification: (notification: Notification) => void;
   notification_count: (count: NotificationCount) => void;
-  authenticated: (data: { success: boolean }) => void;
+  authenticated: (data: { success: boolean }) => void; // Kept for backward compatibility, but not used in new implementation
   connect_error: (error: Error) => void;
   reconnect: (attemptNumber: number) => void;
   reconnect_error: (error: Error) => void;
@@ -76,4 +76,8 @@ export interface NotificationContextType {
   joinUserRoom: (userId: string) => void;
   leaveUserRoom: (userId: string) => void;
   refreshNotifications: () => Promise<void>;
+  // WebSocket methods for task updates and other features
+  emit: (event: string, data?: any) => void;
+  onEvent: (event: string, listener: (...args: any[]) => void) => void;
+  offEvent: (event: string, listener?: (...args: any[]) => void) => void;
 }

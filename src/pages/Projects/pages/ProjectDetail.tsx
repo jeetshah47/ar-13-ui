@@ -266,6 +266,7 @@ const ProjectDetail = () => {
             currentStatus={currentStatus}
             onStatusChange={handleStatusUpdate}
             onClaimTaskClick={handleOpenClaimTask}
+            project={projectDetails as any}
           >
             {/* File Attachments Section */}
             <FileAttachmentsSection
@@ -307,14 +308,15 @@ const ProjectDetail = () => {
           }
           priority={taskDetails?.priority || "Medium"}
           deadline={
-            taskDetails?.duration
-              ? new Date(taskDetails.duration).toLocaleDateString()
+            taskDetails?.deadline
+              ? new Date(taskDetails.deadline).toLocaleDateString()
               : "No deadline set"
           }
           timeLogged="1d 3h 25m logged"
           originalEstimate="Original Estimate 3d 8h"
           projectId={projectId}
           taskId={taskId}
+          task={taskDetails}
           onLogTime={() => {
             // TODO: Implement log time functionality
           }}
@@ -335,9 +337,9 @@ const ProjectDetail = () => {
             subject: taskDetails.subject,
             code: taskDetails.code,
             status: taskDetails.status,
-            duration: taskDetails.duration,
+            deadline: taskDetails.deadline,
             priority: taskDetails.priority,
-            assignTo: taskDetails.assignTo || [],
+            assignTo: taskDetails.assignTo || null,
             projectId: taskDetails.projectId,
             createdAt: taskDetails.created || new Date(),
             updatedAt: new Date(),

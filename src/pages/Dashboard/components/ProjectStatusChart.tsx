@@ -17,17 +17,66 @@ import {
 } from "recharts";
 import { useAppSelector, type RootState } from "../../../store/store";
 import { useTheme, alpha } from "@mui/material/styles";
+import { useEffect, useState, useRef } from "react";
 
 const ProjectStatusChart = () => {
   const theme = useTheme();
+  const [isReady, setIsReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const statisticsState = useAppSelector(
     (state: RootState) => state.projectStatisticsReducer.api
   );
 
   const { data, loading } = statisticsState;
 
+  // Ensure component is mounted and container has dimensions before rendering charts
+  useEffect(() => {
+    if (!data || loading) return;
+
+    // Check dimensions after a short delay to ensure DOM is ready
+    const checkDimensions = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        if (width > 0 && height > 0) {
+          setIsReady(true);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Try immediately first
+    if (checkDimensions()) return;
+
+    // If not ready, try after a short delay
+    const timer = setTimeout(() => {
+      if (!checkDimensions()) {
+        // Fallback: set ready anyway after delay (container might be in a flex layout)
+        setIsReady(true);
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [data, loading]);
+
   if (loading || !data || !data.projects || data.projects.length === 0) {
     return null;
+  }
+
+  // Show loading state while waiting for container dimensions
+  if (!isReady) {
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        <CustomCard>
+          <CardHeader title="Project Status Charts" />
+          <Box sx={{ padding: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Box sx={{ width: "100%", height: "300px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Box sx={{ color: "text.secondary" }}>Loading charts...</Box>
+            </Box>
+          </Box>
+        </CustomCard>
+      </Box>
+    );
   }
 
   // Aggregate status data across all projects
@@ -83,13 +132,13 @@ const ProjectStatusChart = () => {
     }));
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <Box ref={containerRef} sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Status Distribution Bar Chart */}
-      {statusData.length > 0 && (
+      {statusData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Tasks by Status" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px" }}>
-            <ResponsiveContainer>
+          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
                 <XAxis
@@ -117,11 +166,11 @@ const ProjectStatusChart = () => {
       )}
 
       {/* Priority Distribution Pie Chart */}
-      {priorityData.length > 0 && (
+      {priorityData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Tasks by Priority" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px" }}>
-            <ResponsiveContainer>
+          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={priorityData}
@@ -157,11 +206,11 @@ const ProjectStatusChart = () => {
       )}
 
       {/* Project Completion Comparison */}
-      {projectCompletionData.length > 0 && (
+      {projectCompletionData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Project Completion Rates" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px" }}>
-            <ResponsiveContainer>
+          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={projectCompletionData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
                 <XAxis

@@ -6,15 +6,16 @@ export interface TaskResponse {
   subject: string;
   code: string;
   status: string;
-  duration: string;
+  deadline: string; // RFC3339 format (ISO 8601) - replaced deprecated 'duration' field
   priority: string;
-  assignTo: string[];
+  assignTo: string | null;
   assignDetails: UserResponse[];
   projectId: string;
   timeSpent?: TimeSpentEntry[];
   description: string;
   fileAttachments: FileAttachment[];
   activityLogs: ActivityLog[];
+  progress?: number | null; // Completion percentage (0-100), optional
   created?: Created;
 }
 

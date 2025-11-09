@@ -12,7 +12,6 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  Chip,
   Button,
 } from "@mui/material";
 import Crossicon from "../../../assets/icons/general/close/blue.svg?react";
@@ -23,6 +22,15 @@ import {
 } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import type { SelectChangeEvent } from "@mui/material";
+import toast from "react-hot-toast";
+import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
+import { usePermissions } from "../../../store/hooks/usePermissions";
+import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
+import {
+  MSG_CANNOT_MODIFY_TASK,
+  MSG_CANNOT_MODIFY_PROJECT,
+  MSG_PROJECT_ID_REQUIRED,
+} from "../../../constants/messages";
 
 interface TaskFormProps {
   onClose?: () => void;
@@ -36,11 +44,24 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
   const [status, setStatus] = useState("");
   const [duration, setDuration] = useState("");
   const [priority, setPriority] = useState("");
-  const [membersIds, setMembersIds] = useState<string[]>([]);
+  const [memberId, setMemberId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dispatch = useAppDispatch();
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId: projectIdFromParams } = useParams<{ projectId: string }>();
   const { users } = useAppSelector((state: RootState) => state.userReducer);
+  const projectIdFromRedux = useAppSelector(
+    (state: RootState) => state.projectListReducer.common.selectedProjectId
+  );
+  const projects = useAppSelector((state: RootState) => state.projectListReducer.api.data.projects || []);
+  const { canModifyProject, canModifyTask } = useResourceAccess();
+  const { isAdmin } = usePermissions();
+  
+  // Use projectId from URL params if available, otherwise use Redux state
+  const projectId = projectIdFromParams || projectIdFromRedux;
+  
+  // Get project details for permission checking
+  const project = projects.find(p => p.id === projectId);
 
   useEffect(() => {
     dispatch(getUsersAction());
@@ -60,44 +81,104 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
       setSubject(task.subject || "");
       setCode(task.code || "");
       setStatus(task.status || "");
-      setDuration(task.duration ? parseFirebaseTimestamp(task.duration).toISOString().split('T')[0] : "");
+      setDuration(task.deadline ? parseFirebaseTimestamp(task.deadline).toISOString().split('T')[0] : "");
       setPriority(task.priority || "");
-      setMembersIds(task.assignTo || []);
+      setMemberId(task.assignTo || null);
     }
   }, [isEditMode, task]);
 
-  const handleSubmitTask = () => {
+  const handleSubmitTask = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    
     if (!projectId) {
+      toast.error(MSG_PROJECT_ID_REQUIRED);
       return;
     }
 
+    // Permission checks - Admins have full access, skip checks for them
+    if (!isAdmin()) {
+      if (isEditMode && task) {
+        // For editing: user must be assigned to the task
+        // Convert task to TaskResponse format for permission check
+        const taskResponse: TaskResponse = {
+          id: task.id,
+          subject: task.subject,
+          code: task.code,
+          status: task.status,
+          deadline: typeof task.deadline === 'string' 
+            ? task.deadline 
+            : (task.deadline instanceof Date 
+                ? task.deadline.toISOString() 
+                : parseFirebaseTimestamp(task.deadline).toISOString()),
+          priority: task.priority,
+          assignTo: task.assignTo,
+          assignDetails: [],
+          projectId: task.projectId,
+          description: '',
+          fileAttachments: [],
+          activityLogs: [],
+        };
+        
+        if (!canModifyTask(taskResponse)) {
+          toast.error(MSG_CANNOT_MODIFY_TASK);
+          return;
+        }
+      } else {
+        // For creating: user must be a member of the project
+        if (project && !canModifyProject(project)) {
+          toast.error(MSG_CANNOT_MODIFY_PROJECT);
+          return;
+        }
+      }
+    }
+
+    // Basic validation
+    if (!subject.trim()) {
+      toast.error("Please enter a task name");
+      return;
+    }
+
+    if (!code.trim()) {
+      toast.error("Please enter a task code");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     const taskData: ITask = {
       id: isEditMode && task ? task.id : "", // Use existing ID for edit mode
-      subject,
-      code,
-      status,
-      duration: duration ? new Date(duration) : new Date(),
-      priority,
-      assignTo: membersIds,
+      subject: subject.trim(),
+      code: code.trim(),
+      status: status || "pending",
+      deadline: duration ? new Date(duration) : new Date(),
+      priority: priority || "Medium",
+      assignTo: memberId,
       projectId,
       createdAt: isEditMode && task ? task.createdAt : new Date(),
       updatedAt: new Date(),
     };
 
-    if (isEditMode) {
-      dispatch(updateTaskAction(taskData));
-    } else {
-      dispatch(addTaskAction(taskData));
+    try {
+      if (isEditMode) {
+        await dispatch(updateTaskAction(taskData));
+      } else {
+        await dispatch(addTaskAction(taskData));
+      }
+      
+      // Only reset form and close modal on success
+      setSubject("");
+      setCode("");
+      setStatus("");
+      setDuration("");
+      setPriority("");
+      setMemberId(null);
+      onClose?.();
+    } catch {
+      // Error is already handled by the action with toast
+      // Don't close modal on error so user can see the error message
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Reset form and close modal
-    setSubject("");
-    setCode("");
-    setStatus("");
-    setDuration("");
-    setPriority("");
-    setMembersIds([]);
-    onClose?.();
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,12 +217,9 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
     },
   };
 
-  const handleMembersChange = (event: SelectChangeEvent<typeof membersIds>) => {
+  const handleMemberChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
-    setMembersIds(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value
-    );
+    setMemberId(value || null);
   };
 
   const handleClose = () => {
@@ -151,7 +229,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
     setStatus("");
     setDuration("");
     setPriority("");
-    setMembersIds([]);
+    setMemberId(null);
     onClose?.();
   };
 
@@ -313,30 +391,21 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
             <Typography color="secondary" sx={{ fontWeight: "bold" }}>
-              Team Members
+              Assign To
             </Typography>
             <FormControl sx={{ width: "100%" }}>
-              <InputLabel>Team Members</InputLabel>
+              <InputLabel>Assign To</InputLabel>
               <Select
-                multiple
-                value={membersIds}
-                onChange={handleMembersChange}
-                input={<OutlinedInput label="Team Members" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip
-                        key={value}
-                        label={
-                          users.find((user) => user.id === value)?.name ?? ""
-                        }
-                      />
-                    ))}
-                  </Box>
-                )}
+                value={memberId || ""}
+                onChange={handleMemberChange}
+                displayEmpty
+                input={<OutlinedInput label="Assign To" />}
                 MenuProps={MenuProps}
-                name="membersIds"
+                name="memberId"
               >
+                <MenuItem value="">
+                  <em>Unassigned</em>
+                </MenuItem>
                 {users.map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name}
@@ -345,8 +414,12 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
               </Select>
             </FormControl>
           </Box>
-          <Button variant="contained" onClick={handleSubmitTask}>
-            {isEditMode ? "Update Task" : "Add Task"}
+          <Button 
+            variant="contained" 
+            onClick={handleSubmitTask}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : isEditMode ? "Update Task" : "Add Task"}
           </Button>
         </Box>
       </Box>

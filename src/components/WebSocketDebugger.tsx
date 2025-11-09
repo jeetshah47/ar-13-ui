@@ -122,13 +122,13 @@ const WebSocketDebugger: React.FC = () => {
           </Typography>
           <Typography variant="body2" component="div">
             1. Check if backend server is running on localhost:3000<br/>
-            2. Verify auth token is present in localStorage<br/>
+            2. Verify JWT token is present in localStorage (authToken)<br/>
             3. Check browser console for WebSocket errors<br/>
-            4. Ensure backend has Socket.IO server with WebSocketService<br/>
+            4. Ensure backend has WebSocket server configured at /ws endpoint<br/>
             5. Check CORS settings on backend<br/>
-            6. Verify WebSocketAuthMiddleware is configured<br/>
-            7. Check if user is properly authenticated via middleware<br/>
-            8. Ensure user room joining works: user_&lt;userId&gt;
+            6. Verify JWT token is valid and not expired<br/>
+            7. Check if user is properly authenticated (token in query parameter)<br/>
+            8. Note: Server automatically extracts user ID from JWT token and handles user routing
           </Typography>
         </Box>
       </CardContent>

@@ -17,7 +17,6 @@ import {
   Select,
   MenuItem,
   OutlinedInput,
-  Chip,
 } from "@mui/material";
 import Crossicon from "../../../assets/icons/general/close/blue.svg?react";
 import {
@@ -46,7 +45,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
   const [status, setStatus] = useState("");
   const [duration, setDuration] = useState("");
   const [priority, setPriority] = useState("");
-  const [membersIds, setMembersIds] = useState<string[]>([]);
+  const [memberId, setMemberId] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
   const { users } = useAppSelector((state: RootState) => state.userReducer);
@@ -125,11 +124,9 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
     },
   };
 
-  const handleMembersChange = (event: SelectChangeEvent<typeof membersIds>) => {
+  const handleMemberChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
-    setMembersIds(
-      typeof value === "string" ? value.split(",") : value
-    );
+    setMemberId(value || null);
   };
 
   const handleSubmit = async () => {
@@ -148,9 +145,9 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
       subject: drawing.name,
       code: `DWG-${drawing.key.toUpperCase()}`,
       status: status || "To Do",
-      duration: duration ? new Date(duration) : new Date(),
+      deadline: duration ? new Date(duration) : new Date(),
       priority: priority || "Medium",
-      assignTo: membersIds,
+      assignTo: memberId,
       projectId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -412,29 +409,20 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
               color="secondary"
               sx={{ fontWeight: "bold", fontSize: "14px", mb: 1 }}
             >
-              Team Members
+              Assign To
             </Typography>
             <FormControl sx={{ width: "100%" }}>
-              <InputLabel>Team Members</InputLabel>
+              <InputLabel>Assign To</InputLabel>
               <Select
-                multiple
-                value={membersIds}
-                onChange={handleMembersChange}
-                input={<OutlinedInput label="Team Members" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip
-                        key={value}
-                        label={
-                          users.find((user) => user.id === value)?.name ?? ""
-                        }
-                      />
-                    ))}
-                  </Box>
-                )}
+                value={memberId || ""}
+                onChange={handleMemberChange}
+                displayEmpty
+                input={<OutlinedInput label="Assign To" />}
                 MenuProps={MenuProps}
               >
+                <MenuItem value="">
+                  <em>Unassigned</em>
+                </MenuItem>
                 {users.map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name}

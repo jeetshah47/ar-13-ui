@@ -52,7 +52,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
   userId,
   authToken,
-  websocketUrl = "http://localhost:3000",
+  websocketUrl = "ws://localhost:3000",
 }) => {
   // Get user data from localStorage if not provided
   const userData = getUserFromStorage();
@@ -68,13 +68,37 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [wsClient, setWsClient] = useState<WebSocketClient | null>(null);
   const refreshNotificationsRef = useRef<() => Promise<void>>();
 
+  // Expose WebSocket client methods for task updates and other features
+  const emit = useCallback((event: string, data?: any) => {
+    if (wsClient && wsClient.isConnected()) {
+      wsClient.emit(event, data);
+    } else {
+      console.warn('WebSocket: Cannot emit event - not connected');
+    }
+  }, [wsClient]);
+
+  const onEvent = useCallback((event: string, listener: (...args: any[]) => void) => {
+    if (wsClient) {
+      wsClient.onEvent(event, listener);
+    }
+  }, [wsClient]);
+
+  const offEvent = useCallback((event: string, listener?: (...args: any[]) => void) => {
+    if (wsClient) {
+      wsClient.offEvent(event, listener);
+    }
+  }, [wsClient]);
+
   // Initialize WebSocket client
   useEffect(() => {
     // Don't create client if we don't have auth token or userId
     if (!actualAuthToken || !actualUserId) {
+      console.log('NotificationContext: Skipping WebSocket connection - missing token or userId');
       return;
     }
 
+    console.log('NotificationContext: Initializing WebSocket client for', websocketUrl);
+    
     const client = new WebSocketClient({
       serverUrl: websocketUrl,
       authToken: actualAuthToken,
@@ -90,15 +114,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     const handleConnect = () => {
       setIsConnected(true);
       setError(null);
-      
-      // Join user room for personal notifications
-      if (actualUserId) {
-        client.joinUserRoom(actualUserId);
-      }
+      // Note: Server automatically extracts user ID from JWT token
+      // and joins user to their personal room, so manual join is not needed
     };
 
-    const handleDisconnect = () => {
+    const handleDisconnect = (reason?: string) => {
       setIsConnected(false);
+      // Log disconnect reason for debugging
+      if (reason) {
+        console.log('WebSocket disconnected:', reason);
+      }
     };
 
     const handleNotification = (notification: Notification) => {
@@ -113,24 +138,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       setNotificationCount(count);
     };
 
-    const handleAuthenticated = (data: { success: boolean }) => {
-      if (data.success) {
-        setIsConnected(true);
-        setError(null);
-      } else {
-        setError("Authentication failed");
-        setIsConnected(false);
-      }
-    };
-
     const handleConnectError = (error: Error) => {
       setError(`WebSocket connection failed: ${error.message}`);
       setIsConnected(false);
+      // Handle authentication errors specifically
+      if (error.message === 'unauthorized') {
+        setError('Authentication failed. Please check your token.');
+      }
     };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleReconnect = (_attemptNumber: number) => {
-      // attemptNumber is provided by socket.io but we don't need it
+      // attemptNumber is provided for reconnection tracking but we don't need it
       setIsConnected(true);
       setError(null);
       // Refresh notifications after reconnection
@@ -144,21 +163,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     client.on("disconnect", handleDisconnect);
     client.on("notification", handleNotification);
     client.on("notification_count", handleNotificationCount);
-    client.on("authenticated", handleAuthenticated);
     client.on("connect_error", handleConnectError);
     client.on("reconnect", handleReconnect);
 
     return () => {
+      console.log('NotificationContext: Cleaning up WebSocket client');
       // Clean up event listeners
       client.off("connect");
       client.off("disconnect");
       client.off("notification");
       client.off("notification_count");
-      client.off("authenticated");
       client.off("connect_error");
       client.off("reconnect");
-      // Disconnect the client
-      client.disconnect();
+      // Disconnect the client only if it exists and is connected/connecting
+      try {
+        client.disconnect();
+      } catch (error) {
+        // Ignore errors during cleanup (e.g., if connection was never established)
+        console.log('NotificationContext: Error during WebSocket cleanup (expected in dev mode)', error);
+      }
       setWsClient(null);
     };
   }, [websocketUrl, actualAuthToken, actualUserId]);
@@ -371,6 +394,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     joinUserRoom,
     leaveUserRoom,
     refreshNotifications,
+    emit,
+    onEvent,
+    offEvent,
   };
 
   return (
