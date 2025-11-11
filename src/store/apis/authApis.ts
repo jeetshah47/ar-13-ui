@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 export type User = {
   first_name: string;
   last_name: string;
@@ -25,7 +26,7 @@ export async function loginApi(
   email: string,
   password: string
 ): Promise<LoginResponse> {
-  const url = `http://localhost:3000/api/auth/login`;
+  const url = `${API_BASE_URL}/auth/login`;
   const result = await axios.post<LoginResponse>(
     url,
     {
@@ -49,7 +50,7 @@ export async function logoutApi(): Promise<boolean> {
 export async function signupApi(
   body: SingUpRequest
 ): Promise<{ message: string }> {
-  const url = `http://localhost:3000/api/auth/register`;
+  const url = `${API_BASE_URL}/auth/register`;
   const token = localStorage.getItem("authToken");
   const result = await axios.post(
     url,
@@ -69,7 +70,7 @@ export async function signupApi(
 export async function validateSignupTokenApi(
   token: string
 ): Promise<{ message: string; valid: boolean }> {
-  const url = `http://localhost:3000/api/auth/validate-signup`;
+  const url = `${API_BASE_URL}/auth/validate-signup`;
   const result = await axios.get(url, {
     params: { token },
     headers: {

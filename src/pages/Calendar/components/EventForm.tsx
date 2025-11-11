@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent } from "@mui/material";
+import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent, useMediaQuery, useTheme } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import { IOSSwitch } from "../../../common/components/Switch/IOSswitch";
 import { useEffect, useState } from "react";
@@ -18,6 +18,8 @@ type EventFormProps = {
 };
 
 const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.calendarReducer.api);
   const uid = useAppSelector((state) => state.authReducer.api.uid);
@@ -285,10 +287,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     <Box
       sx={(theme) => ({
         backgroundColor: theme.palette.background.paper,
-        borderRadius: "24px",
-        padding: "28px",
-        width: "500px",
-        height: "inherit",
+        borderRadius: { xs: "16px", sm: "24px" },
+        padding: { xs: "20px", sm: "28px" },
+        width: { xs: "90vw", sm: "500px" },
+        maxWidth: { xs: "400px", sm: "500px" },
+        maxHeight: "90vh",
         overflow: "auto"
       })}
     >
@@ -297,10 +300,14 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingY: "30px",
+          paddingY: { xs: "20px", sm: "30px" },
         }}
       >
-        <Typography fontWeight={"bold"} variant="h6">
+        <Typography 
+          fontWeight={"bold"} 
+          variant="h6"
+          sx={{ fontSize: { xs: "18px", sm: "20px" } }}
+        >
           {existingEvent ? "Edit Event" : "Add Event"}
         </Typography>
         <Box
@@ -416,12 +423,17 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           ))}
         </Box>
       </Box>
-      <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-        <Box>
+      <Box sx={{ 
+        display: "flex", 
+        gap: { xs: "8px", sm: "16px" }, 
+        alignItems: "center",
+        flexDirection: { xs: "column", sm: "row" }
+      }}>
+        <Box sx={{ width: { xs: "100%", sm: "auto" }, flex: { xs: 1, sm: "none" } }}>
           <Box sx={{ width: "100%", paddingTop: "10px" }}>
             <Typography
               color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
+              sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
             >
               {date ? "Date" : "Start Date"}
             </Typography>
@@ -439,11 +451,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             />
           </Box>
         </Box>
-        <Box>
+        <Box sx={{ width: { xs: "100%", sm: "auto" }, flex: { xs: 1, sm: "none" } }}>
           <Box sx={{ width: "100%", paddingTop: "10px" }}>
             <Typography
               color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
+              sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
             >
               Time
             </Typography>
@@ -459,12 +471,17 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       </Box>
       {formData.eventType === "online" && (
         <>
-          <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <Box sx={{ flex: 1 }}>
+          <Box sx={{ 
+            display: "flex", 
+            gap: { xs: "8px", sm: "16px" }, 
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" }
+          }}>
+            <Box sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}>
               <Box sx={{ width: "100%", paddingTop: "10px" }}>
                 <Typography
                   color="secondary"
-                  sx={{ fontWeight: "bold", fontSize: "14px" }}
+                  sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
                 >
                   Duration (minutes)
                 </Typography>
@@ -482,11 +499,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
               </Box>
             </Box>
             {!formData.duration && (
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}>
                 <Box sx={{ width: "100%", paddingTop: "10px" }}>
                   <Typography
                     color="secondary"
-                    sx={{ fontWeight: "bold", fontSize: "14px" }}
+                    sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
                   >
                     End Date
                   </Typography>
@@ -687,6 +704,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           paddingY: "12px",
           alignItems: "center",
           gap: "12px",
+          flexDirection: { xs: "column", sm: "row" }
         }}
       >
         {existingEvent && (
@@ -695,16 +713,20 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             color="error"
             onClick={handleDeleteEvent}
             disabled={loading}
-            sx={{ minWidth: "120px" }}
+            sx={{ 
+              minWidth: { xs: "100%", sm: "120px" },
+              width: { xs: "100%", sm: "auto" }
+            }}
           >
             Remove Event
           </Button>
         )}
-        <Box sx={{ flex: 1 }} />
+        <Box sx={{ flex: { xs: 0, sm: 1 } }} />
         <Button 
           variant="contained" 
           onClick={handleSubmit}
           disabled={loading}
+          sx={{ width: { xs: "100%", sm: "auto" } }}
         >
           {loading ? "Saving..." : existingEvent ? "Update Event" : "Save Event"}
         </Button>

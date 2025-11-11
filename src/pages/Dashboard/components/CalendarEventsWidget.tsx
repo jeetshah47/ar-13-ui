@@ -45,13 +45,14 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
       sx={(theme) => ({
         display: "flex",
         alignItems: "center",
-        gap: "10px",
-        padding: "10px 18px",
+        gap: { xs: "8px", sm: "10px" },
+        padding: { xs: "8px 12px", sm: "10px 18px" },
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: "12px",
         backgroundColor: theme.palette.background.paper,
         boxShadow: theme.shadows[1],
         transition: "all 0.2s ease-in-out",
+        flexWrap: { xs: "wrap", sm: "nowrap" },
         "&:hover": {
           boxShadow: theme.shadows[2],
           borderColor: theme.palette.primary.light,
@@ -63,20 +64,22 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          width: "36px",
-          height: "36px",
+          width: { xs: "32px", sm: "36px" },
+          height: { xs: "32px", sm: "36px" },
           borderRadius: "8px",
           backgroundColor: theme.palette.primary.light,
           color: theme.palette.primary.main,
+          flexShrink: 0,
         })}
       >
-        <SvgIcon component={CalenderIcon} sx={{ fontSize: "20px" }} />
+        <SvgIcon component={CalenderIcon} sx={{ fontSize: { xs: "18px", sm: "20px" } }} />
       </Box>
       
       <FormControl 
         size="small" 
         sx={{ 
-          minWidth: 150,
+          minWidth: { xs: 120, sm: 150 },
+          flex: { xs: "1 1 auto", sm: "0 0 auto" },
           "& .MuiOutlinedInput-root": {
             borderRadius: "8px",
             backgroundColor: "background.default",
@@ -94,11 +97,11 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
           value={selectedMonth.getMonth()}
           onChange={(e) => handleMonthChange(Number(e.target.value))}
           sx={{
-            fontSize: "14px",
+            fontSize: { xs: "12px", sm: "14px" },
             fontWeight: 500,
             "& .MuiSelect-select": {
-              padding: "8px 14px",
-              paddingRight: "32px",
+              padding: { xs: "6px 12px", sm: "8px 14px" },
+              paddingRight: { xs: "28px", sm: "32px" },
             },
           }}
         >
@@ -113,10 +116,11 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
       <Typography 
         variant="body2" 
         sx={{ 
-          fontSize: "14px",
+          fontSize: { xs: "12px", sm: "14px" },
           fontWeight: 500,
           color: "text.secondary",
           whiteSpace: "nowrap",
+          flexShrink: 0,
         }}
       >
         {selectedMonth.getFullYear()}
@@ -127,16 +131,17 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
           sx={(theme) => ({
             display: "flex",
             alignItems: "center",
-            padding: "6px 12px",
+            padding: { xs: "4px 10px", sm: "6px 12px" },
             borderRadius: "8px",
             backgroundColor: theme.palette.primary.light,
             border: `1px solid ${theme.palette.primary.main}20`,
+            flexShrink: 0,
           })}
         >
           <Typography 
             variant="caption" 
             sx={{ 
-              fontSize: "12px", 
+              fontSize: { xs: "11px", sm: "12px" }, 
               fontWeight: 600,
               color: "primary.main", 
               whiteSpace: "nowrap",

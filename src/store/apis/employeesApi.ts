@@ -1,9 +1,10 @@
 import { http } from "../../config/http";
+import { API_BASE_URL } from "../../config/api";
 import type { EmployeeResponse, EmployeeListResponse } from "../types/Employee/EmployeeResponse";
 import type { EmployeeStatsResponse } from "../types/Employee/EmployeeStatsResponse";
 
 export async function getAllEmployees(): Promise<EmployeeListResponse> {
-  const url = `http://localhost:3000/api/employee/list`;
+  const url = `${API_BASE_URL}/employee/list`;
   const result = await http.get(url);
   return result.data;
 }
@@ -14,7 +15,7 @@ export async function getAllEmployees(): Promise<EmployeeListResponse> {
  * Returns employee information with task counts
  */
 export async function getEmployeeTaskCounts(userId: string): Promise<{ employee: EmployeeResponse }> {
-  const url = `http://localhost:3000/api/employee/task-counts/${userId}`;
+  const url = `${API_BASE_URL}/employee/task-counts/${userId}`;
   const result = await http.get(url);
   return result.data;
 }
@@ -31,7 +32,7 @@ export async function getEmployeeStats(
   periodValue: string,
   projectId?: string
 ): Promise<EmployeeStatsResponse> {
-  const url = `http://localhost:3000/api/employee/stats/${userId}`;
+  const url = `${API_BASE_URL}/employee/stats/${userId}`;
   const params: Record<string, string> = {
     period,
     periodValue,

@@ -97,45 +97,80 @@ const DashboardPage = () => {
   // Show error state only for critical dashboard data
   if (error) {
     return (
-      <Box sx={{ padding: "20px" }}>
-        <Alert severity="error">{error}</Alert>
+      <Box sx={{ padding: { xs: "12px", sm: "16px", md: "20px" } }}>
+        <Alert severity="error" sx={{ fontSize: { xs: "12px", sm: "14px" } }}>
+          {error}
+        </Alert>
       </Box>
     );
   }
 
   return (
     <Box>
-      <Typography color="secondary">Welcome back, {displayName}</Typography>
+      <Typography 
+        color="secondary" 
+        sx={{ 
+          fontSize: { xs: "14px", sm: "16px" },
+          marginBottom: { xs: "8px", sm: "12px" }
+        }}
+      >
+        Welcome back, {displayName}
+      </Typography>
       <PageHeader
         title="Dashboard"
         endElement={
-          <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <Box 
+            sx={{ 
+              display: "flex", 
+              gap: { xs: "8px", sm: "16px" }, 
+              alignItems: "center",
+              flexDirection: { xs: "column", sm: "row" },
+              width: { xs: "100%", sm: "auto" },
+              marginTop: { xs: "12px", sm: 0 }
+            }}
+          >
             <Button
               onClick={handleOnClickSupportButton}
               variant="outlined"
-              sx={{ textTransform: "none" }}
+              sx={{ 
+                textTransform: "none",
+                width: { xs: "100%", sm: "auto" },
+                fontSize: { xs: "12px", sm: "14px" },
+                padding: { xs: "6px 12px", sm: "8px 16px" }
+              }}
             >
               Get Support
             </Button>
-            <CalendarEventsWidget 
-              events={calendarEvents} 
-              selectedMonth={selectedMonth}
-              onMonthChange={setSelectedMonth}
-            />
+            <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+              <CalendarEventsWidget 
+                events={calendarEvents} 
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+              />
+            </Box>
           </Box>
         }
       />
      
       {/* Main Content: Side by Side Layout */}
-      <Box sx={{ padding: "28px 0px", display: "flex", gap: "30px", minHeight: "calc(100vh - 200px)" }}>
+      <Box 
+        sx={{ 
+          padding: { xs: "16px 0px", sm: "20px 0px", md: "28px 0px" }, 
+          display: "flex", 
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: "20px", md: "30px" }, 
+          minHeight: { xs: "auto", md: "calc(100vh - 200px)" }
+        }}
+      >
         {/* Left Side: Project Statistics with Scroll */}
         <Box
           sx={{
-            width: "70%",
+            width: { xs: "100%", md: "70%" },
             display: "flex",
             flexDirection: "column",
-            overflowY: "auto",
-            paddingRight: "10px",
+            overflowY: { xs: "visible", md: "auto" },
+            paddingRight: { xs: "0px", md: "10px" },
+            maxHeight: { xs: "none", md: "calc(100vh - 220px)" },
             "&::-webkit-scrollbar": {
               width: "8px",
             },
@@ -152,16 +187,41 @@ const DashboardPage = () => {
           }}
         >
           {/* Project Statistics Overview */}
-          <Box sx={{ paddingBottom: "28px" }}>
+          <Box sx={{ paddingBottom: { xs: "16px", sm: "20px", md: "28px" } }}>
             {projectStatisticsData ? (
               <ProjectStatisticsOverview />
             ) : (
               <Box>
-                <Skeleton variant="text" width="40%" height={40} sx={{ marginBottom: "24px" }} />
-                <Box sx={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                <Skeleton 
+                  variant="text" 
+                  width={{ xs: "60%", sm: "50%", md: "40%" }} 
+                  height={{ xs: 32, sm: 36, md: 40 }} 
+                  sx={{ marginBottom: { xs: "16px", sm: "20px", md: "24px" } }} 
+                />
+                <Box 
+                  sx={{ 
+                    display: "flex", 
+                    gap: { xs: "12px", sm: "16px" }, 
+                    flexWrap: "wrap" 
+                  }}
+                >
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <Box key={i} sx={{ flex: "1 1 calc(33.333% - 16px)", minWidth: "200px" }}>
-                      <Skeleton variant="rectangular" height={140} sx={{ borderRadius: "12px" }} />
+                    <Box 
+                      key={i} 
+                      sx={{ 
+                        flex: { 
+                          xs: "1 1 calc(50% - 6px)", 
+                          sm: "1 1 calc(33.333% - 12px)", 
+                          md: "1 1 calc(33.333% - 16px)" 
+                        }, 
+                        minWidth: { xs: "140px", sm: "180px", md: "200px" } 
+                      }}
+                    >
+                      <Skeleton 
+                        variant="rectangular" 
+                        height={{ xs: 120, sm: 130, md: 140 }} 
+                        sx={{ borderRadius: "12px" }} 
+                      />
                     </Box>
                   ))}
                 </Box>
@@ -170,14 +230,29 @@ const DashboardPage = () => {
           </Box>
 
           {/* Charts Section - Lazy Loaded */}
-          <Box sx={{ paddingBottom: "28px" }}>
+          <Box sx={{ paddingBottom: { xs: "16px", sm: "20px", md: "28px" } }}>
             <Suspense
               fallback={
                 <CustomCard>
                   <CardHeader title="Project Status Charts" />
-                  <Box sx={{ padding: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                    <Skeleton variant="rectangular" height={300} sx={{ borderRadius: "12px" }} />
-                    <Skeleton variant="rectangular" height={300} sx={{ borderRadius: "12px" }} />
+                  <Box 
+                    sx={{ 
+                      padding: { xs: "20px", sm: "30px", md: "40px" }, 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      gap: { xs: "16px", sm: "20px" } 
+                    }}
+                  >
+                    <Skeleton 
+                      variant="rectangular" 
+                      height={{ xs: 200, sm: 250, md: 300 }} 
+                      sx={{ borderRadius: "12px" }} 
+                    />
+                    <Skeleton 
+                      variant="rectangular" 
+                      height={{ xs: 200, sm: 250, md: 300 }} 
+                      sx={{ borderRadius: "12px" }} 
+                    />
                   </Box>
                 </CustomCard>
               }
@@ -187,9 +262,16 @@ const DashboardPage = () => {
           </Box>
 
           {/* Individual Project Statistics */}
-          <Box sx={{ paddingBottom: "28px" }}>
+          <Box sx={{ paddingBottom: { xs: "16px", sm: "20px", md: "28px" } }}>
             <CardHeader title="Project Statistics" link="/#" />
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "20px" }}>
+            <Box 
+              sx={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                gap: { xs: "12px", sm: "16px", md: "20px" }, 
+                marginTop: { xs: "12px", sm: "16px", md: "20px" } 
+              }}
+            >
               {projectStatisticsData?.projects && projectStatisticsData.projects.length > 0 ? (
                 projectStatisticsData.projects.map((project) => (
                   <ProjectStatisticsWidget key={project.id} project={project} />
@@ -198,23 +280,41 @@ const DashboardPage = () => {
                 // Show skeleton while loading
                 <>
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={200} sx={{ borderRadius: "12px" }} />
+                    <Skeleton 
+                      key={i} 
+                      variant="rectangular" 
+                      height={{ xs: 150, sm: 175, md: 200 }} 
+                      sx={{ borderRadius: "12px" }} 
+                    />
                   ))}
                 </>
               ) : (
-                <Typography color="secondary">No project statistics available</Typography>
+                <Typography 
+                  color="secondary"
+                  sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+                >
+                  No project statistics available
+                </Typography>
               )}
             </Box>
           </Box>
           
           {/* Original Projects List */}
-          <Box sx={{ paddingBottom: "28px" }}>
+          <Box sx={{ paddingBottom: { xs: "16px", sm: "20px", md: "28px" } }}>
             <CardHeader title="Projects" link="/#" />
             {isLoading ? (
               // Show skeleton while loading projects
               <>
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} variant="rectangular" height={120} sx={{ borderRadius: "24px", marginBottom: "12px" }} />
+                  <Skeleton 
+                    key={i} 
+                    variant="rectangular" 
+                    height={{ xs: 100, sm: 110, md: 120 }} 
+                    sx={{ 
+                      borderRadius: { xs: "12px", sm: "20px", md: "24px" }, 
+                      marginBottom: { xs: "8px", sm: "10px", md: "12px" } 
+                    }} 
+                  />
                 ))}
               </>
             ) : projects.length > 0 ? (
@@ -222,7 +322,12 @@ const DashboardPage = () => {
                 <ProjectCard key={project.id} project={project} />
               ))
             ) : (
-              <Typography color="secondary">No projects found</Typography>
+              <Typography 
+                color="secondary"
+                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
+              >
+                No projects found
+              </Typography>
             )}
           </Box>
         </Box>
@@ -230,15 +335,15 @@ const DashboardPage = () => {
         {/* Right Side: Fixed Calendar Events and Activity Stream */}
         <Box
           sx={{
-            width: "30%",
+            width: { xs: "100%", md: "30%" },
             display: "flex",
             flexDirection: "column",
-            gap: "10px",
-            position: "sticky",
-            top: "20px",
-            alignSelf: "flex-start",
-            maxHeight: "calc(100vh - 220px)",
-            overflowY: "auto",
+            gap: { xs: "16px", md: "10px" },
+            position: { xs: "relative", md: "sticky" },
+            top: { xs: "auto", md: "20px" },
+            alignSelf: { xs: "stretch", md: "flex-start" },
+            maxHeight: { xs: "none", md: "calc(100vh - 220px)" },
+            overflowY: { xs: "visible", md: "auto" },
             "&::-webkit-scrollbar": {
               width: "8px",
             },

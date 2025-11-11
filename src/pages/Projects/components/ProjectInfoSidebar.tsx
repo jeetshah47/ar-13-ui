@@ -32,12 +32,12 @@ const ProjectInfoSidebar = ({
   return (
     <Box
       sx={{
-        width: "265px",
+        width: { xs: "100%", sm: "265px" },
         background: "#FFFFFF",
         borderRadius: "24px",
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-        height: "100%",
-        padding: "18px",
+        height: { xs: "auto", sm: "100%" },
+        padding: { xs: "16px", sm: "18px" },
       }}
     >
       <Box

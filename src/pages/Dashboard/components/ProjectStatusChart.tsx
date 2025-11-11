@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import CardHeader from "../../../common/components/Card/CardHeader";
 import {
@@ -21,6 +21,8 @@ import { useEffect, useState, useRef } from "react";
 
 const ProjectStatusChart = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const [isReady, setIsReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const statisticsState = useAppSelector(
@@ -28,6 +30,10 @@ const ProjectStatusChart = () => {
   );
 
   const { data, loading } = statisticsState;
+
+  // Calculate responsive chart height
+  const chartHeight = isMobile ? 250 : isTablet ? 280 : 300;
+  const pieRadius = isMobile ? 60 : isTablet ? 80 : 100;
 
   // Ensure component is mounted and container has dimensions before rendering charts
   useEffect(() => {
@@ -66,12 +72,12 @@ const ProjectStatusChart = () => {
   // Show loading state while waiting for container dimensions
   if (!isReady) {
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "16px", sm: "20px", md: "24px" } }}>
         <CustomCard>
           <CardHeader title="Project Status Charts" />
-          <Box sx={{ padding: "40px", display: "flex", flexDirection: "column", gap: "20px" }}>
-            <Box sx={{ width: "100%", height: "300px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Box sx={{ color: "text.secondary" }}>Loading charts...</Box>
+          <Box sx={{ padding: { xs: "16px", sm: "24px", md: "40px" }, display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Box sx={{ width: "100%", height: `${chartHeight}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Box sx={{ color: "text.secondary", fontSize: { xs: "12px", sm: "14px" } }}>Loading charts...</Box>
             </Box>
           </Box>
         </CustomCard>
@@ -132,28 +138,47 @@ const ProjectStatusChart = () => {
     }));
 
   return (
-    <Box ref={containerRef} sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <Box ref={containerRef} sx={{ display: "flex", flexDirection: "column", gap: { xs: "16px", sm: "20px", md: "24px" } }}>
       {/* Status Distribution Bar Chart */}
       {statusData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Tasks by Status" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+          <Box 
+            sx={{ 
+              width: "100%", 
+              height: `${chartHeight}px`, 
+              marginTop: { xs: "12px", sm: "16px", md: "20px" }, 
+              minWidth: 0, 
+              minHeight: chartHeight,
+              padding: { xs: "8px", sm: "12px", md: 0 }
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusData}>
+              <BarChart 
+                data={statusData}
+                margin={{ top: 5, right: isMobile ? 5 : 20, left: isMobile ? -10 : 0, bottom: isMobile ? 0 : 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
                 <XAxis
                   dataKey="status"
-                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: isMobile ? 10 : 12 }}
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? "end" : "middle"}
+                  height={isMobile ? 60 : 40}
                 />
-                <YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
+                <YAxis 
+                  tick={{ fill: theme.palette.text.secondary, fontSize: isMobile ? 10 : 12 }}
+                  width={isMobile ? 40 : 60}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: theme.palette.background.paper,
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
+                    fontSize: isMobile ? "11px" : "12px",
                   }}
                 />
-                <Legend />
+                {!isMobile && <Legend />}
                 <Bar
                   dataKey="count"
                   fill={theme.palette.primary.main}
@@ -169,7 +194,16 @@ const ProjectStatusChart = () => {
       {priorityData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Tasks by Priority" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+          <Box 
+            sx={{ 
+              width: "100%", 
+              height: `${chartHeight}px`, 
+              marginTop: { xs: "12px", sm: "16px", md: "20px" }, 
+              minWidth: 0, 
+              minHeight: chartHeight,
+              padding: { xs: "8px", sm: "12px", md: 0 }
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -178,10 +212,11 @@ const ProjectStatusChart = () => {
                   cy="50%"
                   labelLine={false}
                   label={(props: PieLabelRenderProps) => {
+                    if (isMobile) return ""; // Hide labels on mobile for cleaner look
                     const percent = typeof props.percent === 'number' ? props.percent : 0;
                     return `${props.name}: ${(percent * 100).toFixed(0)}%`;
                   }}
-                  outerRadius={100}
+                  outerRadius={pieRadius}
                   fill="#8884d8"
                   dataKey="value"
                 >
@@ -197,8 +232,14 @@ const ProjectStatusChart = () => {
                     backgroundColor: theme.palette.background.paper,
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
+                    fontSize: isMobile ? "11px" : "12px",
                   }}
+                  formatter={(value: number, name: string) => [
+                    `${value} (${((value / priorityData.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(0)}%)`,
+                    name
+                  ]}
                 />
+                {!isMobile && <Legend />}
               </PieChart>
             </ResponsiveContainer>
           </Box>
@@ -209,30 +250,44 @@ const ProjectStatusChart = () => {
       {projectCompletionData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Project Completion Rates" />
-          <Box sx={{ width: "100%", height: "300px", marginTop: "20px", minWidth: 0, minHeight: 300 }}>
+          <Box 
+            sx={{ 
+              width: "100%", 
+              height: `${chartHeight}px`, 
+              marginTop: { xs: "12px", sm: "16px", md: "20px" }, 
+              minWidth: 0, 
+              minHeight: chartHeight,
+              padding: { xs: "8px", sm: "12px", md: 0 }
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={projectCompletionData} layout="vertical">
+              <BarChart 
+                data={projectCompletionData} 
+                layout="vertical"
+                margin={{ top: 5, right: isMobile ? 5 : 20, left: isMobile ? 60 : 120, bottom: isMobile ? 0 : 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.5)} />
                 <XAxis
                   type="number"
                   domain={[0, 100]}
-                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: isMobile ? 10 : 12 }}
                 />
                 <YAxis
                   dataKey="name"
                   type="category"
-                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                  width={120}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: isMobile ? 10 : 12 }}
+                  width={isMobile ? 60 : 120}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: theme.palette.background.paper,
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
+                    fontSize: isMobile ? "11px" : "12px",
                   }}
                   formatter={(value: number) => `${value.toFixed(1)}%`}
                 />
-                <Legend />
+                {!isMobile && <Legend />}
                 <Bar
                   dataKey="completion"
                   fill={theme.palette.success.main}

@@ -10,7 +10,13 @@ const LandingPage = () => {
   return (
     <Box sx={{ height: "100%", width: "100%"}}>
       <Header />
-      <Box sx={{ padding: "28px", minHeight: "100%" }}>
+      <Box 
+        sx={{ 
+          padding: { xs: "12px", sm: "16px", md: "20px", lg: "28px" }, 
+          minHeight: "100%",
+          paddingTop: { xs: "60px", sm: "16px", md: "20px", lg: "28px" } // Extra top padding on mobile for menu button
+        }}
+      >
         <AnimatedPage>
           <Routes location={location} key={location.pathname}>
             {authRoutes.map((route) => (

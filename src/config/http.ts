@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { store } from "../store/store";
 import { authLogout } from "../store/features/auth/authSlice";
 import { setGlobalNetworkError } from "../contexts/NetworkErrorContext";
+import { API_BASE_URL } from "./api";
 
 const http = Axios.create();
 
@@ -10,7 +11,7 @@ export type HttpHeaders = {
   [key: string]: string | boolean;
 };
 
-const publicApiList = [`http://localhost:3000/api/auth`];
+const publicApiList = [`${API_BASE_URL}/auth`];
 
 const updateHeaders = (
   config: InternalAxiosRequestConfig

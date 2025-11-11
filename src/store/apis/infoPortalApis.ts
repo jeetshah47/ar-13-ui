@@ -1,4 +1,5 @@
 import { http } from "../../config/http";
+import { API_BASE_URL } from "../../config/api";
 import type { GetFoldersResponse } from "../types/InfoPortal/FolderResponse";
 import type { FolderDetailResponse } from "../types/InfoPortal/FolderResponse";
 import type { FolderResponse } from "../types/InfoPortal/FolderResponse";
@@ -13,7 +14,7 @@ import type { UpdateSectionsRequest } from "../types/InfoPortal/PageRequest";
 import type { AttachmentResponse } from "../types/InfoPortal/AttachmentResponse";
 import type { StatisticsResponse } from "../types/InfoPortal/StatisticsResponse";
 
-const BASE_URL = "http://localhost:3000/api/info-portal";
+const BASE_URL = `${API_BASE_URL}/info-portal`;
 
 // Folders
 export async function getAllFolders(): Promise<GetFoldersResponse> {

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, SvgIcon, Typography, CircularProgress } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, useMediaQuery, useTheme } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
@@ -14,6 +14,8 @@ import { getUsersAction } from "../../store/features/user/userAction";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
 const CalendarPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useAppDispatch();
   const { events } = useAppSelector((state) => state.calendarReducer.api.data);
   const { loading } = useAppSelector((state) => state.calendarReducer.api);
@@ -50,8 +52,13 @@ const CalendarPage = () => {
       variant="contained" 
       startIcon={<SvgIcon component={PlusIcon} />}
       onClick={handleAddEvent}
+      size={isMobile ? "small" : "medium"}
+      sx={{
+        fontSize: { xs: "12px", sm: "14px" },
+        padding: { xs: "6px 12px", sm: "8px 16px" }
+      }}
     >
-      Add Events
+      {isMobile ? "Add" : "Add Events"}
     </Button>
   );
 
@@ -200,9 +207,9 @@ const CalendarPage = () => {
       
       <Box
         sx={{
-          paddingTop: "28px",
+          paddingTop: { xs: "16px", sm: "28px" },
           display: "flex",
-          gap: "28px",
+          gap: { xs: "16px", sm: "28px" },
           height: "100%",
         }}
       >
@@ -210,7 +217,7 @@ const CalendarPage = () => {
           sx={(theme) => ({
             width: "100%",
             background: theme.palette.background.paper,
-            borderRadius: "24px",
+            borderRadius: { xs: "16px", sm: "24px" },
             boxShadow: theme.shadows[1],
             height: "100%",
             position: "relative",
@@ -244,15 +251,33 @@ const CalendarPage = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              gap: "24px",
-              paddingY: "20px",
+              gap: { xs: "12px", sm: "24px" },
+              paddingY: { xs: "12px", sm: "20px" },
             }}
           >
-            <SvgIcon onClick={handleOnClikPrev} component={LeftIcon} />
-            <Typography variant="h6" fontWeight={700}>
+            <SvgIcon 
+              onClick={handleOnClikPrev} 
+              component={LeftIcon}
+              sx={{ 
+                fontSize: { xs: "20px", sm: "24px" },
+                cursor: "pointer"
+              }}
+            />
+            <Typography 
+              variant="h6" 
+              fontWeight={700}
+              sx={{ fontSize: { xs: "16px", sm: "20px" } }}
+            >
               {currentMonthandYear()}
             </Typography>
-            <SvgIcon onClick={handleOnClikNext} component={RightIcon} />
+            <SvgIcon 
+              onClick={handleOnClikNext} 
+              component={RightIcon}
+              sx={{ 
+                fontSize: { xs: "20px", sm: "24px" },
+                cursor: "pointer"
+              }}
+            />
           </Box>
           
           <Grid container columns={7}>
@@ -301,3 +326,4 @@ const CalendarPage = () => {
 };
 
 export default CalendarPage;
+

@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 
 type EventProps = {
@@ -7,6 +7,8 @@ type EventProps = {
 };
 
 const Event = ({ event, onClick }: EventProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const getCategoryColor = (category: string | undefined) => {
     if (!category) return "#DE92EB";
@@ -40,14 +42,14 @@ const Event = ({ event, onClick }: EventProps) => {
   return (
     <Box
       sx={(theme) => ({
-        padding: "6px",
+        padding: { xs: "4px", sm: "6px" },
         backgroundColor: theme.palette.grey[50],
-        borderRadius: "14px",
+        borderRadius: { xs: "10px", sm: "14px" },
         display: "flex",
         overflow: "hidden",
         width: "100%",
         cursor: onClick ? "pointer" : "default",
-        marginBottom: "2px",
+        marginBottom: { xs: "1px", sm: "2px" },
         "&:hover": onClick ? {
           backgroundColor: theme.palette.primary.light,
           transform: "scale(1.02)",
@@ -58,13 +60,13 @@ const Event = ({ event, onClick }: EventProps) => {
     >
       <Box 
         sx={{ 
-          borderLeft: `3px solid ${getCategoryColor(event.category)}`,
-          paddingLeft: "4px",
+          borderLeft: (theme) => `${isMobile ? "2px" : "3px"} solid ${getCategoryColor(event.category)}`,
+          paddingLeft: { xs: "3px", sm: "4px" },
           width: "100%"
         }}
       >
         <Typography 
-          fontSize={"12px"} 
+          fontSize={{ xs: "10px", sm: "12px" }} 
           fontWeight="600"
           sx={(theme) => ({ 
             color: theme.palette.text.primary,
@@ -77,7 +79,7 @@ const Event = ({ event, onClick }: EventProps) => {
           {event.title || "Untitled Event"}
         </Typography>
         <Typography 
-          fontSize={"10px"} 
+          fontSize={{ xs: "8px", sm: "10px" }} 
           sx={(theme) => ({ 
             color: theme.palette.text.secondary,
             lineHeight: 1.2

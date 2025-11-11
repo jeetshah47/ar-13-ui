@@ -22,7 +22,11 @@ interface ItemProps {
   active?: boolean;
 }
 
-const MainSiderBar = () => {
+interface MainSiderBarProps {
+  onNavigate?: () => void;
+}
+
+const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
   const Item = styled(Paper, {
     shouldForwardProp: (prop) => prop !== "active",
   })<ItemProps>(({ theme, active }) => ({
@@ -30,19 +34,25 @@ const MainSiderBar = () => {
       ? alpha(theme.palette.primary.main, 0.12)
       : undefined,
     ...theme.typography.body2,
-    paddingLeft: theme.spacing(4),
-    paddingRight: theme.spacing(4),
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(0.75),
+    paddingBottom: theme.spacing(0.75),
     textAlign: "center",
     color: (theme.vars ?? theme).palette.text.secondary,
     flexGrow: 1,
     display: "flex",
     alignContent: "center",
-
-    gap: "12px",
-    // padding: "6px 0",
-    // paddingInline: '24px',
+    gap: "8px",
+    fontSize: "12px",
+    [theme.breakpoints.up("sm")]: {
+      paddingLeft: theme.spacing(4),
+      paddingRight: theme.spacing(4),
+      paddingTop: theme.spacing(1),
+      paddingBottom: theme.spacing(1),
+      gap: "12px",
+      fontSize: "14px",
+    },
     ":hover": {
       backgroundColor: alpha(theme.palette.primary.main, 0.12),
       color: (theme.vars ?? theme).palette.text.secondary,
@@ -55,6 +65,10 @@ const MainSiderBar = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    // Close drawer on mobile after navigation
+    if (onNavigate) {
+      onNavigate();
+    }
   };
 
   const checkActiveStatus = (path: string) => {
@@ -66,17 +80,15 @@ const MainSiderBar = () => {
       sx={{
         backgroundColor: "background.paper",
         height: "100%",
-        width: "200px",
+        width: { xs: "100%", sm: "200px" },
         display: "flex",
         flexDirection: "column",
-        // paddingBottom: "0px",
         boxShadow: (theme) => theme.shadows[1],
-        borderRadius: "24px",
-        paddingX: "12px",
+        borderRadius: { xs: "0px", sm: "24px" },
+        paddingX: { xs: "8px", sm: "12px" },
       }}
     >
-      {/* <Box sx={{ position: "absolute", width: "100%", top: 0}}> */}
-      <Box sx={{ width: "50px", paddingTop: "24px" }}>
+      <Box sx={{ width: { xs: "40px", sm: "50px" }, paddingTop: { xs: "16px", sm: "24px" } }}>
         <Box
           component="img"
           src={ARLOGO}
@@ -88,8 +100,8 @@ const MainSiderBar = () => {
           })}
         />
       </Box>
-      <Box>
-        <Stack gap={1}>
+      <Box sx={{ flex: 1, overflowY: "auto" }}>
+        <Stack gap={{ xs: 0.5, sm: 1 }}>
           <Item
             onClick={() => handleNavigation("/app/dashboard")}
             active={checkActiveStatus("dashboard")}

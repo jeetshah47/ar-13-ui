@@ -1,7 +1,8 @@
-import { Box, SvgIcon, Typography } from "@mui/material";
+import { Box, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
+import { SERVER_BASE_URL } from "../../../config/api";
 
 interface FileAttachmentsSectionProps {
   fileAttachments: FileAttachment[];
@@ -22,17 +23,35 @@ const FileAttachmentsSection = ({
   parseFirebaseTimestamp,
   isImageAttachment,
 }: FileAttachmentsSectionProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
-    <Box sx={{ paddingTop: "16px" }}>
-      <Typography>
+    <Box sx={{ 
+      paddingTop: { xs: "16px", sm: "16px" },
+      width: "100%",
+      maxWidth: "100%",
+      overflowX: "hidden",
+      boxSizing: "border-box",
+    }}>
+      <Typography sx={{ 
+        fontSize: { xs: "14px", sm: "16px" },
+        lineHeight: { xs: "1.5", sm: "1.6" },
+        color: "#0A1629",
+        mb: { xs: "12px", sm: "15px" },
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        maxWidth: "100%",
+      }}>
         Think over UX for Login and Registration, create a flow using wireframes.
         Upon completion, show the team and discuss. Attach the source to the task.
       </Typography>
       <Box
         sx={{
-          paddingY: "15px",
+          paddingY: { xs: "0px", sm: "15px" },
           display: "flex",
-          gap: "16px",
+          gap: { xs: "12px", sm: "16px" },
+          mb: { xs: "16px", sm: 0 },
         }}
       >
         <Box
@@ -70,21 +89,33 @@ const FileAttachmentsSection = ({
           <SvgIcon component={FilesIcon} />
         </Box>
       </Box>
-      <Typography color="secondary.main" fontWeight={"700"}>
+      <Typography 
+        color="secondary.main" 
+        fontWeight={"700"}
+        sx={{ 
+          fontSize: { xs: "14px", sm: "16px" },
+          mb: { xs: "8px", sm: "8px" },
+        }}
+      >
         Task Attachment
       </Typography>
       {loading ? (
-        <Box sx={{ padding: "20px", textAlign: "center" }}>
-          <Typography>Loading attachments...</Typography>
+        <Box sx={{ padding: { xs: "16px", sm: "20px" }, textAlign: "center" }}>
+          <Typography sx={{ fontSize: { xs: "14px", sm: "16px" } }}>
+            Loading attachments...
+          </Typography>
         </Box>
       ) : fileAttachments && fileAttachments.length > 0 ? (
         <Box
           sx={{
-            paddingTop: "8px",
+            paddingTop: { xs: "8px", sm: "8px" },
             display: "flex",
             alignContent: "center",
-            gap: "16px",
+            gap: { xs: "12px", sm: "16px" },
             flexWrap: "wrap",
+            width: "100%",
+            maxWidth: "100%",
+            boxSizing: "border-box",
           }}
         >
           {fileAttachments.map((attachment: FileAttachment) => {
@@ -101,7 +132,7 @@ const FileAttachmentsSection = ({
 
             const isImage = isImageAttachment(attachment);
             const imageUrl = attachment.fileUrl
-              ? `http://localhost:3000${attachment.fileUrl}`
+              ? `${SERVER_BASE_URL}${attachment.fileUrl}`
               : undefined;
 
             return (
@@ -109,16 +140,20 @@ const FileAttachmentsSection = ({
                 key={attachment.fileName}
                 onClick={() => isImage && imageUrl && onImagePreview(attachment)}
                 sx={{
-                  width: "156px",
-                  height: "144px",
+                  width: { xs: "calc(50% - 6px)", sm: "156px" },
+                  maxWidth: { xs: "calc(50% - 6px)", sm: "156px" },
+                  minWidth: 0,
+                  height: { xs: "120px", sm: "144px" },
                   backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
-                  borderRadius: "14px",
+                  borderRadius: { xs: "12px", sm: "14px" },
                   backgroundColor: imageUrl ? undefined : "#F5F8FC",
                   cursor: isImage && imageUrl ? "pointer" : "default",
                   transition: "all 0.2s ease",
+                  boxSizing: "border-box",
+                  flexShrink: 0,
                   ...(isImage &&
                     imageUrl && {
                       "&:hover": {
@@ -141,16 +176,16 @@ const FileAttachmentsSection = ({
                   <Box
                     sx={{
                       backgroundColor: "#F5F8FC",
-                      padding: "10px",
-                      borderRadius: "14px",
+                      padding: { xs: "8px", sm: "10px" },
+                      borderRadius: { xs: "12px", sm: "14px" },
                       display: "flex",
                       position: "absolute",
-                      margin: "5px",
+                      margin: { xs: "4px", sm: "5px" },
                       top: 0,
                       right: 0,
                     }}
                   >
-                    <SvgIcon component={AttachmentIcon} />
+                    <SvgIcon sx={{ fontSize: { xs: "16px", sm: "20px" } }} component={AttachmentIcon} />
                   </Box>
                   <Box
                     sx={{
@@ -158,15 +193,28 @@ const FileAttachmentsSection = ({
                       bottom: "1px",
                       left: 0,
                       backgroundColor: "#fff",
-                      borderRadius: "12px",
+                      borderRadius: { xs: "10px", sm: "12px" },
                       width: "100%",
                       textAlign: "center",
+                      padding: { xs: "4px", sm: "6px" },
                     }}
                   >
-                    <Typography fontSize={"12px"} fontWeight={"700"}>
+                    <Typography 
+                      fontSize={{ xs: "10px", sm: "12px" }} 
+                      fontWeight={"700"}
+                      sx={{ 
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        px: 0.5,
+                      }}
+                    >
                       {attachment.originalName}
                     </Typography>
-                    <Typography fontSize={"12px"} color="secondary.main">
+                    <Typography 
+                      fontSize={{ xs: "10px", sm: "12px" }} 
+                      color="secondary.main"
+                    >
                       {formattedDate} | {formattedTime}
                     </Typography>
                   </Box>
@@ -176,8 +224,13 @@ const FileAttachmentsSection = ({
           })}
         </Box>
       ) : (
-        <Box sx={{ padding: "20px", textAlign: "center" }}>
-          <Typography color="secondary.main">No attachments found</Typography>
+        <Box sx={{ padding: { xs: "16px", sm: "20px" }, textAlign: "center" }}>
+          <Typography 
+            color="secondary.main"
+            sx={{ fontSize: { xs: "14px", sm: "16px" } }}
+          >
+            No attachments found
+          </Typography>
         </Box>
       )}
     </Box>

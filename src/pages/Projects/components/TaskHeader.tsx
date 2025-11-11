@@ -1,4 +1,4 @@
-import { Box, IconButton, SvgIcon, Typography, Button } from "@mui/material";
+import { Box, IconButton, SvgIcon, Typography, Button, useMediaQuery, useTheme } from "@mui/material";
 import { ViewButtonOptions } from "../constants/project.contants";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
@@ -18,6 +18,14 @@ const TaskHeader = ({
   onClickFilterShow,
   currentViewOption,
 }: TaskHeaderProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Filter out tile and timeline views on mobile
+  const availableViewOptions = isMobile 
+    ? ViewButtonOptions.filter(option => option.key === "list")
+    : ViewButtonOptions;
+
   return (
     <>
       <Box
@@ -25,10 +33,12 @@ const TaskHeader = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: 1,
         }}
       >
-        <Box sx={{ display: "flex", gap: "6px", alignItems: "center" }}>
-          <Typography sx={{ fontWeight: "bold" }}>Tasks</Typography>
+        <Box sx={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+          <Typography sx={{ fontWeight: "bold", fontSize: { xs: "18px", sm: "22px" } }}>Tasks</Typography>
           <IconButton
             size="small"
             onClick={onClickAddButton}
@@ -39,7 +49,7 @@ const TaskHeader = ({
           >
             <PlusIcon />
           </IconButton>
-          {onClickAddDrawing && (
+          {onClickAddDrawing && !isMobile && (
             <Button
               variant="outlined"
               size="small"
@@ -54,15 +64,15 @@ const TaskHeader = ({
             </Button>
           )}
         </Box>
-        <Box sx={{ display: "flex", gap: "16px" }}>
-          {ViewButtonOptions.map((option) => (
+        <Box sx={{ display: "flex", gap: { xs: "8px", sm: "16px" }, alignItems: "center" }}>
+          {availableViewOptions.map((option) => (
             <Box
               key={option.key}
               onClick={() => onChangeViewOptions(option.key)}
               sx={{
                 backgroundColor: "background.paper",
                 borderRadius: "14px",
-                padding: "12px",
+                padding: { xs: "8px", sm: "12px" },
                 display: "flex",
                 cursor: "pointer",
               }}
@@ -74,23 +84,24 @@ const TaskHeader = ({
                     currentViewOption === option.key 
                       ? theme.palette.primary.main 
                       : theme.palette.text.primary,
+                  fontSize: { xs: "20px", sm: "24px" },
                 })}
               />
             </Box>
           ))}
-        </Box>
-        <Box
-          onClick={onClickFilterShow}
-          sx={(theme) => ({
-            background: theme.palette.background.paper,
-            boxShadow: theme.shadows[1],
-            borderRadius: "14px",
-            padding: "12px",
-            display: "flex",
-            cursor: "pointer",
-          })}
-        >
-          <SvgIcon component={FilterIcon} />
+          <Box
+            onClick={onClickFilterShow}
+            sx={(theme) => ({
+              background: theme.palette.background.paper,
+              boxShadow: theme.shadows[1],
+              borderRadius: "14px",
+              padding: { xs: "8px", sm: "12px" },
+              display: "flex",
+              cursor: "pointer",
+            })}
+          >
+            <SvgIcon component={FilterIcon} sx={{ fontSize: { xs: "20px", sm: "24px" } }} />
+          </Box>
         </Box>
       </Box>
       

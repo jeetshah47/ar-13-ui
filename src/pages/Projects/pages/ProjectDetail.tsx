@@ -1,4 +1,4 @@
-import { Box, Link, SvgIcon, Typography } from "@mui/material";
+import { Box, Link, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
 import LeftIcon from "../../../assets/icons/general/left.svg?react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router";
@@ -14,12 +14,19 @@ import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import TaskDetailsHeader, { TaskDetailsContent } from "../components/TaskDetailsHeader";
 import FileAttachmentsSection from "../components/FileAttachmentsSection";
 import ActivityLogsSection from "../components/ActivityLogsSection";
+import TimeTrackingSection from "../components/TimeTrackingSection";
 import Modal from "../../../common/components/Modal/Modal";
 import { parseFirebaseTimestamp, isImageAttachment } from "../utils/taskUtils";
 import { getActivityIcon } from "../utils/activityLogUtils";
 import { getUsersAction } from "../../../store/features/user/userAction";
+import { SERVER_BASE_URL } from "../../../config/api";
+import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
+import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
+import { convertActivityLogItemsToLegacy } from "../utils/activityLogConverter";
 
 const ProjectDetail = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { taskId, projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +35,10 @@ const ProjectDetail = () => {
 
   const projectDetailState = useAppSelector(
     (state: RootState) => state.projectDetailReducer
+  );
+
+  const activityLogsState = useAppSelector(
+    (state: RootState) => state.activityLogsReducer.api
   );
 
   const taskListState = useAppSelector(
@@ -41,20 +52,38 @@ const ProjectDetail = () => {
   const { taskDetails, projectDetails } = projectDetailState.api.data;
   const { loading, error } = projectDetailState.api;
   const { currentStatus } = projectDetailState.common;
-  const { activityLogs } = taskListState.data;
-  const { loading: taskListLoading } = taskListState;
-  const claimTaskLoading = taskListState.loading;
-  const claimTaskError = taskListState.error;
+  const { items: activityLogItems } = activityLogsState.data;
+  const { loading: activityLogsLoading } = activityLogsState;
+  const { loading: claimTaskLoading } = taskListState;
   const { users } = userState;
 
   // Get file attachments from task details
   const fileAttachments = taskDetails?.fileAttachments || [];
 
+  // Calculate time logged from timeSpent entries
+  const calculateTimeLogged = (timeSpent?: Array<{ timeSpent: number }>) => {
+    if (!timeSpent || timeSpent.length === 0) {
+      return "0h 0m logged";
+    }
+    const totalMinutes = timeSpent.reduce((sum, entry) => sum + (entry.timeSpent || 0), 0);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (parts.length === 0) return "0h 0m logged";
+    return `${parts.join(" ")} logged`;
+  };
+
+  const timeLogged = calculateTimeLogged(taskDetails?.timeSpent);
+
   // Modal states
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
-  const [wasClaiming, setWasClaiming] = useState(false);
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
 
 
@@ -72,11 +101,22 @@ const ProjectDetail = () => {
     }
   }, [taskId, projectId, dispatch]);
 
-  // Map activity logs with user names from store
+  // Fetch activity logs for the task using the new centralized API
+  useEffect(() => {
+    if (taskId) {
+      dispatch(fetchActivityLogsByEntity("task", taskId));
+    }
+  }, [taskId, dispatch]);
+
+  // Convert new ActivityLogItem format to legacy ActivityLog format for backward compatibility
   const mappedActivityLogs = useMemo(() => {
-    if (!activityLogs || activityLogs.length === 0) return activityLogs || [];
+    if (!activityLogItems || activityLogItems.length === 0) return [];
     
-    return activityLogs.map((log: ActivityLog) => {
+    // Convert to legacy format
+    const legacyLogs = convertActivityLogItemsToLegacy(activityLogItems);
+    
+    // Map with user names from store (for any missing user info)
+    return legacyLogs.map((log: ActivityLog) => {
       // If userName is already a proper name (not a user ID), return as is
       if (log.userName && log.userName !== log.userId && log.userName !== "Unknown User") {
         return log;
@@ -93,7 +133,7 @@ const ProjectDetail = () => {
       
       return log;
     });
-  }, [activityLogs, users]);
+  }, [activityLogItems, users]);
 
   // TODO: Replace with backend API polling or WebSocket for real-time activity logs
   // Real-time activity logs subscription removed (Firebase dependency)
@@ -101,7 +141,7 @@ const ProjectDetail = () => {
 
   // Scroll to activity log when hash is present in URL
   useEffect(() => {
-    if (!location.hash || !activityLogs || activityLogs.length === 0) return;
+    if (!location.hash || !mappedActivityLogs || mappedActivityLogs.length === 0) return;
 
     const activityLogId = location.hash.replace("#activity-", "");
 
@@ -156,20 +196,17 @@ const ProjectDetail = () => {
 
     const timeoutId = setTimeout(scrollToActivity, 500);
     return () => clearTimeout(timeoutId);
-  }, [location.hash, activityLogs]);
+  }, [location.hash, mappedActivityLogs]);
 
   // Close modal after successful claim
   useEffect(() => {
-    if (wasClaiming && !claimTaskLoading && !claimTaskError && showClaimTaskModal) {
-      setWasClaiming(false);
-      if (taskId && projectId) {
-        dispatch(fetchProjectDetailAction(taskId, projectId));
-      }
+    if (!claimTaskLoading && showClaimTaskModal && taskId && projectId) {
+      // Refresh task details and activity logs after successful claim
+      dispatch(fetchProjectDetailAction(taskId, projectId));
+      dispatch(fetchActivityLogsByEntity("task", taskId));
       setShowClaimTaskModal(false);
-    } else if (wasClaiming && !claimTaskLoading && claimTaskError) {
-      setWasClaiming(false);
     }
-  }, [claimTaskLoading, claimTaskError, wasClaiming, showClaimTaskModal, taskId, projectId, dispatch]);
+  }, [claimTaskLoading, showClaimTaskModal, taskId, projectId, dispatch]);
 
   // Handlers
   const handleStatusUpdate = async (newStatus: string) => {
@@ -186,7 +223,6 @@ const ProjectDetail = () => {
 
   const handleApproveClaim = () => {
     if (taskId && projectId) {
-      setWasClaiming(true);
       dispatch(claimTaskAction(projectId, taskId));
     }
   };
@@ -231,42 +267,85 @@ const ProjectDetail = () => {
   }
 
   return (
-    <Box sx={{ height: "100%" }}>
+    <Box sx={{ 
+      height: { xs: "auto", sm: "100%" }, 
+      padding: { xs: "10px", sm: 0 },
+      minHeight: { xs: "100vh", sm: "auto" },
+      pb: { xs: "20px", sm: 0 },
+      width: "100%",
+      maxWidth: "100%",
+      overflowX: "hidden",
+      boxSizing: "border-box",
+    }}>
       <Link
-        sx={{ alignItems: "center", display: "flex", cursor: "pointer" }}
+        sx={{ 
+          alignItems: "center", 
+          display: "flex", 
+          cursor: "pointer",
+          fontSize: { xs: "14px", sm: "16px" },
+          mb: { xs: "14px", sm: 0 },
+          paddingLeft: { xs: "10px", sm: 0 },
+        }}
         onClick={() => navigate("/app/projects")}
       >
-        <SvgIcon component={LeftIcon} /> Back to Projects
+        <SvgIcon sx={{ fontSize: { xs: "20px", sm: "24px" }, mr: { xs: "8px", sm: "4px" } }} component={LeftIcon} /> Back to Projects
       </Link>
       <Box
         sx={{
-          paddingTop: "28px",
+          paddingTop: { xs: "0px", sm: "28px" },
           display: "flex",
-          gap: "28px",
-          height: "calc(100vh - 100px)",
-          minHeight: 0,
+          gap: { xs: "10px", sm: "28px" },
+          height: { xs: "auto", sm: "calc(100vh - 100px)" },
+          minHeight: { xs: "auto", sm: 0 },
+          flexDirection: { xs: "column", sm: "row" },
         }}
       >
         {/* Project Info Sidebar */}
-        <ProjectInfoSidebar
-          projectTitle={projectDetails?.title}
-          projectDescription={projectDetails?.description}
-          reporter={projectDetails?.reporter}
-          assignes={projectDetails?.assignes}
-          priority={projectDetails?.priority}
-          deadline={projectDetails?.deadline}
-        />
+        {!isMobile && (
+          <ProjectInfoSidebar
+            projectTitle={projectDetails?.title}
+            projectDescription={projectDetails?.description}
+            reporter={projectDetails?.reporter}
+            assignes={projectDetails?.assignes}
+            priority={projectDetails?.priority}
+            deadline={projectDetails?.deadline}
+          />
+        )}
 
         {/* Main Content Area */}
-        <Box sx={{ width: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-          <TaskDetailsHeader onEditClick={handleOpenEditTask} />
+        <Box sx={{ 
+          width: "100%", 
+          maxWidth: "100%",
+          display: "flex", 
+          flexDirection: "column", 
+          minHeight: 0, 
+          flex: 1,
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        }}>
+          {/* Mobile: Show Project Info at top */}
+          {isMobile && (
+            <Box sx={{ mb: "10px" }}>
+              <ProjectInfoSidebar
+                projectTitle={projectDetails?.title}
+                projectDescription={projectDetails?.description}
+                reporter={projectDetails?.reporter}
+                assignes={projectDetails?.assignes}
+                priority={projectDetails?.priority}
+                deadline={projectDetails?.deadline}
+              />
+            </Box>
+          )}
+          <Box sx={{ mb: { xs: "10px", sm: 0 } }}>
+            <TaskDetailsHeader onEditClick={handleOpenEditTask} />
+          </Box>
           <TaskDetailsContent
             taskCode={taskDetails?.code}
             taskSubject={taskDetails?.subject}
             currentStatus={currentStatus}
             onStatusChange={handleStatusUpdate}
             onClaimTaskClick={handleOpenClaimTask}
-            project={projectDetails as any}
+            project={projectDetails as ProjectResponse}
           >
             {/* File Attachments Section */}
             <FileAttachmentsSection
@@ -278,10 +357,22 @@ const ProjectDetail = () => {
               isImageAttachment={isImageAttachment}
             />
 
+            {/* Time Tracking Section - Mobile only */}
+            {isMobile && (
+              <TimeTrackingSection
+                timeLogged={timeLogged}
+                originalEstimate="Original Estimate 3d 8h"
+                projectId={projectId}
+                taskId={taskId}
+                task={taskDetails}
+                progress={taskDetails?.progress ?? null}
+              />
+            )}
+
             {/* Activity Logs Section */}
             <ActivityLogsSection
               activityLogs={mappedActivityLogs}
-              loading={taskListLoading}
+              loading={activityLogsLoading}
               getActivityIcon={getActivityIcon}
               parseFirebaseTimestamp={parseFirebaseTimestamp}
               activityLogsRef={activityLogsRef}
@@ -290,37 +381,39 @@ const ProjectDetail = () => {
         </Box>
 
         {/* Task Info Sidebar */}
-        <TaskInfo
-          reporter={
-            projectDetails?.reporter
-              ? {
-                  name: projectDetails.reporter.name || "Unknown Reporter",
-                  avatar: projectDetails.reporter.avatar,
-                }
-              : undefined
-          }
-          assigned={
-            taskDetails?.assignDetails && taskDetails.assignDetails.length > 0
-              ? {
-                  name: taskDetails.assignDetails[0].name || "Unknown Assignee",
-                }
-              : undefined
-          }
-          priority={taskDetails?.priority || "Medium"}
-          deadline={
-            taskDetails?.deadline
-              ? new Date(taskDetails.deadline).toLocaleDateString()
-              : "No deadline set"
-          }
-          timeLogged="1d 3h 25m logged"
-          originalEstimate="Original Estimate 3d 8h"
-          projectId={projectId}
-          taskId={taskId}
-          task={taskDetails}
-          onLogTime={() => {
-            // TODO: Implement log time functionality
-          }}
-        />
+        {!isMobile && (
+          <TaskInfo
+            reporter={
+              projectDetails?.reporter
+                ? {
+                    name: projectDetails.reporter.name || "Unknown Reporter",
+                    avatar: projectDetails.reporter.avatar,
+                  }
+                : undefined
+            }
+            assigned={
+              taskDetails?.assignDetails && taskDetails.assignDetails.length > 0
+                ? {
+                    name: taskDetails.assignDetails[0].name || "Unknown Assignee",
+                  }
+                : undefined
+            }
+            priority={taskDetails?.priority || "Medium"}
+            deadline={
+              taskDetails?.deadline
+                ? new Date(taskDetails.deadline).toLocaleDateString()
+                : "No deadline set"
+            }
+            timeLogged="1d 3h 25m logged"
+            originalEstimate="Original Estimate 3d 8h"
+            projectId={projectId}
+            taskId={taskId}
+            task={taskDetails}
+            onLogTime={() => {
+              // TODO: Implement log time functionality
+            }}
+          />
+        )}
       </Box>
 
       {/* Modals */}
@@ -396,7 +489,7 @@ const ProjectDetail = () => {
             </Box>
             <Box
               component="img"
-              src={`http://localhost:3000${previewImage.fileUrl}`}
+              src={`${SERVER_BASE_URL}${previewImage.fileUrl}`}
               alt={previewImage.originalName}
               sx={{
                 maxWidth: "100%",

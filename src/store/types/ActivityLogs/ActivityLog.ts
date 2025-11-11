@@ -44,4 +44,8 @@ export interface ActivityLogsState {
   };
 }
 
+export interface EntityTypesResponse {
+  entityTypes: EntityType[];
+}
+
 

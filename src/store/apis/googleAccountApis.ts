@@ -1,4 +1,5 @@
 import { http } from "../../config/http";
+import { API_BASE_URL } from "../../config/api";
 import type {
   LinkGoogleAccountRequest,
   LinkGoogleAccountResponse,
@@ -7,7 +8,7 @@ import type {
   GetAllLinkedAccountsResponse,
 } from "../types/GoogleAccount/GoogleAccountTypes";
 
-const BASE_URL = "http://localhost:3000/api/google-account";
+const BASE_URL = `${API_BASE_URL}/google-account`;
 
 export interface InitiateOAuthResponse {
   authUrl: string;

@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ActivityLogItem from "./ActivityLogItem";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
 
@@ -19,18 +19,35 @@ const ActivityLogsSection = ({
   parseFirebaseTimestamp,
   activityLogsRef,
 }: ActivityLogsSectionProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
         borderTop: "1px solid #E4E6E8",
-        marginTop: "16px",
-        paddingTop: "28px",
+        marginTop: { xs: "16px", sm: "16px" },
+        paddingTop: { xs: "20px", sm: "28px" },
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+        boxSizing: "border-box",
       }}
     >
-      <Typography fontWeight={700}>Recent Activity</Typography>
+      <Typography 
+        fontWeight={700}
+        sx={{ 
+          fontSize: { xs: "16px", sm: "18px" },
+          mb: { xs: "12px", sm: "16px" },
+        }}
+      >
+        Recent Activity
+      </Typography>
       {activityLogs === undefined || (activityLogs.length === 0 && loading) ? (
-        <Box sx={{ padding: "20px", textAlign: "center" }}>
-          <Typography>Loading activity logs...</Typography>
+        <Box sx={{ padding: { xs: "16px", sm: "20px" }, textAlign: "center" }}>
+          <Typography sx={{ fontSize: { xs: "14px", sm: "16px" } }}>
+            Loading activity logs...
+          </Typography>
         </Box>
       ) : activityLogs && activityLogs.length > 0 ? (
         <Box>
@@ -68,8 +85,13 @@ const ActivityLogsSection = ({
           })}
         </Box>
       ) : (
-        <Box sx={{ padding: "20px", textAlign: "center" }}>
-          <Typography color="secondary.main">No recent activity</Typography>
+        <Box sx={{ padding: { xs: "16px", sm: "20px" }, textAlign: "center" }}>
+          <Typography 
+            color="secondary.main"
+            sx={{ fontSize: { xs: "14px", sm: "16px" } }}
+          >
+            No recent activity
+          </Typography>
         </Box>
       )}
     </Box>

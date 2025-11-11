@@ -1,4 +1,5 @@
-import { Box, Button, SvgIcon, Typography, type Theme } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, type Theme, useMediaQuery, useTheme, FormControl, Select, MenuItem, OutlinedInput, InputLabel } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
 import Modal from "../../../common/components/Modal/Modal";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
@@ -31,6 +32,8 @@ const getActiveCardStyles = (theme: Theme) => ({
 });
 
 const ProjectList = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [currentView, setCurrentView] = useState(ViewButtonOptions[0].key);
   const [showModal, setShowModal] = useState(false);
   const [showDrawingModal, setShowDrawingModal] = useState(false);
@@ -58,6 +61,10 @@ const ProjectList = () => {
         variant="contained"
         startIcon={<SvgIcon component={PlusIcon} />}
         onClick={handleAddProject}
+        size={isMobile ? "small" : "medium"}
+        sx={{
+          fontSize: { xs: "12px", sm: "14px" },
+        }}
       >
         Add Project
       </Button>
@@ -96,6 +103,13 @@ const ProjectList = () => {
     dispatch(updateSelectedProjectId(projectId));
   };
 
+  const handleProjectSelectChange = (event: SelectChangeEvent<string>) => {
+    const projectId = event.target.value;
+    if (projectId) {
+      handleSelectCurrentProjectId(projectId);
+    }
+  };
+
   // Auto-select first project if none is selected
   useEffect(() => {
     const projects = projectListState.api.data.projects;
@@ -114,82 +128,132 @@ const ProjectList = () => {
     }
   }, [dispatch, projectListState.common.selectedProjectId]);
 
+  // Force list view on mobile
+  useEffect(() => {
+    if (isMobile && currentView !== "list") {
+      setCurrentView("list");
+    }
+  }, [isMobile, currentView]);
+
+  const ProjectSidebar = (
+    <Box
+      sx={(theme) => ({
+        width: { xs: "100%", sm: "15%" },
+        background: theme.palette.background.paper,
+        borderRadius: "24px",
+        boxShadow: theme.shadows[1],
+        overflow: "auto",
+        scrollBehavior: "smooth",
+        WebkitOverflowScrolling: "touch",
+        height: { xs: "100%", sm: "auto" },
+        "::-webkit-scrollbar": {
+          width: "3px",
+        },
+        "::-webkit-scrollbar-thumb": {
+          background: theme.palette.mode === "dark" ? theme.palette.grey[500] : "#e1dcdc",
+          borderRadius: "10px",
+        },
+        cursor: "pointer",
+      })}
+    >
+      <Box sx={{ 
+        padding: { xs: "16px", sm: "20px 22px" }, 
+        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+      }}>
+        <Typography sx={{ fontWeight: "bold", fontSize: { xs: "16px", sm: "18px" } }}>
+          Current Projects
+        </Typography>
+      </Box>
+      <Box>
+        {projectListState.api.data.projects.map((project) => (
+          <Box
+            onClick={() => handleSelectCurrentProjectId(project.id)}
+            key={project.id}
+            sx={(theme) =>
+              projectListState.common.selectedProjectId === project.id
+                ? getActiveCardStyles(theme)
+                : { padding: { xs: "12px", sm: "8px" } }
+            }
+          >
+            <Typography color="secondary" sx={{ fontSize: { xs: "12px", sm: "14px" } }}>PN0001245</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold", fontSize: { xs: "14px", sm: "16px" } }}>
+              {project.title}
+            </Typography>
+            <Typography
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOnClickDetails();
+              }}
+              color="primary"
+              sx={{
+                fontWeight: "600",
+                cursor: "pointer",
+                width: "fit-content",
+                fontSize: { xs: "12px", sm: "14px" },
+                ":hover": { textDecoration: "underline" },
+              }}
+            >
+              View Details
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Projects" endElement={AddButton} />
       <Box
         sx={{
-          paddingTop: "28px",
+          paddingTop: { xs: "16px", sm: "28px" },
           display: "flex",
-          gap: "28px",
+          gap: { xs: "16px", sm: "28px" },
           height: "100%",
+          flexDirection: { xs: "column", sm: "row" },
         }}
       >
-        <Box
-          sx={(theme) => ({
-            width: "15%",
-            background: theme.palette.background.paper,
-            borderRadius: "24px",
-            boxShadow: theme.shadows[1],
-            overflow: "auto",
-            scrollBehavior: "smooth",
-            WebkitOverflowScrolling: "touch",
-            "::-webkit-scrollbar": {
-              width: "3px",
-            },
-            "::-webkit-scrollbar-thumb": {
-              background: theme.palette.mode === "dark" ? theme.palette.grey[500] : "#e1dcdc",
-              borderRadius: "10px",
-            },
-            cursor: "pointer",
-          })}
-        >
-          <Box sx={{ padding: "20px 22px", borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-            <Typography sx={{ fontWeight: "bold" }}>
-              Current Projects
-            </Typography>
-          </Box>
-          <Box>
-            {projectListState.api.data.projects.map((project) => (
-              <Box
-                onClick={() => handleSelectCurrentProjectId(project.id)}
-                key={project.id}
-                sx={(theme) =>
-                  projectListState.common.selectedProjectId === project.id
-                    ? getActiveCardStyles(theme)
-                    : { padding: "8px" }
-                }
-              >
-                <Typography color="secondary">PN0001245</Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  {project.title}
-                </Typography>
-                <Typography
-                  onClick={handleOnClickDetails}
-                  color="primary"
-                  sx={{
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    width: "fit-content",
-                    ":hover": { textDecoration: "underline" },
-                  }}
-                >
-                  View Details
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-        <Box sx={{ width: "80%" }}>
+        {/* Desktop Sidebar */}
+        {!isMobile && ProjectSidebar}
+
+        {/* Main Content Area */}
+        <Box sx={{ width: { xs: "100%", sm: "80%" }, flex: 1 }}>
           <>
+            {/* Mobile: Show project selector dropdown */}
+            {isMobile && (
+              <Box sx={{ mb: 2 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Select Project</InputLabel>
+                  <Select
+                    value={projectListState.common.selectedProjectId || ""}
+                    onChange={handleProjectSelectChange}
+                    input={<OutlinedInput label="Select Project" />}
+                    sx={{
+                      borderRadius: "14px",
+                      backgroundColor: "background.paper",
+                    }}
+                  >
+                    {projectListState.api.data.projects.map((project) => (
+                      <MenuItem key={project.id} value={project.id}>
+                        {project.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            )}
             <TaskHeader
               currentViewOption={currentView}
-              onChangeViewOptions={(view) => setCurrentView(view)}
+              onChangeViewOptions={(view) => {
+                // Prevent changing to tile/timeline on mobile
+                if (isMobile && view !== "list") return;
+                setCurrentView(view);
+              }}
               onClickAddButton={handleShowModal}
               onClickAddDrawing={handleShowDrawingModal}
               onClickFilterShow={handleShowFilterModal}
             />
-            <Box sx={{ paddingTop: "5px" }}>
+            <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
               {projectListState.common.selectedProjectId && 
                (!taskListState?.data?.tasks || taskListState.data.tasks.length === 0) ? (
                 <NoTaskMessage />
@@ -198,8 +262,8 @@ const ProjectList = () => {
                   {currentView === "list" && (
                     <ListView tasks={taskListState?.data?.tasks} />
                   )}
-                  {currentView === "tile" && <TileView />}
-                  {currentView === "time" && <TimelineView />}
+                  {!isMobile && currentView === "tile" && <TileView />}
+                  {!isMobile && currentView === "time" && <TimelineView />}
                 </>
               )}
             </Box>

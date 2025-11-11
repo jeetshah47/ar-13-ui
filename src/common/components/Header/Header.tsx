@@ -24,21 +24,23 @@ const Header = () => {
         display: "flex",
         width: "100%",
         justifyContent: "flex-end",
+        marginBottom: { xs: "8px", sm: "12px", md: "16px" },
       }}
     >
       <Box
         sx={{
           display: "flex",
-          gap: "24px",
+          gap: { xs: "12px", sm: "16px", md: "24px" },
           alignItems: "center",
-          paddingRight: "36px",
+          paddingRight: { xs: "8px", sm: "16px", md: "36px" },
+          flexWrap: "wrap",
         }}
       >
         <ThemeToggle />
         <Paper
           elevation={0}
           sx={{
-            padding: "6px",
+            padding: { xs: "4px", sm: "6px" },
             display: "flex",
             justifyContent: "center",
             alignContent: "center",
@@ -58,18 +60,29 @@ const Header = () => {
               "& .MuiBadge-badge": {
                 backgroundColor: "#EF4444",
                 color: "white",
-                fontSize: "10px",
+                fontSize: { xs: "9px", sm: "10px" },
                 fontWeight: 600,
-                minWidth: "18px",
-                height: "18px",
-                borderRadius: "9px",
+                minWidth: { xs: "16px", sm: "18px" },
+                height: { xs: "16px", sm: "18px" },
+                borderRadius: { xs: "8px", sm: "9px" },
               },
             }}
           >
-            <SvgIcon component={BellIcon} />
+            <SvgIcon 
+              component={BellIcon} 
+              sx={{ fontSize: { xs: "20px", sm: "24px" } }}
+            />
           </Badge>
         </Paper>
-        <Paper elevation={0} sx={{ display: "flex"}}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            display: "flex",
+            "& > *": {
+              fontSize: { xs: "12px", sm: "14px" }
+            }
+          }}
+        >
           <ProfileMenu />
         </Paper>
       </Box>

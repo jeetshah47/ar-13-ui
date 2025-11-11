@@ -6,10 +6,11 @@ import {
   NotificationType, 
   RelatedEntityType 
 } from './types';
+import { API_BASE_URL } from '../../config/api';
 
 // Real API service - connects to actual backend
 class NotificationAPIService {
-  private baseUrl = 'http://localhost:3000/api/notifications';
+  private baseUrl = `${API_BASE_URL}/notifications`;
   private authToken: string | null = null;
 
   setAuthToken(token: string) {
