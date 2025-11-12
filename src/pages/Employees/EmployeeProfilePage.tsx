@@ -5,6 +5,8 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import Tab from "../../common/components/Tab/Tab";
@@ -34,6 +36,8 @@ const EmployeeProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const [currentTab, setCurrentTab] = useState("Projects");
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   
   const { selectedEmployee, loading, error } = useAppSelector(
     (state) => state.employeeReducer
@@ -90,46 +94,47 @@ const EmployeeProfilePage = () => {
       <PageHeader title={`${displayName}'s Profile`} />
       <Box
         sx={{
-          padding: "28px 0px",
+          padding: { xs: "10px", sm: "20px", md: "28px 0px" },
           display: "flex",
-          gap: "16px",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: "16px", md: "16px" },
           height: "100%",
         }}
       >
         <Box
           sx={(theme) => ({
-            width: "264px",
-            height: "100%",
+            width: { xs: "100%", md: "264px" },
+            height: { xs: "auto", md: "100%" },
             backgroundColor: theme.palette.background.paper,
-            borderRadius: "24px",
-            padding: "24px 18px",
+            borderRadius: { xs: "24px", md: "24px" },
+            padding: { xs: "20px 18px", md: "24px 18px" },
             boxShadow: theme.shadows[1],
           })}
         >
           <Avatar 
             sx={(theme) => ({ 
-              width: "64px", 
-              height: "64px",
+              width: { xs: "64px", md: "64px" }, 
+              height: { xs: "64px", md: "64px" },
               bgcolor: theme.palette.grey[300],
               color: theme.palette.text.secondary,
-              fontSize: "24px",
+              fontSize: { xs: "24px", md: "24px" },
               fontWeight: "bold",
             })}
           >
             {avatarInitials}
           </Avatar>
-          <Typography fontWeight={700} fontSize={"18px"}>
+          <Typography fontWeight={700} fontSize={{ xs: "18px", md: "18px" }} sx={{ mt: { xs: 1, md: 0 } }}>
             {displayName}
           </Typography>
-          <Typography fontSize={"14px"} color="secondary.main">
+          <Typography fontSize={{ xs: "14px", md: "14px" }} color="secondary.main">
             {displayDesignation}
           </Typography>
-          <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: "26px" })}>
-            <Typography fontWeight={700}>Main Info</Typography>
+          <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: { xs: "20px", md: "26px" }, mt: { xs: "20px", md: 0 } })}>
+            <Typography fontWeight={700} fontSize={{ xs: "16px", md: "18px" }}>Main Info</Typography>
             <Box sx={{ width: "100%", paddingTop: "10px" }}>
               <Typography
                 color="secondary"
-                sx={{ fontWeight: "bold", fontSize: "14px" }}
+                sx={{ fontWeight: "bold", fontSize: { xs: "13px", md: "14px" } }}
               >
                 Position
               </Typography>
@@ -138,12 +143,13 @@ const EmployeeProfilePage = () => {
                 placeholder="Enter Position Name"
                 value={displayDesignation}
                 InputProps={{ readOnly: true }}
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
             <Box sx={{ width: "100%", paddingTop: "10px" }}>
               <Typography
                 color="secondary"
-                sx={{ fontWeight: "bold", fontSize: "14px" }}
+                sx={{ fontWeight: "bold", fontSize: { xs: "13px", md: "14px" } }}
               >
                 Role
               </Typography>
@@ -151,13 +157,14 @@ const EmployeeProfilePage = () => {
                 sx={{ width: "100%", paddingTop: "7px" }}
                 value={selectedEmployee.role}
                 InputProps={{ readOnly: true }}
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
-            <Typography fontWeight={700} sx={{ marginTop: "20px" }}>Contact Info</Typography>
+            <Typography fontWeight={700} fontSize={{ xs: "16px", md: "18px" }} sx={{ marginTop: { xs: "16px", md: "20px" } }}>Contact Info</Typography>
             <Box sx={{ width: "100%", paddingTop: "10px" }}>
               <Typography
                 color="secondary"
-                sx={{ fontWeight: "bold", fontSize: "14px" }}
+                sx={{ fontWeight: "bold", fontSize: { xs: "13px", md: "14px" } }}
               >
                 Email
               </Typography>
@@ -166,39 +173,40 @@ const EmployeeProfilePage = () => {
                 placeholder="Enter Email"
                 value={displayEmail}
                 InputProps={{ readOnly: true }}
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
           </Box>
-          <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: "26px", marginTop: "20px" })}>
-            <Typography fontWeight={700} sx={{ marginBottom: "16px" }}>Task Statistics</Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: { xs: "20px", md: "26px" }, marginTop: { xs: "16px", md: "20px" } })}>
+            <Typography fontWeight={700} fontSize={{ xs: "16px", md: "18px" }} sx={{ marginBottom: { xs: "12px", md: "16px" } }}>Task Statistics</Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "10px", md: "12px" } }}>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography color="secondary" fontSize={"14px"}>To Do</Typography>
-                <Typography fontWeight={600} color="warning.main">{selectedEmployee.backlogTasks}</Typography>
+                <Typography color="secondary" fontSize={{ xs: "13px", md: "14px" }}>To Do</Typography>
+                <Typography fontWeight={600} color="warning.main" fontSize={{ xs: "13px", md: "14px" }}>{selectedEmployee.backlogTasks}</Typography>
               </Box>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography color="secondary" fontSize={"14px"}>In Progress</Typography>
-                <Typography fontWeight={600} color="info.main">{selectedEmployee.tasksInProgress}</Typography>
+                <Typography color="secondary" fontSize={{ xs: "13px", md: "14px" }}>In Progress</Typography>
+                <Typography fontWeight={600} color="info.main" fontSize={{ xs: "13px", md: "14px" }}>{selectedEmployee.tasksInProgress}</Typography>
               </Box>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography color="secondary" fontSize={"14px"}>In Review</Typography>
-                <Typography fontWeight={600} color="success.main">{selectedEmployee.tasksInReview}</Typography>
+                <Typography color="secondary" fontSize={{ xs: "13px", md: "14px" }}>In Review</Typography>
+                <Typography fontWeight={600} color="success.main" fontSize={{ xs: "13px", md: "14px" }}>{selectedEmployee.tasksInReview}</Typography>
               </Box>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography color="secondary" fontSize={"14px"}>Pending</Typography>
-                <Typography fontWeight={600} color="text.secondary">{selectedEmployee.pendingTasks}</Typography>
+                <Typography color="secondary" fontSize={{ xs: "13px", md: "14px" }}>Pending</Typography>
+                <Typography fontWeight={600} color="text.secondary" fontSize={{ xs: "13px", md: "14px" }}>{selectedEmployee.pendingTasks}</Typography>
               </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", borderTop: (theme) => `1px solid ${theme.palette.divider}` }}>
-                <Typography color="secondary" fontSize={"14px"} fontWeight={600}>Total</Typography>
-                <Typography fontWeight={700} fontSize={"16px"}>{selectedEmployee.totalTasks}</Typography>
+              <Box sx={{ display: "flex", justifyContent: "space-between", paddingTop: { xs: "6px", md: "8px" }, borderTop: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <Typography color="secondary" fontSize={{ xs: "13px", md: "14px" }} fontWeight={600}>Total</Typography>
+                <Typography fontWeight={700} fontSize={{ xs: "15px", md: "16px" }}>{selectedEmployee.totalTasks}</Typography>
               </Box>
             </Box>
           </Box>
         </Box>
         <Box
           sx={{
-            borderRadius: "24px",
-            padding: "24px 18px",
+            borderRadius: { xs: "24px", md: "24px" },
+            padding: { xs: "16px 12px", sm: "20px 16px", md: "24px 18px" },
             width: "100%",
           }}
         >
@@ -207,9 +215,11 @@ const EmployeeProfilePage = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              flexWrap: { xs: "wrap", md: "nowrap" },
+              gap: { xs: "12px", md: 0 },
             }}
           >
-            <Box sx={{ width: "50%" }}>
+            <Box sx={{ width: { xs: "100%", md: "50%" } }}>
               <Tab
                 tabList={tabList}
                 currentTab={currentTab}

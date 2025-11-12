@@ -1,16 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import AttachmentIcon from "../../../assets/icons/general/attach/dark.svg?react";
 import { SvgIcon } from "@mui/material";
-
-interface Attachment {
-  id: string;
-  name: string;
-  date: string;
-  imageUrl: string;
-}
+import type { AttachmentResponse } from "../../../store/types/InfoPortal/AttachmentResponse";
 
 interface AttachmentCardProps {
-  attachment: Attachment;
+  attachment: AttachmentResponse;
 }
 
 const AttachmentCard = ({ attachment }: AttachmentCardProps) => {

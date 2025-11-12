@@ -116,6 +116,10 @@ const VacationPage = () => {
         variant="contained" 
         startIcon={<SvgIcon component={PlusIcon} />}
         onClick={handleOpenModal}
+        sx={{
+          width: { xs: "100%", md: "auto" },
+          mt: { xs: 1, md: 0 }
+        }}
       >
         Add Request
       </Button>
@@ -126,8 +130,15 @@ const VacationPage = () => {
       <PageHeader
         title="Vacations"
         endElement={
-          <>
-            <Box sx={{width: "40%"}}>
+          <Box sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: "12px", md: "16px" },
+            width: { xs: "100%", md: "auto" },
+            alignItems: { xs: "stretch", md: "center" },
+            flex: { xs: "1 1 100%", md: "0 0 auto" }
+          }}>
+            <Box sx={{ width: { xs: "100%", md: "auto" }, minWidth: { md: "300px" } }}>
               <Tab
                 tabList={tabList}
                 currentTab={currentTab}
@@ -135,13 +146,13 @@ const VacationPage = () => {
               />
             </Box>
             {AddButton}
-          </>
+          </Box>
         }
       />
       {currentTab === "Vacation Requests" && isAdmin() && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "20px", md: "28px 0px" },
           }}
         >
           {(loading || usersLoading) && (
@@ -188,7 +199,7 @@ const VacationPage = () => {
       {currentTab === "Employee's Vacations" && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "20px", md: "28px 0px" },
           }}
         >
           {(loading || usersLoading) && (
@@ -227,8 +238,9 @@ const VacationPage = () => {
       {currentTab === "Calendar" && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "20px", md: "28px 0px" },
             width: "100%",
+            display: { xs: "none", md: "block" },
           }}
         >
           <VacationsCalender />

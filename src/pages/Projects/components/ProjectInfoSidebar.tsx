@@ -19,6 +19,7 @@ interface ProjectInfoSidebarProps {
   }>;
   priority?: string;
   deadline?: string;
+  timeSpent?: string | null;
 }
 
 const ProjectInfoSidebar = ({
@@ -28,6 +29,7 @@ const ProjectInfoSidebar = ({
   assignes,
   priority,
   deadline,
+  timeSpent,
 }: ProjectInfoSidebarProps) => {
   return (
     <Box
@@ -101,6 +103,12 @@ const ProjectInfoSidebar = ({
             {deadline ? new Date(deadline).toLocaleDateString() : "No deadline set"}
           </Typography>
         </Box>
+        {timeSpent && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Time Spent</Typography>
+            <Typography>{timeSpent}</Typography>
+          </Box>
+        )}
         <Box
           sx={{
             paddingTop: "10px",

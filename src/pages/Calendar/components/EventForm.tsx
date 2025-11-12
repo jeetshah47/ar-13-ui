@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent, Autocomplete } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import { IOSSwitch } from "../../../common/components/Switch/IOSswitch";
 import { useEffect, useState } from "react";
@@ -18,8 +18,6 @@ type EventFormProps = {
 };
 
 const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.calendarReducer.api);
   const uid = useAppSelector((state) => state.authReducer.api.uid);
@@ -43,11 +41,13 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     addToGoogleCalendar: false,
     eventType: "offline",
     invitedMemberIds: [],
+    invites: [],
     duration: undefined,
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("daily");
+  const [externalInviteEmail, setExternalInviteEmail] = useState<string>("");
 
   // Fetch Google account status and users on mount
   useEffect(() => {
@@ -74,6 +74,35 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       }));
     }
   }, [uid, existingEvent]);
+
+  // Reset form and auto-fill date when date prop changes (only for new events)
+  useEffect(() => {
+    if (existingEvent) return; // Don't reset if editing existing event
+    
+    const dateString = date ? date.toISOString().split('T')[0] : "";
+    
+    setFormData({
+      title: "",
+      category: "",
+      priority: "",
+      start: dateString,
+      end: dateString,
+      time: "",
+      description: "",
+      isRepeating: false,
+      repeatFrequency: "daily",
+      repeatDays: [],
+      createdBy: uid || "",
+      addToGoogleCalendar: false,
+      eventType: "offline",
+      invitedMemberIds: [],
+      invites: [],
+      duration: undefined,
+    });
+    setSelectedDays([]);
+    setSelectedFrequency("daily");
+    setExternalInviteEmail("");
+  }, [date, existingEvent, uid]);
 
   // Prefill when existingEvent is provided
   useEffect(() => {
@@ -125,6 +154,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       addToGoogleCalendar: existingEvent.addToGoogleCalendar ?? false,
       eventType: existingEvent.eventType ?? "offline",
       invitedMemberIds: existingEvent.invitedMemberIds ?? [],
+      invites: existingEvent.invites ?? [],
       duration: existingEvent.duration ?? calculatedDuration,
     };
 
@@ -166,6 +196,51 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
   const handleInvitedMembersChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
     handleInputChange("invitedMemberIds", typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleInvitesChange = (newEmails: string[]) => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validEmails = newEmails.filter(email => emailRegex.test(email));
+    
+    if (validEmails.length !== newEmails.length) {
+      toast.error("Please enter valid email addresses");
+    }
+    
+    handleInputChange("invites", validEmails);
+  };
+
+  const handleAddExternalInvite = () => {
+    if (!externalInviteEmail.trim()) {
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(externalInviteEmail.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    const currentInvites = formData.invites || [];
+    const emailToAdd = externalInviteEmail.trim().toLowerCase();
+    
+    // Check if email already exists
+    if (currentInvites.includes(emailToAdd)) {
+      toast.error("This email is already in the invite list");
+      setExternalInviteEmail("");
+      return;
+    }
+
+    // Add email to invites
+    handleInputChange("invites", [...currentInvites, emailToAdd]);
+    setExternalInviteEmail("");
+  };
+
+  const handleExternalInviteKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddExternalInvite();
+    }
   };
 
   const handleSubmit = async () => {
@@ -230,6 +305,10 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
         // Only include invitedMemberIds for online events
         ...(formData.eventType === "online" && formData.invitedMemberIds && formData.invitedMemberIds.length > 0 
           ? { invitedMemberIds: formData.invitedMemberIds } 
+          : {}),
+        // Include invites if provided
+        ...(formData.invites && formData.invites.length > 0 
+          ? { invites: formData.invites } 
           : {}),
       };
 
@@ -574,6 +653,67 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           onChange={(e) => handleInputChange("description", e.target.value)}
         />
       </Box>
+      <Box sx={{ width: "100%", paddingTop: "10px" }}>
+        <Typography
+          color="secondary"
+          sx={{ fontWeight: "bold", fontSize: "14px" }}
+        >
+          Invitees
+        </Typography>
+        <Autocomplete
+          multiple
+          freeSolo
+          options={users
+            .filter((user) => user.id !== uid)
+            .map((user) => user.email)}
+          value={formData.invites || []}
+          onChange={(_, newValue) => {
+            handleInvitesChange(newValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Select or type email addresses"
+              sx={{ width: "100%", paddingTop: "7px" }}
+            />
+          )}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                {...getTagProps({ index })}
+                key={option}
+                label={option}
+                size="small"
+              />
+            ))
+          }
+        />
+      </Box>
+      <Box sx={{ width: "100%", paddingTop: "10px" }}>
+        <Typography
+          color="secondary"
+          sx={{ fontWeight: "bold", fontSize: "14px" }}
+        >
+          External Invite
+        </Typography>
+        <Box sx={{ display: "flex", gap: "8px", paddingTop: "7px" }}>
+          <TextField
+            sx={{ flex: 1 }}
+            placeholder="Enter email address"
+            type="email"
+            value={externalInviteEmail}
+            onChange={(e) => setExternalInviteEmail(e.target.value)}
+            onKeyPress={handleExternalInviteKeyPress}
+          />
+          <Button
+            variant="contained"
+            onClick={handleAddExternalInvite}
+            disabled={!externalInviteEmail.trim()}
+          >
+            Add
+          </Button>
+        </Box>
+      </Box>
       <Box
         sx={(theme) => ({
           backgroundColor: theme.palette.grey[50],
@@ -627,75 +767,79 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           onChange={(e) => handleInputChange("isRepeating", e.target.checked)}
         />
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          paddingTop: "12px",
-          gap: "16px",
-        }}
-      >
-        {frequencies.map((frequency) => (
+      {formData.isRepeating && (
+        <>
           <Box
-            key={frequency}
-            sx={(theme) => ({
-              paddingY: "12px",
-              flex: 1,
-              border: `1px solid ${theme.palette.grey[300]}`,
-              borderRadius: "10px",
-              backgroundColor: selectedFrequency === frequency 
-                ? theme.palette.primary.main 
-                : "transparent",
-              textAlign: "center",
-              color: selectedFrequency === frequency 
-                ? theme.palette.primary.contrastText 
-                : theme.palette.text.secondary,
-              fontWeight: selectedFrequency === frequency ? "600" : "normal",
-              cursor: "pointer",
-            })}
-            onClick={() => handleFrequencyChange(frequency)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              paddingTop: "12px",
+              gap: "16px",
+            }}
           >
-            {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+            {frequencies.map((frequency) => (
+              <Box
+                key={frequency}
+                sx={(theme) => ({
+                  paddingY: "12px",
+                  flex: 1,
+                  border: `1px solid ${theme.palette.grey[300]}`,
+                  borderRadius: "10px",
+                  backgroundColor: selectedFrequency === frequency 
+                    ? theme.palette.primary.main 
+                    : "transparent",
+                  textAlign: "center",
+                  color: selectedFrequency === frequency 
+                    ? theme.palette.primary.contrastText 
+                    : theme.palette.text.secondary,
+                  fontWeight: selectedFrequency === frequency ? "600" : "normal",
+                  cursor: "pointer",
+                })}
+                onClick={() => handleFrequencyChange(frequency)}
+              >
+                {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+              </Box>
+            ))}
           </Box>
-        ))}
-      </Box>
-      <Box>
-        <Typography color="secondary.main" fontWeight={700}>
-          On these days
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            paddingTop: "12px",
-            gap: "12px",
-          }}
-        >
-          {daysOfWeek.map((day) => (
+          <Box>
+            <Typography color="secondary.main" fontWeight={700}>
+              On these days
+            </Typography>
             <Box
-              key={day}
-              sx={(theme) => ({
-                paddingY: "12px",
-                flex: 1,
-                border: `1px solid ${theme.palette.grey[300]}`,
-                borderRadius: "10px",
-                backgroundColor: selectedDays.includes(day) 
-                  ? theme.palette.primary.main 
-                  : "transparent",
-                textAlign: "center",
-                color: selectedDays.includes(day) 
-                  ? theme.palette.primary.contrastText 
-                  : theme.palette.text.secondary,
-                fontWeight: selectedDays.includes(day) ? "600" : "normal",
-                cursor: "pointer",
-              })}
-              onClick={() => handleDayToggle(day)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                paddingTop: "12px",
+                gap: "12px",
+              }}
             >
-              {day}
+              {daysOfWeek.map((day) => (
+                <Box
+                  key={day}
+                  sx={(theme) => ({
+                    paddingY: "12px",
+                    flex: 1,
+                    border: `1px solid ${theme.palette.grey[300]}`,
+                    borderRadius: "10px",
+                    backgroundColor: selectedDays.includes(day) 
+                      ? theme.palette.primary.main 
+                      : "transparent",
+                    textAlign: "center",
+                    color: selectedDays.includes(day) 
+                      ? theme.palette.primary.contrastText 
+                      : theme.palette.text.secondary,
+                    fontWeight: selectedDays.includes(day) ? "600" : "normal",
+                    cursor: "pointer",
+                  })}
+                  onClick={() => handleDayToggle(day)}
+                >
+                  {day}
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
-      </Box>
+          </Box>
+        </>
+      )}
       <Box
         sx={{
           display: "flex",

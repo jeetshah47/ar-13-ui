@@ -111,10 +111,6 @@ const CalendarPage = () => {
     });
   };
 
-  // Helper function to check if a date has events
-  const hasEventsForDate = (date: Date | null): boolean => {
-    return getEventsForDate(date).length > 0;
-  };
 
   const getDaysInMonth = (date: Date): (Date | null)[] => {
     const year = date.getFullYear();
@@ -171,8 +167,14 @@ const CalendarPage = () => {
     date?.toDateString().split(" ")[0] ?? "";
 
   const handleOnCellClick = (date: Date | null) => {
-    // Open blank form for the selected date
-    setSelectedCellDate(date);
+    // Open blank form for the selected date + 1 day
+    if (date) {
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setSelectedCellDate(nextDay);
+    } else {
+      setSelectedCellDate(date);
+    }
     setSelectedEventId(null);
     setSelectedEvent(null);
     setShowEventDetailsModal(false);
@@ -201,6 +203,33 @@ const CalendarPage = () => {
     setShowDateModal(true);
   };
 
+  // Get all events for the current month, grouped by date (for mobile view)
+  const getEventsByDate = (): { date: Date; events: CalendarResponse[] }[] => {
+    const year = dateState.getFullYear();
+    const month = dateState.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const eventsByDate: { date: Date; events: CalendarResponse[] }[] = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateEvents = getEventsForDate(date);
+      if (dateEvents.length > 0) {
+        eventsByDate.push({ date, events: dateEvents });
+      }
+    }
+    
+    return eventsByDate;
+  };
+
+  const formatDateForDisplay = (date: Date): string => {
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  };
+
   return (
     <Box sx={{ height: "100%" }}>
       <PageHeader title="Calendar" endElement={AddButton} />
@@ -211,6 +240,7 @@ const CalendarPage = () => {
           display: "flex",
           gap: { xs: "16px", sm: "28px" },
           height: "100%",
+          paddingX: { xs: "0px", sm: "0px" },
         }}
       >
         <Box
@@ -221,6 +251,8 @@ const CalendarPage = () => {
             boxShadow: theme.shadows[1],
             height: "100%",
             position: "relative",
+            padding: { xs: "0px", sm: "0px" },
+            overflow: { xs: "visible", sm: "hidden" },
           })}
         >
           {/* Loading Overlay */}
@@ -239,7 +271,7 @@ const CalendarPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 zIndex: 1000,
-                borderRadius: "24px",
+                borderRadius: { xs: "16px", sm: "24px" },
               })}
             >
               <CircularProgress />
@@ -252,21 +284,29 @@ const CalendarPage = () => {
               justifyContent: "center",
               alignItems: "center",
               gap: { xs: "12px", sm: "24px" },
-              paddingY: { xs: "12px", sm: "20px" },
+              paddingY: { xs: "16px", sm: "20px" },
+              paddingX: { xs: "20px", sm: "0px" },
             }}
           >
             <SvgIcon 
               onClick={handleOnClikPrev} 
               component={LeftIcon}
               sx={{ 
-                fontSize: { xs: "20px", sm: "24px" },
-                cursor: "pointer"
+                fontSize: { xs: "24px", sm: "24px" },
+                cursor: "pointer",
+                width: { xs: "24px", sm: "24px" },
+                height: { xs: "24px", sm: "24px" },
               }}
             />
             <Typography 
               variant="h6" 
               fontWeight={700}
-              sx={{ fontSize: { xs: "16px", sm: "20px" } }}
+              sx={{ 
+                fontSize: { xs: "18px", sm: "20px" },
+                lineHeight: { xs: "1.44", sm: "1.5" },
+                textAlign: "center",
+                minWidth: { xs: "144px", sm: "auto" },
+              }}
             >
               {currentMonthandYear()}
             </Typography>
@@ -274,26 +314,193 @@ const CalendarPage = () => {
               onClick={handleOnClikNext} 
               component={RightIcon}
               sx={{ 
-                fontSize: { xs: "20px", sm: "24px" },
-                cursor: "pointer"
+                fontSize: { xs: "24px", sm: "24px" },
+                cursor: "pointer",
+                width: { xs: "24px", sm: "24px" },
+                height: { xs: "24px", sm: "24px" },
               }}
             />
           </Box>
           
-          <Grid container columns={7}>
-            {getDaysInMonth(dateState).map((date, index) => (
-              <Grid size={1} key={index}>
-                <Cell
-                  date={date}
-                  onClickCell={handleOnCellClick}
-                  weekDay={index < 7 ? getWeekDayString(date) : ""}
-                  events={getEventsForDate(date)}
-                  hasEvents={hasEventsForDate(date)}
-                  onClickEvent={handleOnEventClick}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <Box
+            sx={{
+              paddingX: { xs: "20px", sm: "0px" },
+              paddingBottom: { xs: "20px", sm: "0px" },
+            }}
+          >
+            <Grid 
+              container 
+              columns={7}
+              sx={{
+                gap: { xs: "0px", sm: "0px" },
+                width: "100%",
+                "& > .MuiGrid-item": {
+                  padding: { xs: "1px", sm: "0px" },
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              }}
+            >
+              {getDaysInMonth(dateState).map((date, index) => (
+                <Grid 
+                  size={{ xs: 1, sm: 1 }} 
+                  key={index}
+                >
+                  <Cell
+                    date={date}
+                    onClickCell={handleOnCellClick}
+                    weekDay={index < 7 ? getWeekDayString(date) : ""}
+                    events={getEventsForDate(date)}
+                    onClickEvent={handleOnEventClick}
+                    currentMonth={dateState}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Mobile Events List - Show all events of the month below calendar */}
+          {isMobile && (
+            <Box
+              sx={{
+                paddingX: "20px",
+                paddingTop: "20px",
+                paddingBottom: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+              }}
+            >
+              {getEventsByDate().map(({ date, events: dateEvents }) => (
+                <Box key={date.toISOString()}>
+                  <Typography
+                    sx={{
+                      fontSize: "16px",
+                      fontWeight: 700,
+                      lineHeight: "1.5",
+                      color: theme.palette.text.primary,
+                      marginBottom: "10px",
+                    }}
+                  >
+                    {formatDateForDisplay(date)}
+                  </Typography>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: "1px",
+                      backgroundColor: theme.palette.divider,
+                      marginBottom: "10px",
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                    }}
+                  >
+                    {dateEvents.map((event) => (
+                      <Box
+                        key={event.id}
+                        onClick={() => handleOnEventClick(event)}
+                        sx={(theme) => ({
+                          width: "100%",
+                          height: "56px",
+                          backgroundColor: "#F4F9FD",
+                          border: "2px solid #FFFFFF",
+                          borderRadius: "14px",
+                          display: "flex",
+                          alignItems: "center",
+                          padding: "0px",
+                          cursor: "pointer",
+                          position: "relative",
+                          overflow: "hidden",
+                          "&:hover": {
+                            backgroundColor: theme.palette.grey[50],
+                          },
+                        })}
+                      >
+                        {/* Event indicator bar */}
+                        <Box
+                          sx={{
+                            width: "4px",
+                            height: "40px",
+                            backgroundColor: (() => {
+                              if (!event.category) return "#DE92EB";
+                              switch (event.category.toLowerCase()) {
+                                case "work":
+                                  return "#3F8CFF";
+                                case "personal":
+                                  return "#DE92EB";
+                                case "meeting":
+                                  return "#3F8CFF";
+                                case "appointment":
+                                  return "#6D5DD3";
+                                default:
+                                  return "#DE92EB";
+                              }
+                            })(),
+                            borderRadius: "2px",
+                            marginLeft: "4px",
+                            marginRight: "18px",
+                          }}
+                        />
+                        {/* Event content */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            paddingRight: "22px",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "14px",
+                              fontWeight: 700,
+                              lineHeight: "1.5",
+                              color: theme.palette.text.primary,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {event.title || "Untitled Event"}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              lineHeight: "1.33",
+                              color: theme.palette.text.secondary,
+                              marginTop: "2px",
+                            }}
+                          >
+                            {event.duration ? `${event.duration}h` : "0h"}
+                          </Typography>
+                        </Box>
+                        {/* Priority icon placeholder */}
+                        <Box
+                          sx={{
+                            width: "24px",
+                            height: "24px",
+                            marginRight: "22px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {/* Priority icon would go here if available */}
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
         </Box>
         
         {/* Event Details Modal */}
@@ -310,6 +517,7 @@ const CalendarPage = () => {
         {/* Event Form Modal */}
         <Modal show={showDateModal} onClose={handleOnCrossClick}>
           <EventForm 
+            key={selectedEventId || (selectedCellDate ? selectedCellDate.toISOString() : 'new')}
             onClose={handleOnCrossClick} 
             date={selectedCellDate} 
             currentMonth={dateState}

@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon } from "@mui/material";
+import { Box, Button, SvgIcon, Fab } from "@mui/material";
 import { Routes, Route, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
@@ -35,6 +35,60 @@ const InfoPortalList = () => {
     });
   };
 
+  const AddButton = (
+    <Button
+      variant="contained"
+      onClick={handleAddFolder}
+      startIcon={
+        <SvgIcon
+          component={PlusIcon}
+          sx={{
+            width: "24px",
+            height: "24px",
+            fill: "white",
+          }}
+        />
+      }
+      sx={(theme) => ({
+        borderRadius: "14px",
+        padding: "11px 16px",
+        boxShadow: theme.shadows[4],
+        display: { xs: "none", sm: "flex" },
+      })}
+    >
+      Add Folder
+    </Button>
+  );
+
+  const FloatingActionButton = (
+    <Fab
+      onClick={handleAddFolder}
+      color="primary"
+      sx={{
+        position: "fixed",
+        bottom: { xs: "24px", sm: "32px" },
+        right: { xs: "20px", sm: "32px" },
+        display: { xs: "flex", sm: "none" },
+        zIndex: (theme) => theme.zIndex.speedDial,
+        width: "56px",
+        height: "56px",
+        boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+        "&:hover": {
+          boxShadow: "0px 8px 16px 0px rgba(63, 140, 255, 0.35)",
+        },
+      }}
+    >
+      <SvgIcon
+        component={PlusIcon}
+        sx={{
+          width: "24px",
+          height: "24px",
+          fill: "white",
+        }}
+      />
+    </Fab>
+  );
+
   return (
     <Box
       sx={(theme) => ({
@@ -42,42 +96,39 @@ const InfoPortalList = () => {
         height: "100%",
         backgroundColor: theme.palette.grey[50],
         minHeight: "100vh",
+        paddingBottom: { xs: "100px", sm: 0 }, // Add bottom padding on mobile for FAB
       })}
     >
       <PageHeader
         title="Info Portal"
-        endElement={
-          <Button
-            variant="contained"
-            onClick={handleAddFolder}
-            startIcon={
-              <SvgIcon
-                component={PlusIcon}
-                sx={{
-                  width: "24px",
-                  height: "24px",
-                  fill: "white",
-                }}
-              />
-            }
-            sx={(theme) => ({
-              borderRadius: "14px",
-              padding: "11px 16px",
-              boxShadow: theme.shadows[4],
-            })}
-          >
-            Add Folder
-          </Button>
-        }
+        endElement={AddButton}
       />
 
-      <Box sx={{ padding: "28px 0px", display: "flex", flexDirection: "column", gap: "30px" }}>
+      <Box
+        sx={{
+          padding: { xs: "10px", sm: "28px 0px" },
+          display: "flex",
+          flexDirection: "column",
+          gap: { xs: "20px", sm: "30px" },
+        }}
+      >
         {/* Banner and Statistics Row */}
-        <Box sx={{ display: "flex", gap: "30px" }}>
-          <Box sx={{ flex: "1", maxWidth: "855px" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: "20px", sm: "30px" },
+          }}
+        >
+          <Box sx={{ flex: { xs: "1", md: "1" }, maxWidth: { xs: "100%", md: "855px" } }}>
             <Banner />
           </Box>
-          <Box sx={{ width: "265px", flexShrink: 0 }}>
+          <Box
+            sx={{
+              width: { xs: "100%", md: "265px" },
+              flexShrink: 0,
+            }}
+          >
             <StatisticsCard
               title="Current Projects"
               value={statistics?.currentProjects || 0}
@@ -98,7 +149,8 @@ const InfoPortalList = () => {
               md: "repeat(3, 1fr)",
               lg: "repeat(4, 1fr)",
             },
-            gap: "30px",
+            gap: { xs: "20px", sm: "30px" },
+            paddingX: { xs: 0, sm: 0 },
           }}
         >
           {folders.map((folder) => (
@@ -112,6 +164,8 @@ const InfoPortalList = () => {
           ))}
         </Box>
       </Box>
+
+      {FloatingActionButton}
 
       {/* Add Folder Modal */}
       <Modal show={showAddFolderModal} onClose={handleCloseModal}>

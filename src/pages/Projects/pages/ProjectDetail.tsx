@@ -23,6 +23,8 @@ import { SERVER_BASE_URL } from "../../../config/api";
 import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
 import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
 import { convertActivityLogItemsToLegacy } from "../utils/activityLogConverter";
+import type { ActivityLogItem } from "../../../store/types/ActivityLogs/ActivityLog";
+import { getActivityLogsByEntity } from "../../../store/apis/activityLogsApi";
 
 const ProjectDetail = () => {
   const theme = useTheme();
@@ -85,6 +87,7 @@ const ProjectDetail = () => {
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
+  const [projectActivityLogs, setProjectActivityLogs] = useState<ActivityLogItem[]>([]);
 
 
   // Fetch users if not already loaded
@@ -107,6 +110,116 @@ const ProjectDetail = () => {
       dispatch(fetchActivityLogsByEntity("task", taskId));
     }
   }, [taskId, dispatch]);
+
+  // Fetch activity logs for the project
+  useEffect(() => {
+    if (projectId) {
+      getActivityLogsByEntity("project", projectId)
+        .then((response) => {
+          setProjectActivityLogs(response.activityLogs || []);
+        })
+        .catch(() => {
+          // Handle error silently
+          setProjectActivityLogs([]);
+        });
+    }
+  }, [projectId]);
+
+  // Calculate time spent from activity logs (both project and task level)
+  const calculateProjectTimeSpent = useMemo(() => {
+    // First, try to get time spent from task activity logs (already fetched)
+    let totalMinutes = 0;
+    
+    // Helper function to extract timeSpent from a log entry
+    const getTimeSpentFromLog = (log: ActivityLogItem): number | null => {
+      // Check fields.timeSpent first (primary location based on user's example)
+      // The user's example shows: fields: { timeSpent: 540, ... }
+      if (log.fields) {
+        const timeSpent = log.fields.timeSpent;
+        if (typeof timeSpent === "number" && timeSpent > 0) {
+          return timeSpent;
+        }
+        // Also handle string numbers if they exist
+        if (typeof timeSpent === "string" && !isNaN(Number(timeSpent))) {
+          return Number(timeSpent);
+        }
+      }
+      // Check metadata.timeSpent as fallback
+      if (log.metadata) {
+        const timeSpent = log.metadata.timeSpent;
+        if (typeof timeSpent === "number" && timeSpent > 0) {
+          return timeSpent;
+        }
+        if (typeof timeSpent === "string" && !isNaN(Number(timeSpent))) {
+          return Number(timeSpent);
+        }
+      }
+      return null;
+    };
+    
+    // Check task activity logs
+    if (activityLogItems && activityLogItems.length > 0) {
+      activityLogItems.forEach((log) => {
+        // Only process time_spent related actions
+        if (log.action === "time_spent_added" || log.action === "time_spent_updated" || log.action === "time_spent_removed") {
+          const timeSpentValue = getTimeSpentFromLog(log);
+
+          if (timeSpentValue !== null && timeSpentValue > 0) {
+            // Add for time_spent_added and time_spent_updated
+            if (log.action === "time_spent_added" || log.action === "time_spent_updated") {
+              totalMinutes += timeSpentValue;
+            }
+            // Subtract for time_spent_removed
+            else if (log.action === "time_spent_removed") {
+              totalMinutes -= timeSpentValue;
+            }
+          }
+        }
+      });
+    }
+
+    // Also check project activity logs (if any)
+    if (projectActivityLogs && projectActivityLogs.length > 0) {
+      projectActivityLogs.forEach((log) => {
+        // Only process time_spent related actions
+        if (log.action === "time_spent_added" || log.action === "time_spent_updated" || log.action === "time_spent_removed") {
+          const timeSpentValue = getTimeSpentFromLog(log);
+
+          if (timeSpentValue !== null && timeSpentValue > 0) {
+            // Add for time_spent_added and time_spent_updated
+            if (log.action === "time_spent_added" || log.action === "time_spent_updated") {
+              totalMinutes += timeSpentValue;
+            }
+            // Subtract for time_spent_removed
+            else if (log.action === "time_spent_removed") {
+              totalMinutes -= timeSpentValue;
+            }
+          }
+        }
+      });
+    }
+
+    // If no time spent found in activity logs, try using taskDetails.timeSpent as fallback
+    if (totalMinutes === 0 && taskDetails?.timeSpent && taskDetails.timeSpent.length > 0) {
+      totalMinutes = taskDetails.timeSpent.reduce((sum, entry) => sum + (entry.timeSpent || 0), 0);
+    }
+
+    if (totalMinutes <= 0) {
+      return null;
+    }
+
+    // Format time
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (parts.length === 0) return null;
+    return `${parts.join(" ")} logged`;
+  }, [activityLogItems, projectActivityLogs, taskDetails]);
 
   // Convert new ActivityLogItem format to legacy ActivityLog format for backward compatibility
   const mappedActivityLogs = useMemo(() => {
@@ -309,6 +422,7 @@ const ProjectDetail = () => {
             assignes={projectDetails?.assignes}
             priority={projectDetails?.priority}
             deadline={projectDetails?.deadline}
+            timeSpent={calculateProjectTimeSpent}
           />
         )}
 
@@ -333,6 +447,7 @@ const ProjectDetail = () => {
                 assignes={projectDetails?.assignes}
                 priority={projectDetails?.priority}
                 deadline={projectDetails?.deadline}
+                timeSpent={calculateProjectTimeSpent}
               />
             </Box>
           )}
@@ -404,8 +519,8 @@ const ProjectDetail = () => {
                 ? new Date(taskDetails.deadline).toLocaleDateString()
                 : "No deadline set"
             }
-            timeLogged="1d 3h 25m logged"
-            originalEstimate="Original Estimate 3d 8h"
+            timeLogged={timeLogged}
+            originalEstimate={undefined}
             projectId={projectId}
             taskId={taskId}
             task={taskDetails}

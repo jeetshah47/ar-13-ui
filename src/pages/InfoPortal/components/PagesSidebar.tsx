@@ -1,16 +1,10 @@
 import { Box, Typography, Button, SvgIcon } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
-
-interface Page {
-  id: string;
-  title: string;
-  lastModified: string;
-  isActive: boolean;
-}
+import type { PageResponse } from "../../../store/types/InfoPortal/PageResponse";
 
 interface PagesSidebarProps {
-  pages: Page[];
+  pages: PageResponse[];
   onAddPage: () => void;
   onPageClick?: (pageId: string) => void;
   selectedPageId?: string;

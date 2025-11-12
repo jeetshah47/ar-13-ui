@@ -244,16 +244,30 @@ const TaskInfo = ({
           {timeLogged}
         </Typography>
         
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "14px",
-            lineHeight: "1.36",
-            color: "#91929E",
-          }}
-        >
-          {originalEstimate}
-        </Typography>
+        {originalEstimate ? (
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+            }}
+          >
+            {originalEstimate}
+          </Typography>
+        ) : (
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+              fontStyle: "italic",
+            }}
+          >
+            No estimate available
+          </Typography>
+        )}
       </Box>
 
       {/* Log Time Button - Only show if user can log time for this task */}
@@ -286,26 +300,46 @@ const TaskInfo = ({
       )}
 
       {/* Created Date */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          marginTop: "24px",
-        }}
-      >
-        <SvgIcon component={CalendarIcon} />
-        <Typography
+      {task?.created && (
+        <Box
           sx={{
-            fontWeight: 600,
-            fontSize: "14px",
-            lineHeight: "1.14",
-            color: "#7D8592",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            marginTop: "24px",
           }}
         >
-          Created May 28, 2020
-        </Typography>
-      </Box>
+          <SvgIcon component={CalendarIcon} />
+          <Typography
+            sx={{
+              fontWeight: 600,
+              fontSize: "14px",
+              lineHeight: "1.14",
+              color: "#7D8592",
+            }}
+          >
+            Created {(() => {
+              // Handle Firebase timestamp format
+              if (typeof task.created === "object" && "_seconds" in task.created) {
+                return new Date(task.created._seconds * 1000).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+              }
+              // Handle ISO string format
+              if (typeof task.created === "string") {
+                return new Date(task.created).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+              }
+              return "Unknown date";
+            })()}
+          </Typography>
+        </Box>
+      )}
 
       {/* Log Time Modal */}
       {showLogTimeModal && (

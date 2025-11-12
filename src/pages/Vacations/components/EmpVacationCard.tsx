@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography } from "@mui/material";
+import { Avatar, Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import type { VacationResponse } from "../../../store/types/Vacation/VacationTypes";
 
 interface EmpVacationCardProps {
@@ -17,6 +17,9 @@ interface EmpVacationCardProps {
 }
 
 const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  
   // If employee data provided, show employee vacation stats card (Figma design)
   if (employee) {
     return (
@@ -24,28 +27,30 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         sx={(theme) => ({
           background: theme.palette.background.paper,
           boxShadow: theme.shadows[1],
-          borderRadius: "24px",
-          padding: "20px 28px",
+          borderRadius: { xs: "24px", md: "24px" },
+          padding: { xs: "16px 18px", md: "20px 28px" },
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: "20px",
-          height: "91px",
+          flexDirection: { xs: "column", md: "row" },
+          justifyContent: { xs: "flex-start", md: "space-between" },
+          alignItems: { xs: "flex-start", md: "center" },
+          marginTop: { xs: "16px", md: "20px" },
+          height: { xs: "auto", md: "91px" },
+          gap: { xs: "16px", md: 0 },
         })}
       >
-        <Box sx={{ display: "flex", gap: "18px", alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: { xs: "12px", md: "18px" }, alignItems: "center", width: "100%" }}>
           <Avatar 
-            sx={{ width: "50px", height: "50px" }}
+            sx={{ width: { xs: "40px", md: "50px" }, height: { xs: "40px", md: "50px" } }}
             src={employee.avatar}
           >
             {employee.name.split(' ').map(n => n[0]).join('')}
           </Avatar>
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Typography 
               sx={(theme) => ({ 
                 fontWeight: 700, 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 marginBottom: "2px"
               })}
@@ -54,8 +59,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary
               })}
             >
@@ -64,12 +69,18 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Box>
         </Box>
         
-        <Box sx={{ display: "flex", gap: "48px", alignItems: "center" }}>
-          <Box sx={{ textAlign: "center" }}>
+        <Box sx={{ 
+          display: "flex", 
+          gap: { xs: "24px", md: "48px" }, 
+          alignItems: "center",
+          width: { xs: "100%", md: "auto" },
+          justifyContent: { xs: "space-between", md: "flex-end" }
+        }}>
+          <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "2px"
               })}
@@ -78,8 +89,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 400
               })}
@@ -88,11 +99,11 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
           </Box>
           
-          <Box sx={{ textAlign: "center" }}>
+          <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "2px"
               })}
@@ -101,8 +112,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 400
               })}
@@ -111,11 +122,11 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
           </Box>
           
-          <Box sx={{ textAlign: "center" }}>
+          <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "2px"
               })}
@@ -124,8 +135,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 400
               })}
@@ -144,23 +155,25 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
       sx={(theme) => ({
         background: theme.palette.background.paper,
         boxShadow: theme.shadows[1],
-        borderRadius: "24px",
-        padding: "20px 28px",
+        borderRadius: { xs: "24px", md: "24px" },
+        padding: { xs: "16px 18px", md: "20px 28px" },
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginTop: "20px",
-        height: "91px",
+        flexDirection: { xs: "column", md: "row" },
+        justifyContent: { xs: "flex-start", md: "space-between" },
+        alignItems: { xs: "flex-start", md: "center" },
+        marginTop: { xs: "16px", md: "20px" },
+        height: { xs: "auto", md: "91px" },
+        gap: { xs: "16px", md: 0 },
       })}
     >
-      <Box sx={{ display: "flex", gap: "18px", alignItems: "center" }}>
-        <Avatar sx={{ width: "50px", height: "50px" }}>RT</Avatar>
-        <Box>
+      <Box sx={{ display: "flex", gap: { xs: "12px", md: "18px" }, alignItems: "center", width: "100%" }}>
+        <Avatar sx={{ width: { xs: "40px", md: "50px" }, height: { xs: "40px", md: "50px" } }}>RT</Avatar>
+        <Box sx={{ flex: 1 }}>
           <Typography 
             sx={(theme) => ({ 
               fontWeight: 700, 
-              fontSize: "16px", 
-              lineHeight: "24px",
+              fontSize: { xs: "14px", md: "16px" }, 
+              lineHeight: { xs: "20px", md: "24px" },
               color: theme.palette.text.primary,
               marginBottom: "2px"
             })}
@@ -169,8 +182,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "14px", 
-              lineHeight: "19px",
+              fontSize: { xs: "12px", md: "14px" }, 
+              lineHeight: { xs: "16px", md: "19px" },
               color: theme.palette.text.secondary
             })}
           >
@@ -179,12 +192,18 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
         </Box>
       </Box>
       
-      <Box sx={{ display: "flex", gap: "48px", alignItems: "center" }}>
-        <Box sx={{ textAlign: "center" }}>
+      <Box sx={{ 
+        display: "flex", 
+        gap: { xs: "24px", md: "48px" }, 
+        alignItems: "center",
+        width: { xs: "100%", md: "auto" },
+        justifyContent: { xs: "space-between", md: "flex-end" }
+      }}>
+        <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "14px", 
-              lineHeight: "19px",
+              fontSize: { xs: "12px", md: "14px" }, 
+              lineHeight: { xs: "16px", md: "19px" },
               color: theme.palette.text.secondary,
               marginBottom: "2px"
             })}
@@ -193,8 +212,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "16px", 
-              lineHeight: "24px",
+              fontSize: { xs: "14px", md: "16px" }, 
+              lineHeight: { xs: "20px", md: "24px" },
               color: theme.palette.text.primary,
               fontWeight: 400
             })}
@@ -203,11 +222,11 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
         </Box>
         
-        <Box sx={{ textAlign: "center" }}>
+        <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "14px", 
-              lineHeight: "19px",
+              fontSize: { xs: "12px", md: "14px" }, 
+              lineHeight: { xs: "16px", md: "19px" },
               color: theme.palette.text.secondary,
               marginBottom: "2px"
             })}
@@ -216,8 +235,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "16px", 
-              lineHeight: "24px",
+              fontSize: { xs: "14px", md: "16px" }, 
+              lineHeight: { xs: "20px", md: "24px" },
               color: theme.palette.text.primary,
               fontWeight: 400
             })}
@@ -226,11 +245,11 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
         </Box>
         
-        <Box sx={{ textAlign: "center" }}>
+        <Box sx={{ textAlign: "center", flex: { xs: 1, md: "none" } }}>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "14px", 
-              lineHeight: "19px",
+              fontSize: { xs: "12px", md: "14px" }, 
+              lineHeight: { xs: "16px", md: "19px" },
               color: theme.palette.text.secondary,
               marginBottom: "2px"
             })}
@@ -239,8 +258,8 @@ const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
           </Typography>
           <Typography 
             sx={(theme) => ({ 
-              fontSize: "16px", 
-              lineHeight: "24px",
+              fontSize: { xs: "14px", md: "16px" }, 
+              lineHeight: { xs: "20px", md: "24px" },
               color: theme.palette.text.primary,
               fontWeight: 400
             })}
