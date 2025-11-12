@@ -2,6 +2,7 @@ import { Box, IconButton, SvgIcon, Typography, Button, useMediaQuery, useTheme }
 import { ViewButtonOptions } from "../constants/project.contants";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
+import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
 
 type TaskHeaderProps = {
   onClickAddButton: () => void;
@@ -39,29 +40,33 @@ const TaskHeader = ({
       >
         <Box sx={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
           <Typography sx={{ fontWeight: "bold", fontSize: { xs: "18px", sm: "22px" } }}>Tasks</Typography>
-          <IconButton
-            size="small"
-            onClick={onClickAddButton}
-            sx={{
-              backgroundColor: "#3F8CFF",
-              ":hover": { backgroundColor: "#3F8CFF" },
-            }}
-          >
-            <PlusIcon />
-          </IconButton>
-          {onClickAddDrawing && !isMobile && (
-            <Button
-              variant="outlined"
+          <RequirePermission permission="tasks:write">
+            <IconButton
               size="small"
-              onClick={onClickAddDrawing}
+              onClick={onClickAddButton}
               sx={{
-                ml: 1,
-                textTransform: "none",
-                fontSize: "12px",
+                backgroundColor: "#3F8CFF",
+                ":hover": { backgroundColor: "#3F8CFF" },
               }}
             >
-              Add Drawing
-            </Button>
+              <PlusIcon />
+            </IconButton>
+          </RequirePermission>
+          {onClickAddDrawing && !isMobile && (
+            <RequirePermission permission="tasks:write">
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={onClickAddDrawing}
+                sx={{
+                  ml: 1,
+                  textTransform: "none",
+                  fontSize: "12px",
+                }}
+              >
+                Add Drawing
+              </Button>
+            </RequirePermission>
           )}
         </Box>
         <Box sx={{ display: "flex", gap: { xs: "8px", sm: "16px" }, alignItems: "center" }}>

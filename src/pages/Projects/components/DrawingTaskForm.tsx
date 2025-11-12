@@ -165,7 +165,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
       setStatus("");
       setDuration("");
       setPriority("");
-      setMembersIds([]);
+      setMemberId(null);
       setRightList([]);
       
       // Reinitialize left list
@@ -190,7 +190,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
     setStatus("");
     setDuration("");
     setPriority("");
-    setMembersIds([]);
+    setMemberId(null);
     setRightList([]);
     
     // Reinitialize left list

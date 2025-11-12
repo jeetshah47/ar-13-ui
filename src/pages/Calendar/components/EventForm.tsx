@@ -48,6 +48,15 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("daily");
   const [externalInviteEmail, setExternalInviteEmail] = useState<string>("");
+  const [errors, setErrors] = useState<{
+    title?: string;
+    category?: string;
+    priority?: string;
+    start?: string;
+    time?: string;
+    invitedMemberIds?: string;
+    duration?: string;
+  }>({});
 
   // Fetch Google account status and users on mount
   useEffect(() => {
@@ -168,6 +177,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       ...prev,
       [field]: value
     }));
+    
+    // Clear error when user starts typing/changing
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field as keyof typeof errors]: undefined }));
+    }
   };
 
   const handleDayToggle = (day: string) => {
@@ -243,22 +257,46 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     }
   };
 
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.category || !formData.priority || !formData.start || !formData.time) {
-      toast.error("Please fill in all required fields");
-      return;
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+    
+    if (!formData.title?.trim()) {
+      newErrors.title = "Event name is required";
     }
-
+    
+    if (!formData.category) {
+      newErrors.category = "Event category is required";
+    }
+    
+    if (!formData.priority) {
+      newErrors.priority = "Priority is required";
+    }
+    
+    if (!formData.start) {
+      newErrors.start = "Start date is required";
+    }
+    
+    if (!formData.time) {
+      newErrors.time = "Time is required";
+    }
+    
     // Validate online event requirements
     if (formData.eventType === "online") {
       if (!formData.invitedMemberIds || formData.invitedMemberIds.length === 0) {
-        toast.error("Please select at least one member to invite for online events");
-        return;
+        newErrors.invitedMemberIds = "Please select at least one member to invite for online events";
       }
       if (!formData.duration && !formData.end) {
-        toast.error("Please provide either duration or end time for online events");
-        return;
+        newErrors.duration = "Please provide either duration or end time for online events";
       }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
     }
 
     if (!uid) {
@@ -415,6 +453,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             placeholder="Enter Event Name"
             value={formData.title}
             onChange={(e) => handleInputChange("title", e.target.value)}
+            error={Boolean(errors.title)}
+            helperText={errors.title}
+            required
           />
         </Box>
       </Box>
@@ -431,6 +472,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             select
             value={formData.category}
             onChange={(e) => handleInputChange("category", e.target.value)}
+            error={Boolean(errors.category)}
+            helperText={errors.category}
+            required
           >
             {categories.map((category) => (
               <MenuItem key={category} value={category}>
@@ -453,6 +497,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             select
             value={formData.priority}
             onChange={(e) => handleInputChange("priority", e.target.value)}
+            error={Boolean(errors.priority)}
+            helperText={errors.priority}
+            required
           >
             {priorities.map((priority) => (
               <MenuItem key={priority} value={priority}>
@@ -527,6 +574,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                   handleInputChange("end", e.target.value);
                 }
               }}
+              error={Boolean(errors.start)}
+              helperText={errors.start}
+              required
             />
           </Box>
         </Box>
@@ -544,6 +594,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
               type="time"
               value={formData.time}
               onChange={(e) => handleInputChange("time", e.target.value)}
+              error={Boolean(errors.time)}
+              helperText={errors.time}
+              required
             />
           </Box>
         </Box>
@@ -574,6 +627,8 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                     handleInputChange("duration", value);
                   }}
                   inputProps={{ min: 1 }}
+                  error={Boolean(errors.duration)}
+                  helperText={errors.duration}
                 />
               </Box>
             </Box>
@@ -604,7 +659,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             >
               Invite Members
             </Typography>
-            <FormControl sx={{ width: "100%", paddingTop: "7px" }}>
+            <FormControl sx={{ width: "100%", paddingTop: "7px" }} error={Boolean(errors.invitedMemberIds)}>
               <InputLabel>Select Members</InputLabel>
               <Select
                 multiple
@@ -633,6 +688,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                     </MenuItem>
                   ))}
               </Select>
+              {errors.invitedMemberIds && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                  {errors.invitedMemberIds}
+                </Typography>
+              )}
             </FormControl>
           </Box>
         </>

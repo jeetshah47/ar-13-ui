@@ -1,6 +1,6 @@
 import type { RolePermissions, UserRole, Permission } from './index';
 
-// Role-Permission Matrix based on the specification
+// Role-Permission Matrix based on PERMISSIONS_API.md specification
 export const ROLE_PERMISSIONS: RolePermissions = {
   Admin: [
     // Project Permissions
@@ -16,6 +16,8 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     'users:read',
     'users:write',
     'users:delete',
+    'users:profile',
+    'users:invite',
     // Calendar Permissions
     'calendar:read',
     'calendar:write',
@@ -29,8 +31,32 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     'notifications:read',
     'notifications:write',
     'notifications:delete',
+    // Activity Logs Permissions
+    'activityLogs:read',
     // Dashboard Permissions
     'dashboard:read',
+    // Employees Permissions
+    'employees:read',
+    // Info Portal Permissions
+    'infoPortal:read',
+    'infoPortal:write',
+    'infoPortal:delete',
+    // Google Account Permissions
+    'googleAccount:read',
+    'googleAccount:write',
+    'googleAccount:link',
+    'googleAccount:unlink',
+    // WebSocket Permissions
+    'websocket:connect',
+    // Auth Permissions
+    'auth:read',
+    // Project Details Permissions
+    'projectDetails:read',
+    'projectDetails:write',
+    'projectDetails:delete',
+    // Backup Permissions
+    'backup:read',
+    'backup:write',
   ],
   Standard: [
     // Project Permissions
@@ -51,8 +77,29 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     'notifications:read',
     'notifications:write',
     'notifications:delete',
+    // Activity Logs Permissions
+    'activityLogs:read',
     // Dashboard Permissions
     'dashboard:read',
+    // Employees Permissions
+    'employees:read',
+    // Info Portal Permissions
+    'infoPortal:read',
+    'infoPortal:write',
+    'infoPortal:delete',
+    // Google Account Permissions
+    'googleAccount:read',
+    'googleAccount:write',
+    'googleAccount:link',
+    'googleAccount:unlink',
+    // WebSocket Permissions
+    'websocket:connect',
+    // Auth Permissions
+    'auth:read',
+    // User Management Permissions
+    'users:profile',
+    // Project Details Permissions
+    'projectDetails:read',
   ],
 };
 

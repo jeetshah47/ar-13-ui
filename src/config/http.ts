@@ -4,6 +4,7 @@ import { store } from "../store/store";
 import { authLogout } from "../store/features/auth/authSlice";
 import { setGlobalNetworkError } from "../contexts/NetworkErrorContext";
 import { API_BASE_URL } from "./api";
+import { isAdminAccessError } from "../utils/errorUtils";
 
 const http = Axios.create();
 
@@ -24,7 +25,7 @@ const updateHeaders = (
   return newConfig;
 };
 
-const handleServerError = (rootError: AxiosError<{ message: string }>) => {
+const handleServerError = (rootError: AxiosError<{ message?: string; error?: string }>) => {
   if (rootError?.code === "ERR_NETWORK") {
     toast.dismiss();
     toast.error("Server offline");
@@ -35,12 +36,30 @@ const handleServerError = (rootError: AxiosError<{ message: string }>) => {
     setGlobalNetworkError(false);
   }
   if (rootError?.response?.data) {
-    const { message } = rootError.response.data;
-    if (message === "Auth token Invalid" || rootError.response.status === 401) {
-      store.dispatch(authLogout());
-      return Promise.reject(message);
+    const responseData = rootError.response.data;
+    const errorMessage = responseData.message || responseData.error || "";
+    
+    // Check for "Admin access required" error
+    if (isAdminAccessError(errorMessage)) {
+      toast.dismiss();
+      toast.error("Admin access required");
+      // Stop any ongoing loading states by dispatching failed actions for common reducers
+      // Note: The redirect will cause a page reload, which will naturally stop all loading states
+      // Redirect to dashboard
+      if (typeof window !== "undefined") {
+        // Use setTimeout to ensure error is logged and state is updated before redirect
+        setTimeout(() => {
+          window.location.href = "/app/dashboard";
+        }, 100);
+      }
+      return Promise.reject(errorMessage);
     }
-    return Promise.reject(message);
+    
+    if (errorMessage === "Auth token Invalid" || rootError.response.status === 401) {
+      store.dispatch(authLogout());
+      return Promise.reject(errorMessage);
+    }
+    return Promise.reject(errorMessage);
   }
   return Promise.reject(new Error("unknown error occured"));
 };

@@ -11,52 +11,87 @@ import ProjectPage from "../pages/Projects/ProjectPage";
 import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
-import { RequireAdmin } from "../common/components/RBAC/RequirePermission";
+import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
 import { Navigate } from "react-router";
 
 const authRoutes = [
   {
     path: "/dashboard",
-    component: <DashboardPage />,
+    component: (
+      <PermissionRoute permission="dashboard:read" redirectTo="/app/dashboard">
+        <DashboardPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/projects/*",
-    component: <ProjectPage />,
+    component: (
+      <PermissionRoute permission="projects:read" redirectTo="/app/dashboard">
+        <ProjectPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/calendar/*",
-    component: <CalendarPage />,
+    component: (
+      <PermissionRoute permission="calendar:read" redirectTo="/app/dashboard">
+        <CalendarPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/vacations/*",
     component: (
-      <RequireAdmin fallback={<Navigate to="/dashboard" replace />}>
+      <PermissionRoute 
+        permission="vacation:read" 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
         <VacationPage />
-      </RequireAdmin>
+      </PermissionRoute>
     ),
   },
   {
     path: "/employees",
-    component: <EmployeesPage />,
+    component: (
+      <PermissionRoute permission="employees:read" redirectTo="/app/dashboard">
+        <EmployeesPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/employees/:userId",
-    component: <EmployeeProfilePage />,
+    component: (
+      <PermissionRoute permission="employees:read" redirectTo="/app/dashboard">
+        <EmployeeProfilePage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/profile/*",
-    component: <ProfilePage />,
+    component: (
+      <PermissionRoute permission="users:profile" redirectTo="/app/dashboard">
+        <ProfilePage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/info-portal/*",
-    component: <InfoPortalPage />,
+    component: (
+      <PermissionRoute permission="infoPortal:read" redirectTo="/app/dashboard">
+        <InfoPortalPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/backup",
     component: (
-      <RequireAdmin fallback={<Navigate to="/dashboard" replace />}>
+      <PermissionRoute 
+        permission="backup:read"
+        redirectTo="/app/dashboard"
+      >
         <BackupPage />
-      </RequireAdmin>
+      </PermissionRoute>
     ),
   },
 ];

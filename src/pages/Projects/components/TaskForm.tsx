@@ -46,6 +46,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
   const [priority, setPriority] = useState("");
   const [memberId, setMemberId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ subject?: string; code?: string }>({});
 
   const dispatch = useAppDispatch();
   const { projectId: projectIdFromParams } = useParams<{ projectId: string }>();
@@ -86,6 +87,21 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
       setMemberId(task.assignTo || null);
     }
   }, [isEditMode, task]);
+
+  const validateForm = (): boolean => {
+    const newErrors: { subject?: string; code?: string } = {};
+    
+    if (!subject.trim()) {
+      newErrors.subject = "Task name is required";
+    }
+    
+    if (!code.trim()) {
+      newErrors.code = "Task code is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmitTask = async () => {
     if (isSubmitting) return; // Prevent double submission
@@ -132,14 +148,8 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
       }
     }
 
-    // Basic validation
-    if (!subject.trim()) {
-      toast.error("Please enter a task name");
-      return;
-    }
-
-    if (!code.trim()) {
-      toast.error("Please enter a task code");
+    // Validate form
+    if (!validateForm()) {
       return;
     }
 
@@ -172,6 +182,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
       setDuration("");
       setPriority("");
       setMemberId(null);
+      setErrors({});
       onClose?.();
     } catch {
       // Error is already handled by the action with toast
@@ -186,9 +197,15 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
     switch (name) {
       case "subject":
         setSubject(value);
+        if (errors.subject) {
+          setErrors({ ...errors, subject: undefined });
+        }
         break;
       case "code":
         setCode(value);
+        if (errors.code) {
+          setErrors({ ...errors, code: undefined });
+        }
         break;
       case "duration":
         setDuration(value);
@@ -230,6 +247,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
     setDuration("");
     setPriority("");
     setMemberId(null);
+    setErrors({});
     onClose?.();
   };
 
@@ -282,6 +300,9 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
               name="subject"
               value={subject}
               onChange={handleChange}
+              error={Boolean(errors.subject)}
+              helperText={errors.subject}
+              required
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
@@ -297,6 +318,9 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
               name="code"
               value={code}
               onChange={handleChange}
+              error={Boolean(errors.code)}
+              helperText={errors.code}
+              required
             />
           </Box>
         </Box>
@@ -417,7 +441,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
           <Button 
             variant="contained" 
             onClick={handleSubmitTask}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !subject.trim() || !code.trim()}
           >
             {isSubmitting ? "Submitting..." : isEditMode ? "Update Task" : "Add Task"}
           </Button>

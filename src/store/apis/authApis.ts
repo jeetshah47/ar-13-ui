@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "../../config/api";
+import type { PermissionsResponse } from "../../types/RBAC";
 export type User = {
   first_name: string;
   last_name: string;
@@ -20,6 +21,7 @@ export interface SingUpRequest {
   password: string;
   role: UserRoles;
   phoneNumber?: string;
+  token?: string;
 }
 
 export async function loginApi(
@@ -86,5 +88,27 @@ export async function validateSignupTokenApi(
     error.response = { data: { valid: false, reason: data.reason } };
     throw error;
   }
+  return result.data;
+}
+
+/**
+ * Fetch user permissions from the API
+ * @returns PermissionsResponse containing role and permissions array
+ */
+export async function getPermissionsApi(): Promise<PermissionsResponse> {
+  const url = `${API_BASE_URL}/auth/permissions`;
+  const token = localStorage.getItem("authToken");
+  
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  const result = await axios.get<PermissionsResponse>(url, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  
   return result.data;
 }

@@ -17,6 +17,7 @@ import InfoPortalIcon from "../../../assets/icons/sidebar/infoportal/active.svg?
 import GearIcon from "../../../assets/icons/general/gear.svg?react";
 import { useLocation, useNavigate } from "react-router";
 import { RequireAdmin } from "../RBAC/RequirePermission";
+import { usePermissions } from "../../../store/hooks/usePermissions";
 
 interface ItemProps {
   active?: boolean;
@@ -27,6 +28,8 @@ interface MainSiderBarProps {
 }
 
 const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
+  const { checkPermission } = usePermissions();
+  
   const Item = styled(Paper, {
     shouldForwardProp: (prop) => prop !== "active",
   })<ItemProps>(({ theme, active }) => ({
@@ -102,66 +105,74 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
       </Box>
       <Box sx={{ flex: 1, overflowY: "auto" }}>
         <Stack gap={{ xs: 0.5, sm: 1 }}>
-          <Item
-            onClick={() => handleNavigation("/app/dashboard")}
-            active={checkActiveStatus("dashboard")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={DashIcon}
-              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+          {checkPermission("dashboard:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/dashboard")}
+              active={checkActiveStatus("dashboard")}
+              elevation={0}
             >
-              Dashboard
-            </Typography>
-          </Item>
-          <Item
-            active={checkActiveStatus("projects")}
-            onClick={() => handleNavigation("/app/projects")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={ProjectIcon}
-              color={checkActiveStatus("projects") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              <SvgIcon
+                component={DashIcon}
+                color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+              >
+                Dashboard
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("projects:read") && (
+            <Item
+              active={checkActiveStatus("projects")}
+              onClick={() => handleNavigation("/app/projects")}
+              elevation={0}
             >
-              Project
-            </Typography>
-          </Item>
-          <Item
-            active={checkActiveStatus("calendar")}
-            onClick={() => handleNavigation("/app/calendar")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={CalenderIcon}
-              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              <SvgIcon
+                component={ProjectIcon}
+                color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              >
+                Project
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("calendar:read") && (
+            <Item
+              active={checkActiveStatus("calendar")}
+              onClick={() => handleNavigation("/app/calendar")}
+              elevation={0}
             >
-              Calender
-            </Typography>
-          </Item>
-          <Item
-            onClick={() => handleNavigation("/app/employees")}
-            active={checkActiveStatus("employees")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={EmployeesIcon}
-              color={checkActiveStatus("employees") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              <SvgIcon
+                component={CalenderIcon}
+                color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              >
+                Calender
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("employees:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/employees")}
+              active={checkActiveStatus("employees")}
+              elevation={0}
             >
-              Employees
-            </Typography>
-          </Item>
+              <SvgIcon
+                component={EmployeesIcon}
+                color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              >
+                Employees
+              </Typography>
+            </Item>
+          )}
           <RequireAdmin>
             <Item
               onClick={() => handleNavigation("/app/vacations")}
@@ -179,22 +190,25 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
               </Typography>
             </Item>
           </RequireAdmin>
-          <Item
-            onClick={() => handleNavigation("/app/info-portal")}
-            active={checkActiveStatus("info-portal")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={InfoPortalIcon}
-              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
+          {checkPermission("infoPortal:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/info-portal")}
+              active={checkActiveStatus("info-portal")}
+              elevation={0}
             >
-              Info Portal
-            </Typography>
-          </Item>
-          <RequireAdmin>
+              <SvgIcon
+                component={InfoPortalIcon}
+                color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
+              >
+                Info Portal
+              </Typography>
+            </Item>
+          )}
+          {/* Backup sidebar - Only visible to users with backup:read permission */}
+          {checkPermission("backup:read") && (
             <Item
               onClick={() => handleNavigation("/app/backup")}
               active={checkActiveStatus("backup")}
@@ -210,7 +224,7 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
                 Backup
               </Typography>
             </Item>
-          </RequireAdmin>
+          )}
         </Stack>
       </Box>
     </Box>

@@ -3,11 +3,16 @@ import PageHeader from "../../common/components/PageHeader/PageHeader";
 import { useState } from "react";
 import { createBackup, createBackupWithCustomLocation } from "../../store/apis/backupApis";
 import toast from "react-hot-toast";
+import { usePermissions } from "../../store/hooks/usePermissions";
+import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
 
 const BackupPage = () => {
+  const { checkPermission } = usePermissions();
   const [loading, setLoading] = useState(false);
   const [customDir, setCustomDir] = useState("");
   const [lastBackupLocation, setLastBackupLocation] = useState<string | null>(null);
+  
+  const canWrite = checkPermission("backup:write");
 
   const handleDefaultBackup = async () => {
     setLoading(true);
@@ -70,51 +75,58 @@ const BackupPage = () => {
               )}
 
               <Stack spacing={3}>
-                <Box>
-                  <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
-                    Default Backup Location
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
-                    Creates a backup in the default location: <code>upload/backups/</code>
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={handleDefaultBackup}
-                    disabled={loading}
-                    sx={{ minWidth: "200px" }}
-                  >
-                    {loading ? <CircularProgress size={20} /> : "Create Default Backup"}
-                  </Button>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
-                    Custom Backup Location
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
-                    Specify a custom directory path for the backup.
-                  </Typography>
-                  <Stack direction="row" spacing={2} alignItems="flex-start">
-                    <TextField
-                      fullWidth
-                      label="Backup Directory Path"
-                      placeholder="/path/to/backup"
-                      value={customDir}
-                      onChange={(e) => setCustomDir(e.target.value)}
-                      disabled={loading}
-                      size="small"
-                      helperText="Enter the full path where you want to store the backup"
-                    />
+                <RequirePermission permission="backup:write">
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
+                      Default Backup Location
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
+                      Creates a backup in the default location: <code>upload/backups/</code>
+                    </Typography>
                     <Button
                       variant="contained"
-                      onClick={handleCustomBackup}
-                      disabled={loading || !customDir.trim()}
-                      sx={{ minWidth: "200px", marginTop: "8px" }}
+                      onClick={handleDefaultBackup}
+                      disabled={loading}
+                      sx={{ minWidth: "200px" }}
                     >
-                      {loading ? <CircularProgress size={20} /> : "Create Custom Backup"}
+                      {loading ? <CircularProgress size={20} /> : "Create Default Backup"}
                     </Button>
-                  </Stack>
-                </Box>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
+                      Custom Backup Location
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
+                      Specify a custom directory path for the backup.
+                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <TextField
+                        fullWidth
+                        label="Backup Directory Path"
+                        placeholder="/path/to/backup"
+                        value={customDir}
+                        onChange={(e) => setCustomDir(e.target.value)}
+                        disabled={loading}
+                        size="small"
+                        helperText="Enter the full path where you want to store the backup"
+                      />
+                      <Button
+                        variant="contained"
+                        onClick={handleCustomBackup}
+                        disabled={loading || !customDir.trim()}
+                        sx={{ minWidth: "200px", marginTop: "8px" }}
+                      >
+                        {loading ? <CircularProgress size={20} /> : "Create Custom Backup"}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </RequirePermission>
+                {!canWrite && (
+                  <Alert severity="info">
+                    You have read-only access to the backup page. You need the <strong>backup:write</strong> permission to create backups.
+                  </Alert>
+                )}
               </Stack>
             </CardContent>
           </Card>
@@ -135,7 +147,10 @@ const BackupPage = () => {
                   Custom backup paths must be absolute paths (e.g., /home/user/backups)
                 </Typography>
                 <Typography component="li" variant="body2" color="text.secondary">
-                  Only administrators can access this page
+                  Users with <strong>backup:read</strong> permission can view this page
+                </Typography>
+                <Typography component="li" variant="body2" color="text.secondary">
+                  Users with <strong>backup:write</strong> permission can create backups
                 </Typography>
               </Box>
             </CardContent>

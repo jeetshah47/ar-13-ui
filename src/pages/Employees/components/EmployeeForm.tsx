@@ -4,6 +4,8 @@ import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
 import { inviteEmployeeAction } from "../../../store/features/employees/employeeActions";
+import { MSG_INVALID_EMAIL } from "../../../constants/messages";
+
 type EmployeeCardProps = {
   onClose: () => void;
 };
@@ -12,10 +14,46 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
   const dispatch = useAppDispatch();
   const inviting = useAppSelector((s) => s.employeeReducer.inviting) ?? false;
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+
+  const validateEmail = (emailValue: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailValue);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    // Clear error when user starts typing
+    if (emailError) {
+      setEmailError("");
+    }
+  };
+
+  const handleEmailBlur = () => {
+    if (email.trim() && !validateEmail(email.trim())) {
+      setEmailError(MSG_INVALID_EMAIL);
+    } else {
+      setEmailError("");
+    }
+  };
 
   const handleInvite = () => {
-    if (!email.trim()) return;
-    dispatch(inviteEmployeeAction(email.trim(), onClose));
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail) {
+      setEmailError("Email is required");
+      return;
+    }
+    
+    if (!validateEmail(trimmedEmail)) {
+      setEmailError(MSG_INVALID_EMAIL);
+      return;
+    }
+    
+    setEmailError("");
+    dispatch(inviteEmployeeAction(trimmedEmail, onClose));
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
@@ -78,8 +116,12 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
             sx={{ width: "100%", paddingTop: "7px" }}
             placeholder="Enter Member's Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
+            onBlur={handleEmailBlur}
             onKeyDown={handleKeyDown}
+            error={Boolean(emailError)}
+            helperText={emailError}
+            type="email"
           />
         </Box>
         <Box sx={{ display: "flex", gap: "8px", paddingTop: "10px" }}>
@@ -97,7 +139,11 @@ const EmployeeForm = ({ onClose }: EmployeeCardProps) => {
             alignItems: "center",
           }}
         >
-          <Button variant="contained" disabled={inviting || !email.trim()} onClick={handleInvite}>
+          <Button 
+            variant="contained" 
+            disabled={inviting || !email.trim() || Boolean(emailError)} 
+            onClick={handleInvite}
+          >
             {inviting ? "Sending..." : "Send Invite"}
           </Button>
         </Box>

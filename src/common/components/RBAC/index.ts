@@ -13,3 +13,5 @@ export {
   RequireProjectOwnership,
   RequireTaskAssignment,
 } from './RequireResourceAccess';
+
+export { PermissionRoute } from './PermissionRoute';

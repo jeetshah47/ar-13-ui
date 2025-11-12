@@ -46,7 +46,11 @@ export const getAllEmployeesAction = () => async (dispatch: AppDispatch) => {
     }
     
     dispatch(getAllEmployeesFailed(errorMessage));
-    toast.error(errorMessage);
+    
+    // Don't show toast if it's an admin access error (handled globally in HTTP interceptor)
+    if (!errorMessage.toLowerCase().includes("admin access required")) {
+      toast.error(errorMessage);
+    }
   }
 };
 
@@ -82,7 +86,11 @@ export const getEmployeeByIdAction = (userId: string) => async (dispatch: AppDis
     }
     
     dispatch(getEmployeeByIdFailed(errorMessage));
-    toast.error(errorMessage);
+    
+    // Don't show toast if it's an admin access error (handled globally in HTTP interceptor)
+    if (!errorMessage.toLowerCase().includes("admin access required")) {
+      toast.error(errorMessage);
+    }
   }
 };
 
@@ -115,7 +123,11 @@ export const inviteEmployeeAction = (email: string, cb?: () => void) => async (d
     }
     
     dispatch(inviteEmployeeFailed(errorMessage));
-    toast.error(errorMessage);
+    
+    // Don't show toast if it's an admin access error (handled globally in HTTP interceptor)
+    if (!errorMessage.toLowerCase().includes("admin access required")) {
+      toast.error(errorMessage);
+    }
   }
 };
 
@@ -155,6 +167,10 @@ export const getEmployeeStatsAction = (
     }
     
     dispatch(getEmployeeStatsFailed(errorMessage));
-    toast.error(errorMessage);
+    
+    // Don't show toast if it's an admin access error (handled globally in HTTP interceptor)
+    if (!errorMessage.toLowerCase().includes("admin access required")) {
+      toast.error(errorMessage);
+    }
   }
 };

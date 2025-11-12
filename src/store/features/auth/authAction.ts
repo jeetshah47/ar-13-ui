@@ -9,11 +9,14 @@ import {
   validateSignupTokenRequest,
   validateSignupTokenSuccess,
   validateSignupTokenFailed,
+  fetchPermissionsRequest,
+  fetchPermissionsSuccess,
+  fetchPermissionsFailed,
 } from "./authSlice";
 import type { AxiosError } from "axios";
 import type { AuthError } from "../../types/Auth/AuthError";
 import toast from "react-hot-toast";
-import { loginApi, signupApi, type SingUpRequest, validateSignupTokenApi } from "../../apis/authApis";
+import { loginApi, signupApi, type SingUpRequest, validateSignupTokenApi, getPermissionsApi } from "../../apis/authApis";
 import { getUserProfile } from "../../apis/userApis";
 import type { UserRole } from "../../types/RBAC";
 
@@ -77,6 +80,22 @@ export const authSignInActions =
           email: userProfile.email,
           name: userProfile.name
         }));
+        
+        // Fetch permissions from API after successful login
+        try {
+          const permissionsData = await getPermissionsApi();
+          dispatch(fetchPermissionsSuccess({
+            role: permissionsData.role,
+            permissions: permissionsData.permissions
+          }));
+          // Update localStorage with API role (may differ from profile role)
+          localStorage.setItem("userRole", permissionsData.role);
+        } catch (permissionsError) {
+          // If permissions API fails, use role-based permissions as fallback
+          // eslint-disable-next-line no-console
+          console.warn("Failed to fetch permissions from API, using role-based permissions:", permissionsError);
+          dispatch(fetchPermissionsFailed("Failed to fetch permissions, using default permissions"));
+        }
       } catch {
         // Fallback to default role if API call fails
         // This ensures the app continues to work even if the user profile API is unavailable
@@ -93,6 +112,20 @@ export const authSignInActions =
           email: userEmail,
           name: undefined
         }));
+        
+        // Try to fetch permissions even with fallback role
+        try {
+          const permissionsData = await getPermissionsApi();
+          dispatch(fetchPermissionsSuccess({
+            role: permissionsData.role,
+            permissions: permissionsData.permissions
+          }));
+          localStorage.setItem("userRole", permissionsData.role);
+        } catch (permissionsError) {
+          // eslint-disable-next-line no-console
+          console.warn("Failed to fetch permissions from API:", permissionsError);
+          dispatch(fetchPermissionsFailed("Failed to fetch permissions, using default permissions"));
+        }
       }
       
       if (cb) cb();
@@ -104,11 +137,12 @@ export const authSignInActions =
   };
 
 export const authSignUpActions =
-  (body: SingUpRequest, cb?: () => void) => async (dispatch: AppDispatch) => {
+  (body: SingUpRequest, token?: string, cb?: () => void) => async (dispatch: AppDispatch) => {
     dispatch(authSignUpRequest());
     try {
       signupApi({
         ...body,
+        token: token,
       })
         .then(() => {
           toast.success("User Signup Successfull");
@@ -132,8 +166,23 @@ export const validateSignupTokenAction =
   (token: string) => async (dispatch: AppDispatch) => {
     dispatch(validateSignupTokenRequest());
     try {
-      await validateSignupTokenApi(token);
-      dispatch(validateSignupTokenSuccess());
+      const response = await validateSignupTokenApi(token);
+      
+      // Try to extract email from token (if it's a JWT) or from API response
+      let email: string | undefined;
+      
+      // First, try to decode the token as JWT
+      const decodedToken = decodeJWT(token);
+      if (decodedToken?.email) {
+        email = decodedToken.email;
+      }
+      
+      // If not in token, check API response
+      if (!email && (response as { email?: string }).email) {
+        email = (response as { email?: string }).email;
+      }
+      
+      dispatch(validateSignupTokenSuccess({ email }));
     } catch (error) {
       const axiosError = error as AxiosError<{ valid?: boolean; reason?: string; message?: string }>;
       const responseData = axiosError.response?.data;
@@ -148,3 +197,25 @@ export const validateSignupTokenAction =
       dispatch(validateSignupTokenFailed({ message, reason }));
     }
   };
+
+/**
+ * Fetch user permissions from the API
+ * This action can be called independently to refresh permissions
+ */
+export const fetchPermissionsAction = () => async (dispatch: AppDispatch) => {
+  dispatch(fetchPermissionsRequest());
+  try {
+    const permissionsData = await getPermissionsApi();
+    dispatch(fetchPermissionsSuccess({
+      role: permissionsData.role,
+      permissions: permissionsData.permissions
+    }));
+    // Update localStorage with API role
+    localStorage.setItem("userRole", permissionsData.role);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to fetch permissions";
+    dispatch(fetchPermissionsFailed(errorMessage));
+    // eslint-disable-next-line no-console
+    console.error("Error fetching permissions:", error);
+  }
+};

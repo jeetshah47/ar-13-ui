@@ -2,6 +2,7 @@ import { Box, Button, SvgIcon, Typography, Chip, Divider, useMediaQuery, useThem
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 import { useAppSelector } from "../../../store/store";
+import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
 
 type EventDetailsModalProps = {
   event: CalendarResponse;
@@ -315,9 +316,11 @@ const EventDetailsModal = ({ event, onClose, onEdit }: EventDetailsModalProps) =
         <Button variant="outlined" onClick={onClose}>
           Close
         </Button>
-        <Button variant="contained" onClick={onEdit}>
-          Edit Event
-        </Button>
+        <RequirePermission permission="calendar:write">
+          <Button variant="contained" onClick={onEdit}>
+            Edit Event
+          </Button>
+        </RequirePermission>
       </Box>
     </Box>
   );

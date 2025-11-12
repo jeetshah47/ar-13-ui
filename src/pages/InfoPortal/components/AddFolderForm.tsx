@@ -28,6 +28,7 @@ const folderColors = [
 const AddFolderForm = ({ onClose, onAddFolder }: AddFolderFormProps) => {
   const [folderName, setFolderName] = useState("");
   const [selectedColor, setSelectedColor] = useState("#FFF7E3");
+  const [error, setError] = useState("");
 
   const handleColorChange = (event: SelectChangeEvent) => {
     setSelectedColor(event.target.value);
@@ -35,13 +36,19 @@ const AddFolderForm = ({ onClose, onAddFolder }: AddFolderFormProps) => {
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFolderName(event.target.value);
+    // Clear error when user starts typing
+    if (error) {
+      setError("");
+    }
   };
 
   const handleSubmit = () => {
     if (!folderName.trim()) {
+      setError("Folder name is required");
       return;
     }
 
+    setError("");
     onAddFolder(folderName.trim(), selectedColor);
     onClose();
   };
@@ -49,6 +56,7 @@ const AddFolderForm = ({ onClose, onAddFolder }: AddFolderFormProps) => {
   const handleClose = () => {
     setFolderName("");
     setSelectedColor("#FFF7E3");
+    setError("");
     onClose();
   };
 
@@ -111,6 +119,9 @@ const AddFolderForm = ({ onClose, onAddFolder }: AddFolderFormProps) => {
           value={folderName}
           onChange={handleNameChange}
           placeholder="Enter folder name"
+          error={Boolean(error)}
+          helperText={error}
+          required
           sx={(theme) => ({
             width: "100%",
             "& .MuiOutlinedInput-root": {

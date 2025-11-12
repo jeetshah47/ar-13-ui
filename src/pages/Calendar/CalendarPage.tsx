@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../store/store";
 import { fetchCalendarEvents } from "../../store/features/calendar/calendarAction";
 import { getUsersAction } from "../../store/features/user/userAction";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
+import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
 
 const CalendarPage = () => {
   const theme = useTheme();
@@ -48,18 +49,20 @@ const CalendarPage = () => {
   };
 
   const AddButton = (
-    <Button 
-      variant="contained" 
-      startIcon={<SvgIcon component={PlusIcon} />}
-      onClick={handleAddEvent}
-      size={isMobile ? "small" : "medium"}
-      sx={{
-        fontSize: { xs: "12px", sm: "14px" },
-        padding: { xs: "6px 12px", sm: "8px 16px" }
-      }}
-    >
-      {isMobile ? "Add" : "Add Events"}
-    </Button>
+    <RequirePermission permission="calendar:write">
+      <Button 
+        variant="contained" 
+        startIcon={<SvgIcon component={PlusIcon} />}
+        onClick={handleAddEvent}
+        size={isMobile ? "small" : "medium"}
+        sx={{
+          fontSize: { xs: "12px", sm: "14px" },
+          padding: { xs: "6px 12px", sm: "8px 16px" }
+        }}
+      >
+        {isMobile ? "Add" : "Add Events"}
+      </Button>
+    </RequirePermission>
   );
 
   // Helper to format a Date as YYYY-MM-DD without calling toISOString on invalid dates

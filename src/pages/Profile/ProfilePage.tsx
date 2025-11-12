@@ -13,12 +13,14 @@ import { useEffect, useState } from "react";
 import ProjectSection from "./components/ProjectSection";
 import TeamSection from "./components/TeamSection";
 import VacationSection from "./components/VacationSection";
+import PermissionsSection from "./components/PermissionsSection";
 import Modal from "../../common/components/Modal/Modal";
 import VacationForm from "./components/VacationForm";
 import { ProfileSetting } from "./components/ProfileSetting";
 import GoogleAccountLink from "./components/GoogleAccountLink";
 import { useAppDispatch, useAppSelector, type RootState } from "../../store/store";
 import { getUserProfileAction } from "../../store/features/user/userActions";
+import { usePermissions } from "../../store/hooks/usePermissions";
 
 // Helper function to generate initials from name
 const getInitials = (name: string | null | undefined): string => {
@@ -30,8 +32,6 @@ const getInitials = (name: string | null | undefined): string => {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
-const tabList = ["Projects", "Team", "My Vacations"];
-
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("Projects");
   const [showModal, setShowModal] = useState(false);
@@ -41,6 +41,23 @@ const ProfilePage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const uid = useAppSelector((s) => s.authReducer.api.uid);
   const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
+  const { checkPermission } = usePermissions();
+  
+  // Filter tab list based on permissions
+  const baseTabList = ["Projects", "Team", "My Vacations", "Permissions"];
+  const tabList = baseTabList.filter(tab => {
+    if (tab === "My Vacations") {
+      return checkPermission("vacation:read");
+    }
+    return true;
+  });
+  
+  // If current tab is not available, switch to first available tab
+  useEffect(() => {
+    if (!tabList.includes(currentTab) && tabList.length > 0) {
+      setCurrentTab(tabList[0]);
+    }
+  }, [tabList, currentTab]);
   
   // Get auth state user data as fallback
   const authUserName = useAppSelector((state: RootState) => state.authReducer.user.name);
@@ -227,7 +244,7 @@ const ProfilePage = () => {
                   />
                 </Box>
 
-                {currentTab === "My Vacations" && (
+                {currentTab === "My Vacations" && checkPermission("vacation:write") && (
                   <Button 
                     onClick={handleOnShowModal} 
                     variant="contained"
@@ -244,7 +261,8 @@ const ProfilePage = () => {
           </Box>
           {currentTab === "Projects" && <ProjectSection />}
           {currentTab === "Team" && <TeamSection />}
-          {currentTab === "My Vacations" && <VacationSection />}
+          {currentTab === "My Vacations" && checkPermission("vacation:read") && <VacationSection />}
+          {currentTab === "Permissions" && <PermissionsSection />}
           {showSetting && <ProfileSetting />}
         </Box>
       </Box>

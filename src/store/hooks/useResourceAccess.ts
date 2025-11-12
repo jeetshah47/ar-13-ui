@@ -65,7 +65,13 @@ export const useResourceAccess = () => {
     };
   };
   
+  /**
+   * Check if user can access (view) a project
+   * Standard users can view ALL projects (read-only access)
+   * Admin users can view and modify all projects
+   */
   const canAccessProject = (project: ProjectResponse): boolean => {
+    // All users (both Admin and Standard) can view all projects
     return getProjectAccess(project).canRead;
   };
   

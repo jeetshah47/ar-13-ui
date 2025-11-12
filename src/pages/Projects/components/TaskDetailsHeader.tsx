@@ -4,6 +4,7 @@ import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
 import Chips from "../../../common/components/Chips/Chips";
 import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
 import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
+import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
 
 interface TaskDetailsHeaderProps {
   onEditClick: () => void;
@@ -33,23 +34,25 @@ const TaskDetailsHeader = ({ onEditClick }: TaskDetailsHeaderProps) => {
         Task Details
       </Typography>
       <Box sx={{ display: "flex", gap: { xs: "6px", sm: "8px" } }}>
-        <Box
-          onClick={onEditClick}
-          sx={{
-            backgroundColor: "#fff",
-            display: "flex",
-            padding: { xs: "8px", sm: "10px" },
-            borderRadius: "14px",
-            cursor: "pointer",
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: "#f5f5f5",
-              transform: "scale(1.05)",
-            },
-          }}
-        >
-          <SvgIcon sx={{ fontSize: { xs: "20px", sm: "24px" } }} component={EditIcon} />
-        </Box>
+        <RequirePermission permission="tasks:write">
+          <Box
+            onClick={onEditClick}
+            sx={{
+              backgroundColor: "#fff",
+              display: "flex",
+              padding: { xs: "8px", sm: "10px" },
+              borderRadius: "14px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "#f5f5f5",
+                transform: "scale(1.05)",
+              },
+            }}
+          >
+            <SvgIcon sx={{ fontSize: { xs: "20px", sm: "24px" } }} component={EditIcon} />
+          </Box>
+        </RequirePermission>
         <Box
           sx={{
             backgroundColor: "#fff",

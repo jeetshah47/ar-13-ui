@@ -11,6 +11,7 @@ import Modal from "../../common/components/Modal/Modal";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import AnimatedPage from "../../common/components/AnimatedPage/AnimatedPage";
 import { useInfoPortal } from "../../store/hooks/useInfoPortal";
+import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
 
 const InfoPortalList = () => {
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
@@ -36,10 +37,51 @@ const InfoPortalList = () => {
   };
 
   const AddButton = (
-    <Button
-      variant="contained"
-      onClick={handleAddFolder}
-      startIcon={
+    <RequirePermission permission="infoPortal:write">
+      <Button
+        variant="contained"
+        onClick={handleAddFolder}
+        startIcon={
+          <SvgIcon
+            component={PlusIcon}
+            sx={{
+              width: "24px",
+              height: "24px",
+              fill: "white",
+            }}
+          />
+        }
+        sx={(theme) => ({
+          borderRadius: "14px",
+          padding: "11px 16px",
+          boxShadow: theme.shadows[4],
+          display: { xs: "none", sm: "flex" },
+        })}
+      >
+        Add Folder
+      </Button>
+    </RequirePermission>
+  );
+
+  const FloatingActionButton = (
+    <RequirePermission permission="infoPortal:write">
+      <Fab
+        onClick={handleAddFolder}
+        color="primary"
+        sx={{
+          position: "fixed",
+          bottom: { xs: "24px", sm: "32px" },
+          right: { xs: "20px", sm: "32px" },
+          display: { xs: "flex", sm: "none" },
+          zIndex: (theme) => theme.zIndex.speedDial,
+          width: "56px",
+          height: "56px",
+          boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+          "&:hover": {
+            boxShadow: "0px 8px 16px 0px rgba(63, 140, 255, 0.35)",
+          },
+        }}
+      >
         <SvgIcon
           component={PlusIcon}
           sx={{
@@ -48,45 +90,8 @@ const InfoPortalList = () => {
             fill: "white",
           }}
         />
-      }
-      sx={(theme) => ({
-        borderRadius: "14px",
-        padding: "11px 16px",
-        boxShadow: theme.shadows[4],
-        display: { xs: "none", sm: "flex" },
-      })}
-    >
-      Add Folder
-    </Button>
-  );
-
-  const FloatingActionButton = (
-    <Fab
-      onClick={handleAddFolder}
-      color="primary"
-      sx={{
-        position: "fixed",
-        bottom: { xs: "24px", sm: "32px" },
-        right: { xs: "20px", sm: "32px" },
-        display: { xs: "flex", sm: "none" },
-        zIndex: (theme) => theme.zIndex.speedDial,
-        width: "56px",
-        height: "56px",
-        boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
-        "&:hover": {
-          boxShadow: "0px 8px 16px 0px rgba(63, 140, 255, 0.35)",
-        },
-      }}
-    >
-      <SvgIcon
-        component={PlusIcon}
-        sx={{
-          width: "24px",
-          height: "24px",
-          fill: "white",
-        }}
-      />
-    </Fab>
+      </Fab>
+    </RequirePermission>
   );
 
   return (

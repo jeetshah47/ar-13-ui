@@ -46,6 +46,7 @@ const AddProject = () => {
     ownerId: localStorage.getItem("uid") ?? "",
     logoUrl: "",
   });
+  const [errors, setErrors] = useState<{ title?: string; endDate?: string }>({});
 
   useEffect(() => {
     dispatch(getUsersAction());
@@ -56,7 +57,12 @@ const AddProject = () => {
       ...prev,
       deadLine: endDate ? endDate.toISOString() : "",
     }));
-  }, [endDate]);
+    
+    // Clear end date error when date is selected
+    if (endDate && errors.endDate) {
+      setErrors((prev) => ({ ...prev, endDate: undefined }));
+    }
+  }, [endDate, errors.endDate]);
 
   const handleChange = (
     e:
@@ -65,9 +71,35 @@ const AddProject = () => {
   ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Clear error when user starts typing
+    if (name === "title" && errors.title) {
+      setErrors({ ...errors, title: undefined });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: { title?: string; endDate?: string } = {};
+    
+    if (!formData.title.trim()) {
+      newErrors.title = "Project name is required";
+    }
+    
+    if (!endDate) {
+      newErrors.endDate = "End date is required";
+    } else if (startDate && endDate && endDate < startDate) {
+      newErrors.endDate = "End date must be after start date";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
+    if (!validateForm()) {
+      return;
+    }
+    
     dispatch(
       addProjectAction(formData, () => {
         navigate("/app/projects");
@@ -122,6 +154,9 @@ const AddProject = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              error={Boolean(errors.title)}
+              helperText={errors.title}
+              required
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
@@ -134,6 +169,11 @@ const AddProject = () => {
               endDate={endDate}
               setEndDate={setEndDate}
             />
+            {errors.endDate && (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5, display: "block" }}>
+                {errors.endDate}
+              </Typography>
+            )}
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>
             <Typography color="secondary" sx={{ fontWeight: "bold" }}>
@@ -218,7 +258,11 @@ const AddProject = () => {
         </Box>
       </Box>
       <Box>
-        <Button variant="contained" onClick={handleSubmit}>
+        <Button 
+          variant="contained" 
+          onClick={handleSubmit}
+          disabled={!formData.title.trim() || !endDate}
+        >
           Save Project
         </Button>
       </Box>
