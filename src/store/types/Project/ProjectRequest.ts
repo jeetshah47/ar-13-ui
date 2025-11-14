@@ -1,8 +1,10 @@
 export interface ProjectRequest {
   title: string;
   description: string;
-  deadLine: string;
-  membersIds: string[];
   ownerId: string;
+  membersIds: string[];
+  startDate: string;
+  endDate: string;
+  deadLine: string;
   logoUrl?: string;
 }

@@ -10,6 +10,11 @@ import {
   InputLabel,
   OutlinedInput,
   Chip,
+  Stepper,
+  Step,
+  StepLabel,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import Icon1 from "../../../assets/icons/project/Image-1.svg?react";
@@ -26,85 +31,120 @@ import Icon from "../../../assets/icons/project/Image.svg?react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { addProjectAction } from "../../../store/features/projects/projectAction";
 import type { AppDispatch, RootState } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import type { SelectChangeEvent } from "@mui/material";
-import { DateRangePicker } from "../../../common/components/DateRangePicker/DateRangePicker";
+
+const steps = ["Basic Details", "Team Members"];
+
+// Validation schema for step 1
+const step1ValidationSchema = Yup.object({
+  title: Yup.string()
+    .trim()
+    .required("Project name is required")
+    .min(1, "Project name cannot be empty"),
+  startDate: Yup.string()
+    .required("Start date is required"),
+  endDate: Yup.string()
+    .required("End date is required")
+    .test(
+      "is-after-start",
+      "End date must be after start date",
+      function (value) {
+        const { startDate } = this.parent;
+        if (!startDate || !value) return true;
+        const start = new Date(startDate + "T00:00:00");
+        const end = new Date(value + "T23:59:59");
+        return end >= start;
+      }
+    ),
+  description: Yup.string(),
+  logoUrl: Yup.string(),
+});
 
 const AddProject = () => {
+  const theme = useTheme();
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up("lg"));
+  
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { users } = useSelector((state: RootState) => state.userReducer);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    deadLine: "",
-    membersIds: [] as string[],
-    ownerId: localStorage.getItem("uid") ?? "",
-    logoUrl: "",
-  });
-  const [errors, setErrors] = useState<{ title?: string; endDate?: string }>({});
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     dispatch(getUsersAction());
   }, [dispatch]);
 
+  const formik = useFormik({
+    initialValues: {
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      deadLine: "",
+      membersIds: [] as string[],
+      ownerId: localStorage.getItem("uid") ?? "",
+      logoUrl: "",
+    },
+    validationSchema: step1ValidationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: (values) => {
+      // Format dates to ISO strings
+      const start = values.startDate ? new Date(values.startDate + "T00:00:00") : null;
+      const end = values.endDate ? new Date(values.endDate + "T23:59:59") : null;
+      
+      const finalFormData = {
+        ...values,
+        startDate: start ? start.toISOString() : "",
+        endDate: end ? end.toISOString() : "",
+        deadLine: end ? end.toISOString() : "",
+      };
+      
+      dispatch(
+        addProjectAction(finalFormData, () => {
+          navigate("/app/projects");
+        })
+      );
+    },
+  });
+
+  // Update deadline when endDate changes
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      deadLine: endDate ? endDate.toISOString() : "",
-    }));
-    
-    // Clear end date error when date is selected
-    if (endDate && errors.endDate) {
-      setErrors((prev) => ({ ...prev, endDate: undefined }));
+    if (formik.values.endDate) {
+      const end = new Date(formik.values.endDate + "T23:59:59");
+      formik.setFieldValue("deadLine", end.toISOString(), false);
     }
-  }, [endDate, errors.endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.endDate]);
 
-  const handleChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | SelectChangeEvent<string[]>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    
-    // Clear error when user starts typing
-    if (name === "title" && errors.title) {
-      setErrors({ ...errors, title: undefined });
+  const handleNext = async () => {
+    if (activeStep === 0) {
+      // Validate step 1 fields
+      const errors = await formik.validateForm();
+      if (Object.keys(errors).length === 0) {
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      }
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: { title?: string; endDate?: string } = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = "Project name is required";
-    }
-    
-    if (!endDate) {
-      newErrors.endDate = "End date is required";
-    } else if (startDate && endDate && endDate < startDate) {
-      newErrors.endDate = "End date must be after start date";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) {
+  const handleSubmit = async () => {
+    // Validate all fields before submitting
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0) {
+      // If validation fails, go back to step 1 to show errors
+      setActiveStep(0);
       return;
     }
     
-    dispatch(
-      addProjectAction(formData, () => {
-        navigate("/app/projects");
-      })
-    );
+    formik.handleSubmit();
   };
 
   const arrayIcons = [
@@ -122,149 +162,235 @@ const AddProject = () => {
   ];
 
   const handleIconClick = (iconName: string) => {
-    setFormData({ ...formData, logoUrl: iconName });
+    formik.setFieldValue("logoUrl", iconName);
   };
+
+  const handleMembersChange = (event: SelectChangeEvent<string[]>) => {
+    formik.setFieldValue("membersIds", event.target.value);
+  };
+  const renderStepContent = (step: number) => {
+    switch (step) {
+      case 0:
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+              width: "100%",
+              flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+            }}
+          >
+            <Box sx={{ width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" }, padding: { xs: "8px 12px", sm: "10px 14px", md: "12px 16px", lg: "12px 16px" } }}>
+              <Box sx={{ width: "100%", paddingTop: "16px" }}>
+                <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+                  Project Name
+                </Typography>
+                <TextField
+                  sx={{ width: "100%" }}
+                  placeholder="Enter Project Name"
+                  name="title"
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.title && formik.errors.title)}
+                  helperText={formik.touched.title && formik.errors.title}
+                  required
+                />
+              </Box>
+              <Box sx={{ width: "100%", paddingTop: "16px" }}>
+                <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+                  Start Date
+                </Typography>
+                <TextField
+                  sx={{ width: "100%" }}
+                  type="date"
+                  name="startDate"
+                  value={formik.values.startDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.startDate && formik.errors.startDate)}
+                  helperText={formik.touched.startDate && formik.errors.startDate}
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Box>
+              <Box sx={{ width: "100%", paddingTop: "16px" }}>
+                <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+                  End Date
+                </Typography>
+                <TextField
+                  sx={{ width: "100%" }}
+                  type="date"
+                  name="endDate"
+                  value={formik.values.endDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.endDate && formik.errors.endDate)}
+                  helperText={formik.touched.endDate && formik.errors.endDate}
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    min: formik.values.startDate || undefined,
+                  }}
+                />
+              </Box>
+              <Box sx={{ width: "100%", paddingTop: "16px" }}>
+                <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+                  Description
+                </Typography>
+                <TextField
+                  sx={{ width: "100%" }}
+                  placeholder="Enter Description"
+                  name="description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  multiline
+                  rows={4}
+                />
+              </Box>
+            </Box>
+            <Box
+              sx={(theme) => ({
+                backgroundColor: theme.palette.background.paper,
+                border: `1px solid ${theme.palette.grey[300]}`,
+                borderRadius: "24px",
+                padding: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+                width: { xs: "100%", sm: "100%", md: "45%", lg: "30%" },
+                marginTop: { xs: "16px", sm: "20px", md: "0", lg: "0" },
+              })}
+            >
+              <Typography sx={{ fontSize: "18px", fontWeight: "bold" }}>
+                Select image
+              </Typography>
+              <Typography color="secondary" sx={{ padding: "12px 0px" }}>
+                Select or upload an avatar for the project (available formats: jpg,
+                png)
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: "12px", sm: "14px", md: "14px", lg: "16px" } }}>
+                {arrayIcons.map((icon, index) => (
+                  <SvgIcon
+                    key={index}
+                    sx={{
+                      width: "48px",
+                      height: "48px",
+                      cursor: "pointer",
+                      border:
+                        formik.values.logoUrl === icon.name
+                          ? "2px solid #3F8CFF"
+                          : "none",
+                    }}
+                    component={icon.component}
+                    onClick={() => handleIconClick(icon.name)}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        );
+      case 1:
+        return (
+          <Box sx={{ width: "100%", padding: "12px 16px" }}>
+            <Box sx={{ width: "100%", paddingTop: "16px" }}>
+              <Typography color="secondary" sx={{ fontWeight: "bold" }}>
+                Team Members
+              </Typography>
+              <FormControl sx={{ width: "100%", mt: 1 }}>
+                <InputLabel>Team Members</InputLabel>
+                <Select
+                  multiple
+                  value={formik.values.membersIds}
+                  onChange={handleMembersChange}
+                  input={<OutlinedInput label="Team Members" />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip
+                          key={value}
+                          label={
+                            users.find((user) => user.id === value)?.name ?? ""
+                          }
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  name="membersIds"
+                >
+                  {users.map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      {user.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Box
       sx={{
         backgroundColor: "background.paper",
-        padding: "24px",
+        padding: { xs: "16px", sm: "20px", md: "24px", lg: "24px" },
         display: "flex",
         flexDirection: "column",
+        maxWidth: { xs: "100%", sm: "100%", md: "100%", lg: "1400px" },
+        margin: { xs: "0 auto", sm: "0 auto", md: "0 auto", lg: "0 auto" },
       }}
     >
       <PageHeader title="Add Project" />
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyItems: "center",
-          gap: "24px",
-          width: "100%",
-        }}
-      >
-        <Box sx={{ width: "50%", padding: "12px 16px" }}>
-          <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography color="secondary" sx={{ fontWeight: "bold" }}>
-              Project Name
-            </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Project Name"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              error={Boolean(errors.title)}
-              helperText={errors.title}
-              required
-            />
-          </Box>
-          <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography color="secondary" sx={{ fontWeight: "bold" }}>
-              Select Date
-            </Typography>
-            <DateRangePicker
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-            />
-            {errors.endDate && (
-              <Typography variant="caption" color="error" sx={{ mt: 0.5, display: "block" }}>
-                {errors.endDate}
-              </Typography>
-            )}
-          </Box>
-          <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography color="secondary" sx={{ fontWeight: "bold" }}>
-              Description
-            </Typography>
-            <TextField
-              sx={{ width: "100%" }}
-              placeholder="Enter Description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </Box>
-          <Box sx={{ width: "100%", paddingTop: "16px" }}>
-            <Typography color="secondary" sx={{ fontWeight: "bold" }}>
-              Team Members
-            </Typography>
-            <FormControl sx={{ width: "100%" }}>
-              <InputLabel>Team Members</InputLabel>
-              <Select
-                multiple
-                value={formData.membersIds}
-                onChange={handleChange}
-                input={<OutlinedInput label="Team Members" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip
-                        key={value}
-                        label={
-                          users.find((user) => user.id === value)?.name ?? ""
-                        }
-                      />
-                    ))}
-                  </Box>
-                )}
-                name="membersIds"
-              >
-                {users.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
-                    {user.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
-        <Box
-          sx={(theme) => ({
-            background: theme.palette.primary.light,
-            border: `1px solid ${theme.palette.grey[300]}`,
-            borderRadius: "24px",
-            padding: "24px",
-            width: "30%",
-          })}
-        >
-          <Typography sx={{ fontSize: "18px", fontWeight: "bold" }}>
-            Select image
-          </Typography>
-          <Typography color="secondary" sx={{ padding: "12px 0px" }}>
-            Select or upload an avatar for the project (available formats: jpg,
-            png)
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-            {arrayIcons.map((icon, index) => (
-              <SvgIcon
-                key={index}
-                sx={{
-                  width: "48px",
-                  height: "48px",
-                  cursor: "pointer",
-                  border:
-                    formData.logoUrl === icon.name
-                      ? "2px solid #3F8CFF"
-                      : "none",
-                }}
-                component={icon.component}
-                onClick={() => handleIconClick(icon.name)}
-              />
-            ))}
-          </Box>
-        </Box>
+      
+      <Stepper activeStep={activeStep} sx={{ mb: 4, mt: 2 }}>
+        {steps.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+
+      <Box sx={{ width: "100%", minHeight: "400px" }}>
+        {renderStepContent(activeStep)}
       </Box>
-      <Box>
-        <Button 
-          variant="contained" 
-          onClick={handleSubmit}
-          disabled={!formData.title.trim() || !endDate}
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: { xs: 2, sm: 3, md: 3, lg: 4 }, flexDirection: { xs: "column-reverse", sm: "row", md: "row", lg: "row" }, gap: { xs: "12px", sm: "0", md: "0", lg: "0" } }}>
+        <Button
+          disabled={activeStep === 0}
+          onClick={handleBack}
+          sx={{ mr: { xs: 0, sm: 1, md: 1, lg: 1 }, width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" } }}
         >
-          Save Project
+          Back
         </Button>
+        <Box sx={{ width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" } }}>
+          {activeStep === steps.length - 1 ? (
+            <Button 
+              variant="contained" 
+              onClick={handleSubmit}
+              disabled={!formik.values.title.trim() || !formik.values.startDate || !formik.values.endDate}
+              fullWidth={!isLargeScreen}
+              sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}
+            >
+              Save Project
+            </Button>
+          ) : (
+            <Button 
+              variant="contained" 
+              onClick={handleNext}
+              fullWidth={!isLargeScreen}
+              sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}
+            >
+              Next
+            </Button>
+          )}
+        </Box>
       </Box>
     </Box>
   );

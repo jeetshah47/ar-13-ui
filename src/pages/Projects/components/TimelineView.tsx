@@ -9,8 +9,8 @@ import {
   type TooltipProps,
 } from "@mui/material";
 import { blurAnimation } from "../../../common/animation/cssAnimation";
-import { useAppSelector, type RootState } from "../../../store/store";
-import { getAllTaskByProjectId } from "../../../store/apis/taskApis";
+import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
+import { getTaskListAction } from "../../../store/features/task/projectAction";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 import type { TimeSpentEntry } from "../../../store/types/Task/TaskTypes";
 
@@ -58,29 +58,19 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
 }));
 
 const TaskTimelineFlex: React.FC = () => {
+  const dispatch = useAppDispatch();
   const projectListState = useAppSelector((state: RootState) => state.projectListReducer);
-  
-  const [tasks, setTasks] = React.useState<TaskResponse[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const taskListState = useAppSelector((state: RootState) => state.taskListReducer.api);
 
-  // Fetch tasks when project changes
+  // Fetch tasks using Redux action when project changes
   useEffect(() => {
-    const fetchTasks = async () => {
-      if (projectListState.common.selectedProjectId) {
-        setLoading(true);
-        try {
-          const response = await getAllTaskByProjectId(projectListState.common.selectedProjectId);
-          setTasks(response.tasks);
-        } catch {
-          // Handle error silently or show user-friendly message
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+    if (projectListState.common.selectedProjectId) {
+      dispatch(getTaskListAction(projectListState.common.selectedProjectId));
+    }
+  }, [dispatch, projectListState.common.selectedProjectId]);
 
-    fetchTasks();
-  }, [projectListState.common.selectedProjectId]);
+  const tasks = taskListState?.data?.tasks || [];
+  const loading = taskListState?.loading || false;
 
   // Use a fixed maximum scale for better visualization (8 hours = 480 minutes)
   const maxTimeSpent = 480; // 8 hours in minutes

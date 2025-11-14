@@ -53,10 +53,10 @@ const VerticalLayout = () => {
             sx={{
               position: "fixed",
               height: "100vh",
-              width: `${sidebarWidth}px`,
+              width: { md: `${sidebarWidth - 20}px`, lg: `${sidebarWidth}px` },
               top: 0,
               left: 0,
-              padding: { xs: "12px", sm: "16px", md: "20px" },
+              padding: { xs: "12px", sm: "16px", md: "16px", lg: "20px" },
               zIndex: (theme) => theme.zIndex.drawer,
             }}
           >
@@ -93,11 +93,11 @@ const VerticalLayout = () => {
         <Box
           data-scroll-container
           sx={{
-            marginLeft: { xs: 0, md: `${sidebarWidth}px` },
+            marginLeft: { xs: 0, sm: 0, md: `${sidebarWidth - 20}px`, lg: `${sidebarWidth}px` },
             overflow: "auto",
-            width: { xs: "100%", md: `calc(100% - ${sidebarWidth}px)` },
+            width: { xs: "100%", sm: "100%", md: `calc(100% - ${sidebarWidth - 20}px)`, lg: `calc(100% - ${sidebarWidth}px)` },
             height: "100vh",
-            padding: { xs: "12px", sm: "16px", md: "20px" },
+            padding: { xs: "12px", sm: "16px", md: "16px", lg: "20px" },
             boxSizing: "border-box",
             scrollBehavior: "smooth",
             WebkitOverflowScrolling: "touch",

@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from "react-router";
 import AddProject from "./pages/AddProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectList from "./pages/ProjectList";
+import ProjectInfo from "./pages/ProjectInfo";
 import { useAppDispatch } from "../../store/store";
 import { useEffect } from "react";
 import { getProjectListAction } from "../../store/features/projects/projectAction";
@@ -22,6 +23,7 @@ const ProjectPage = () => {
         <Routes location={location} key={location.pathname}>
           <Route key="/add-project" element={<AddProject />} path="/add-project" />
           <Route key="/details/:projectId/:taskId" element={<ProjectDetail />} path="/details/:projectId/:taskId" />
+          <Route key="/info/:projectId" element={<ProjectInfo />} path="/info/:projectId" />
           <Route key="/" element={<ProjectList />} path="/" />
         </Routes>
       </AnimatedPage>

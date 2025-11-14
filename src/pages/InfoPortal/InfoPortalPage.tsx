@@ -111,26 +111,26 @@ const InfoPortalList = () => {
 
       <Box
         sx={{
-          padding: { xs: "10px", sm: "28px 0px" },
+          padding: { xs: "10px", sm: "20px", md: "24px 0px", lg: "28px 0px" },
           display: "flex",
           flexDirection: "column",
-          gap: { xs: "20px", sm: "30px" },
+          gap: { xs: "20px", sm: "24px", md: "28px", lg: "30px" },
         }}
       >
         {/* Banner and Statistics Row */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: { xs: "20px", sm: "30px" },
+            flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+            gap: { xs: "20px", sm: "24px", md: "24px", lg: "30px" },
           }}
         >
-          <Box sx={{ flex: { xs: "1", md: "1" }, maxWidth: { xs: "100%", md: "855px" } }}>
+          <Box sx={{ flex: { xs: "1", sm: "1", md: "1", lg: "1" }, maxWidth: { xs: "100%", sm: "100%", md: "855px", lg: "855px" } }}>
             <Banner />
           </Box>
           <Box
             sx={{
-              width: { xs: "100%", md: "265px" },
+              width: { xs: "100%", sm: "100%", md: "280px", lg: "265px" },
               flexShrink: 0,
             }}
           >

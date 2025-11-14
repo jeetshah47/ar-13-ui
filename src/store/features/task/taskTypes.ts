@@ -1,5 +1,5 @@
 import type { TaskResponse } from "../../types/Task/TaskResponse";
-import type { ActivityLog, FileAttachment } from "../../types/Task/TaskTypes";
+import type { ActivityLog, FileAttachment, TaskStatus } from "../../types/Task/TaskTypes";
 
 export interface TaskState {
   api: {
@@ -8,6 +8,7 @@ export interface TaskState {
       filteredTasks: TaskResponse[];
       activityLogs: ActivityLog[];
       fileAttachments: FileAttachment[];
+      taskStatuses: TaskStatus[];
     };
     loading: boolean;
     error: string;

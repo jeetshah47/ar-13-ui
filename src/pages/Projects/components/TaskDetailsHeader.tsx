@@ -15,21 +15,21 @@ const TaskDetailsHeader = ({ onEditClick }: TaskDetailsHeaderProps) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        pb: { xs: "10px", sm: "24px" },
-        flexShrink: 0,
-        flexWrap: { xs: "wrap", sm: "nowrap" },
-        gap: { xs: "8px", sm: 0 },
-      }}
-    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: { xs: "10px", sm: "20px", md: "22px", lg: "24px" },
+          flexShrink: 0,
+          flexWrap: { xs: "wrap", sm: "wrap", md: "nowrap", lg: "nowrap" },
+          gap: { xs: "8px", sm: "8px", md: 0, lg: 0 },
+        }}
+      >
       <Typography sx={{ 
-        fontSize: { xs: "22px", sm: "20px" }, 
-        fontWeight: { xs: 700, sm: 400 },
-        lineHeight: { xs: "1.36", sm: "1.5" },
+        fontSize: { xs: "22px", sm: "20px", md: "20px", lg: "20px" }, 
+        fontWeight: { xs: 700, sm: 400, md: 400, lg: 400 },
+        lineHeight: { xs: "1.36", sm: "1.5", md: "1.5", lg: "1.5" },
       }}>
         Task Details
       </Typography>
@@ -98,17 +98,21 @@ export const TaskDetailsContent = ({
       sx={{
         backgroundColor: "#fff",
         flex: 1,
-        borderRadius: { xs: "20px", sm: "24px" },
-        padding: { xs: "20px", sm: "30px" },
-        overflowY: { xs: "visible", sm: "auto" },
+        borderRadius: { xs: "20px", sm: "20px", md: "24px", lg: "24px" },
+        padding: { xs: "20px", sm: "24px", md: "26px", lg: "30px" },
+        overflowY: { xs: "visible", sm: "visible", md: "auto", lg: "auto" },
         overflowX: "hidden",
-        minHeight: { xs: "auto", sm: 0 },
-        maxHeight: { xs: "none", sm: "100%" },
+        minHeight: { xs: "auto", sm: "auto", md: 0, lg: 0 },
+        maxHeight: { xs: "none", sm: "none", md: "100%", lg: "100%" },
         maxWidth: "100%",
         width: "100%",
+        minWidth: 0,
         boxSizing: "border-box",
         scrollBehavior: "smooth",
         WebkitOverflowScrolling: "touch",
+        "@media (min-width: 1200px) and (max-width: 1600px)": {
+          padding: "24px",
+        },
       }}
     >
       <Typography 
@@ -117,23 +121,23 @@ export const TaskDetailsContent = ({
       >
         {taskCode}
       </Typography>
-      <Box
-        sx={{
-          paddingTop: "4px",
-          display: "flex",
-          alignItems: { xs: "flex-start", sm: "center" },
-          justifyContent: "space-between",
-          flexDirection: { xs: "column", sm: "row" },
-          gap: { xs: 2, sm: 0 },
-        }}
-      >
+        <Box
+          sx={{
+            paddingTop: "4px",
+            display: "flex",
+            alignItems: { xs: "flex-start", sm: "flex-start", md: "center", lg: "center" },
+            justifyContent: "space-between",
+            flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+            gap: { xs: 2, sm: 2, md: 0, lg: 0 },
+          }}
+        >
         <Typography 
           variant="h6" 
           fontWeight={"700"}
           sx={{ 
-            fontSize: { xs: "18px", sm: "20px" },
-            lineHeight: { xs: "1.4", sm: "1.5" },
-            width: { xs: "100%", sm: "auto" },
+            fontSize: { xs: "18px", sm: "19px", md: "19px", lg: "20px" },
+            lineHeight: { xs: "1.4", sm: "1.45", md: "1.45", lg: "1.5" },
+            width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
             wordBreak: "break-word",
             overflowWrap: "break-word",
             maxWidth: "100%",
@@ -143,12 +147,12 @@ export const TaskDetailsContent = ({
         </Typography>
         <Box sx={{ 
           display: "flex", 
-          gap: { xs: "8px", sm: "16px" }, 
+          gap: { xs: "8px", sm: "12px", md: "14px", lg: "16px" }, 
           alignItems: "center",
-          flexDirection: { xs: "column", sm: "row" },
-          width: { xs: "100%", sm: "auto" },
+          flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+          width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
         }}>
-          <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+          <Box sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}>
             <Chips selected={currentStatus} onChange={onStatusChange} />
           </Box>
           {showClaimButton && (

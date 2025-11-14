@@ -30,6 +30,7 @@ import {
   getFileAttachments,
   addFileAttachment,
   claimTask,
+  getTaskStatuses,
 } from "../../apis/taskApis";
 import type { ITask } from "../../types/Task/Task";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
@@ -61,34 +62,47 @@ import {
   claimTaskRequest,
   claimTaskSuccess,
   claimTaskFailed,
+  getTaskStatusesRequest,
+  getTaskStatusesSuccess,
+  getTaskStatusesFailed,
 } from "./taskSlice";
 
 export const getTaskListAction =
   (projectId: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
     dispatch(getTaskListRequest());
     try {
-      getAllTaskByProjectId(projectId)
-        .then((data: { tasks: TaskResponse[] }) => {
-          dispatch(getTaskListSuccess(data));
-          
-          // Apply role-based filtering
-          const state = getState();
-          const userRole = state.authReducer.user.role;
-          const userId = state.authReducer.api.uid;
-          
-          if (userRole && userId) {
-            const filteredTasks = filterTasksByRole(data.tasks, userRole, userId);
-            dispatch(setFilteredTasks(filteredTasks));
-          }
-        })
-        .catch((error: AxiosError<ProjectErrorResponse>) => {
-          if (error?.response?.data) {
-            dispatch(getTaskListFailed(error?.response?.data));
-          }
-        });
-    } catch {
-      toast.success("Failed to get tasks");
-      dispatch(getTaskListFailed({ error: "Unkown Error" }));
+      const result = await getAllTaskByProjectId(projectId);
+      dispatch(getTaskListSuccess(result));
+      
+      // Apply role-based filtering
+      const state = getState();
+      const userRole = state.authReducer.user.role;
+      const userId = state.authReducer.api.uid;
+      
+      if (userRole && userId) {
+        const filteredTasks = filterTasksByRole(result.tasks, userRole, userId);
+        const currentFilteredTasks = state.taskListReducer.api.data.filteredTasks;
+        
+        // Only update if the filtered tasks have actually changed
+        // Compare by length and IDs to avoid unnecessary updates
+        const hasChanged = 
+          currentFilteredTasks.length !== filteredTasks.length ||
+          filteredTasks.some((task, index) => 
+            !currentFilteredTasks[index] || currentFilteredTasks[index].id !== task.id
+          );
+        
+        if (hasChanged) {
+          dispatch(setFilteredTasks(filteredTasks));
+        }
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse>;
+      if (axiosError?.response?.data) {
+        dispatch(getTaskListFailed(axiosError.response.data));
+      } else {
+        toast.error("Failed to get tasks");
+        dispatch(getTaskListFailed({ error: "Unknown Error" }));
+      }
     }
   };
 
@@ -277,3 +291,20 @@ export const claimTaskAction =
       }
     }
   };
+
+export const getTaskStatusesAction = () => async (dispatch: AppDispatch) => {
+  dispatch(getTaskStatusesRequest());
+  try {
+    const data = await getTaskStatuses();
+    dispatch(getTaskStatusesSuccess(data));
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(getTaskStatusesFailed(axiosError.response.data));
+      toast.error(`Failed to fetch task statuses: ${axiosError.response.data.error}`);
+    } else {
+      dispatch(getTaskStatusesFailed({ error: "Unknown Error" }));
+      toast.error("Failed to fetch task statuses");
+    }
+  }
+};

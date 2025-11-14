@@ -66,6 +66,27 @@ const projectDetailSlice = createSlice({
       state.api.loading = false;
       state.common.currentStatus = "pending" as TaskStatus;
     },
+    fetchProjectInfoRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+      // Don't clear projectDetails, only clear if fetch fails
+    },
+    fetchProjectInfoSuccess(
+      state,
+      action: PayloadAction<{
+        projectDetails: ProjectDetailResponse['projectDetails'];
+      }>
+    ) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.projectDetails = action.payload.projectDetails;
+      // Keep taskDetails unchanged
+    },
+    fetchProjectInfoFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+      // Don't clear projectDetails if we have it from store
+    },
   },
 });
 
@@ -75,6 +96,9 @@ export const {
   fetchProjectDetailFailed,
   updateTaskStatus,
   clearProjectDetail,
+  fetchProjectInfoRequest,
+  fetchProjectInfoSuccess,
+  fetchProjectInfoFailed,
 } = projectDetailSlice.actions;
 
 export const projectDetailReducer = projectDetailSlice.reducer;

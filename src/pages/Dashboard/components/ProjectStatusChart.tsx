@@ -1,4 +1,4 @@
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery, Pagination } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import CardHeader from "../../../common/components/Card/CardHeader";
 import {
@@ -17,13 +17,14 @@ import {
 } from "recharts";
 import { useAppSelector, type RootState } from "../../../store/store";
 import { useTheme, alpha } from "@mui/material/styles";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 const ProjectStatusChart = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const [isReady, setIsReady] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const statisticsState = useAppSelector(
     (state: RootState) => state.projectStatisticsReducer.api
@@ -31,9 +32,36 @@ const ProjectStatusChart = () => {
 
   const { data, loading } = statisticsState;
 
+  // Calculate items per page based on screen size
+  const itemsPerPage = isMobile ? 5 : isTablet ? 8 : 10;
+
   // Calculate responsive chart height
   const chartHeight = isMobile ? 250 : isTablet ? 280 : 300;
   const pieRadius = isMobile ? 60 : isTablet ? 80 : 100;
+
+  // Prepare all project completion data (must be before early returns)
+  const allProjectCompletionData = useMemo(() => {
+    if (!data?.projects) return [];
+    return data.projects.map((project) => ({
+      name: project.title.length > 15 
+        ? project.title.substring(0, 15) + "..." 
+        : project.title,
+      fullName: project.title,
+      completion: project.statistics.completionRate,
+      tasks: project.statistics.totalTasks,
+    }));
+  }, [data?.projects]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(allProjectCompletionData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const projectCompletionData = allProjectCompletionData.slice(startIndex, endIndex);
+
+  // Reset to page 1 when items per page changes (e.g., on resize)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
   // Ensure component is mounted and container has dimensions before rendering charts
   useEffect(() => {
@@ -64,6 +92,10 @@ const ProjectStatusChart = () => {
 
     return () => clearTimeout(timer);
   }, [data, loading]);
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value);
+  };
 
   if (loading || !data || !data.projects || data.projects.length === 0) {
     return null;
@@ -126,17 +158,6 @@ const ProjectStatusChart = () => {
     return COLORS[lowerName as keyof typeof COLORS] || theme.palette.primary.main;
   };
 
-  // Prepare project completion data
-  const projectCompletionData = data.projects
-    .slice(0, 10)
-    .map((project) => ({
-      name: project.title.length > 15 
-        ? project.title.substring(0, 15) + "..." 
-        : project.title,
-      completion: project.statistics.completionRate,
-      tasks: project.statistics.totalTasks,
-    }));
-
   return (
     <Box ref={containerRef} sx={{ display: "flex", flexDirection: "column", gap: { xs: "16px", sm: "20px", md: "24px" } }}>
       {/* Status Distribution Bar Chart */}
@@ -183,6 +204,7 @@ const ProjectStatusChart = () => {
                   dataKey="count"
                   fill={theme.palette.primary.main}
                   radius={[8, 8, 0, 0]}
+                  barSize={isMobile ? 20 : 40}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -247,7 +269,7 @@ const ProjectStatusChart = () => {
       )}
 
       {/* Project Completion Comparison */}
-      {projectCompletionData.length > 0 && isReady && (
+      {allProjectCompletionData.length > 0 && isReady && (
         <CustomCard>
           <CardHeader title="Project Completion Rates" />
           <Box 
@@ -285,7 +307,10 @@ const ProjectStatusChart = () => {
                     borderRadius: "8px",
                     fontSize: isMobile ? "11px" : "12px",
                   }}
-                  formatter={(value: number) => `${value.toFixed(1)}%`}
+                  formatter={(value: number, _name: string, props: { payload?: { fullName?: string } }) => [
+                    `${value.toFixed(1)}%`,
+                    props.payload?.fullName || ""
+                  ]}
                 />
                 {!isMobile && <Legend />}
                 <Bar
@@ -296,6 +321,34 @@ const ProjectStatusChart = () => {
               </BarChart>
             </ResponsiveContainer>
           </Box>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: { xs: "16px", sm: "20px", md: "24px" },
+                paddingTop: { xs: "8px", sm: "12px", md: "16px" },
+                gap: "8px",
+              }}
+            >
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                siblingCount={isMobile ? 0 : 1}
+                boundaryCount={isMobile ? 1 : 1}
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    fontSize: isMobile ? "0.75rem" : "0.875rem",
+                  },
+                }}
+              />
+            </Box>
+          )}
         </CustomCard>
       )}
     </Box>

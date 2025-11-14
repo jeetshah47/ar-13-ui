@@ -2,7 +2,7 @@ import { http } from "../../config/http";
 import { API_BASE_URL } from "../../config/api";
 import type { TaskResponse } from "../types/Task/TaskResponse";
 import type { ITask } from "../types/Task/Task";
-import type { TimeSpentEntry, FileAttachment, AssignableUser, ActivityLog } from "../types/Task/TaskTypes";
+import type { TimeSpentEntry, FileAttachment, AssignableUser, ActivityLog, TaskStatusResponse } from "../types/Task/TaskTypes";
 
 export async function getAllTaskByProjectId(projectId: string): Promise<{
   tasks: TaskResponse[];
@@ -238,9 +238,21 @@ export async function claimTask(
 export async function updateTaskStatus(
   projectId: string,
   taskId: string,
-  status: string
+  status: string,
+  remark: string
 ): Promise<{ message: string }> {
   const url = `${API_BASE_URL}/tasks/update-status/${projectId}/${taskId}`;
-  const result = await http.put(url, { status });
+  const result = await http.put(url, { status, remark });
+  return result.data;
+}
+
+/**
+ * Get master data of task statuses
+ * @returns Promise with task statuses and total count
+ * @requires Permission: tasks:read
+ */
+export async function getTaskStatuses(): Promise<TaskStatusResponse> {
+  const url = `${API_BASE_URL}/tasks/statuses`;
+  const result = await http.get(url);
   return result.data;
 }

@@ -5,10 +5,12 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  SvgIcon,
 } from "@mui/material";
 import { useNavigate } from "react-router";
 import StatusTag from "../../../common/components/StatusTag/StatusTag";
 import { blurAnimation } from "../../../common/animation/cssAnimation";
+import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import type {
   TaskResponse,
 } from "../../../store/types/Task/TaskResponse";
@@ -232,28 +234,15 @@ const ListView = ({ tasks }: ListViewProps) => {
               >
                 Priority
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <Box
+              <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <SvgIcon 
+                  component={YellowArrow}
                   sx={{
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "50%",
-                    backgroundColor: "#D8D8D8",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
+                    fontSize: "20px",
+                    width: "20px",
+                    height: "20px",
                   }}
-                >
-                  <Box
-                    sx={{
-                      width: "12px",
-                      height: "16px",
-                      backgroundColor: "#FFBD21",
-                      borderRadius: "2px"
-                    }}
-                  />
-                </Box>
+                />
                 <Typography 
                   sx={{ 
                     fontSize: "14px",
@@ -268,8 +257,21 @@ const ListView = ({ tasks }: ListViewProps) => {
             </Box>
 
             {/* Status */}
-            <Box sx={{ textAlign: "right" }}>
-              <StatusTag status={task.status} />
+            <Box>
+              <Typography 
+                sx={{ 
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  lineHeight: "1.36em",
+                  color: "#91929E",
+                  marginBottom: "4px",
+                }}
+              >
+                Status
+              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+                <StatusTag status={task.status} />
+              </Box>
             </Box>
           </Box>
         </Box>
@@ -303,6 +305,10 @@ const ListView = ({ tasks }: ListViewProps) => {
             boxShadow: "0px 8px 64px 0px rgba(196, 203, 214, 0.15)",
           },
           ...blurAnimation,
+          "@media (max-width: 1400px) and (min-width: 1201px)": {
+            gridTemplateColumns: "minmax(180px, 1fr) repeat(2, minmax(90px, 110px)) minmax(70px, 90px) auto",
+            gap: "var(--spacing-xs, 2px) var(--spacing-md, 16px)",
+          },
           "@media (max-width: 1200px)": {
             gridTemplateColumns: "1fr repeat(2, minmax(100px, 1fr)) auto",
             gridTemplateAreas: `
@@ -414,28 +420,15 @@ const ListView = ({ tasks }: ListViewProps) => {
             Priority
           </Typography>
         </Box>
-        <Box sx={{ gridArea: "priority-value", display: "flex", alignItems: "center", gap: "var(--spacing-xs, 6px)" }}>
-          <Box
+        <Box sx={{ gridArea: "priority-value", display: "flex", alignItems: "center", gap: "var(--spacing-xs, 4px)" }}>
+          <SvgIcon 
+            component={YellowArrow}
             sx={{
-              width: "var(--icon-size, 24px)",
-              height: "var(--icon-size, 24px)",
-              borderRadius: "50%",
-              backgroundColor: "var(--color-gray-light, #D8D8D8)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              fontSize: "20px",
+              width: "20px",
+              height: "20px",
             }}
-          >
-            <Box
-              sx={{
-                width: "var(--priority-icon-width, 12px)",
-                height: "var(--priority-icon-height, 16px)",
-                backgroundColor: "var(--color-warning, #FFBD21)",
-                borderRadius: "var(--border-radius-xs, 2px)"
-              }}
-            />
-          </Box>
+          />
           <Typography 
             sx={{ 
               fontSize: "var(--font-size-sm, 13px)", 
@@ -463,7 +456,7 @@ const ListView = ({ tasks }: ListViewProps) => {
             Status
           </Typography>
         </Box>
-        <Box sx={{ gridArea: "status-value" }}>
+        <Box sx={{ gridArea: "status-value", display: "flex", alignItems: "center" }}>
           <StatusTag status={task.status} />
         </Box>
 

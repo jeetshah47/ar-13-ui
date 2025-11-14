@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { TaskState } from "./taskTypes";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
-import type { ActivityLog, FileAttachment } from "../../types/Task/TaskTypes";
+import type { ActivityLog, FileAttachment, TaskStatus } from "../../types/Task/TaskTypes";
 
 const initialState: TaskState = {
   api: {
@@ -11,6 +11,7 @@ const initialState: TaskState = {
       filteredTasks: [],
       activityLogs: [],
       fileAttachments: [],
+      taskStatuses: [],
     },
     error: "",
     loading: false,
@@ -150,6 +151,19 @@ const taskListSlice = createSlice({
     setFilteredTasks(state, action: PayloadAction<TaskResponse[]>) {
       state.api.data.filteredTasks = action.payload;
     },
+    getTaskStatusesRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    getTaskStatusesSuccess(state, action: PayloadAction<{ statuses: TaskStatus[] }>) {
+      state.api.loading = false;
+      state.api.error = "";
+      state.api.data.taskStatuses = action.payload.statuses;
+    },
+    getTaskStatusesFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -185,6 +199,9 @@ export const {
   claimTaskSuccess,
   claimTaskFailed,
   setFilteredTasks,
+  getTaskStatusesRequest,
+  getTaskStatusesSuccess,
+  getTaskStatusesFailed,
 } = taskListSlice.actions;
 
 export const taskListReducer = taskListSlice.reducer;

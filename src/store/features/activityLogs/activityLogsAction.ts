@@ -22,7 +22,9 @@ export const fetchActivityLogsByEntity = (
   dispatch(getActivityLogsRequest());
   try {
     const response = await getActivityLogsByEntity(entityType, entityId);
-    dispatch(getActivityLogsSuccess({ items: response.activityLogs || [] }));
+    const items = response.activityLogs || [];
+    dispatch(getActivityLogsSuccess({ items }));
+    return { items };
   } catch (err) {
     const error = err as AxiosError<{ message?: string; error?: string }>;
     const message =
@@ -30,6 +32,7 @@ export const fetchActivityLogsByEntity = (
       (error?.response?.data?.error as string) ||
       "Failed to fetch activity logs";
     dispatch(getActivityLogsFailed({ error: message }));
+    throw err;
   }
 };
 

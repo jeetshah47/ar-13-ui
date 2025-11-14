@@ -155,22 +155,22 @@ const DashboardPage = () => {
       {/* Main Content: Side by Side Layout */}
       <Box 
         sx={{ 
-          padding: { xs: "16px 0px", sm: "20px 0px", md: "28px 0px" }, 
+          padding: { xs: "16px 0px", sm: "20px 0px", md: "24px 0px", lg: "28px 0px" }, 
           display: "flex", 
-          flexDirection: { xs: "column", md: "row" },
-          gap: { xs: "20px", md: "30px" }, 
-          minHeight: { xs: "auto", md: "calc(100vh - 200px)" }
+          flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+          gap: { xs: "20px", sm: "24px", md: "24px", lg: "30px" }, 
+          minHeight: { xs: "auto", sm: "auto", md: "calc(100vh - 200px)", lg: "calc(100vh - 200px)" }
         }}
       >
         {/* Left Side: Project Statistics with Scroll */}
         <Box
           sx={{
-            width: { xs: "100%", md: "70%" },
+            width: { xs: "100%", sm: "100%", md: "65%", lg: "70%" },
             display: "flex",
             flexDirection: "column",
-            overflowY: { xs: "visible", md: "auto" },
-            paddingRight: { xs: "0px", md: "10px" },
-            maxHeight: { xs: "none", md: "calc(100vh - 220px)" },
+            overflowY: { xs: "visible", sm: "visible", md: "auto", lg: "auto" },
+            paddingRight: { xs: "0px", sm: "0px", md: "8px", lg: "10px" },
+            maxHeight: { xs: "none", sm: "none", md: "calc(100vh - 220px)", lg: "calc(100vh - 220px)" },
             "&::-webkit-scrollbar": {
               width: "8px",
             },
@@ -335,7 +335,7 @@ const DashboardPage = () => {
         {/* Right Side: Fixed Calendar Events and Activity Stream */}
         <Box
           sx={{
-            width: { xs: "100%", md: "30%" },
+            width: { xs: "100%", sm: "100%", md: "32%", lg: "30%" },
             display: "flex",
             flexDirection: "column",
             gap: { xs: "16px", md: "10px" },

@@ -42,3 +42,18 @@ export interface ActivityLog {
     newStatus?: string;
   };
 }
+
+export interface TaskStatus {
+  value: string;
+  displayName: string;
+  description: string;
+  category: "active" | "completed" | "final";
+  isActive: boolean;
+  isCompleted: boolean;
+  order?: number; // Order field from API response for sorting statuses
+}
+
+export interface TaskStatusResponse {
+  statuses: TaskStatus[];
+  total: number;
+}

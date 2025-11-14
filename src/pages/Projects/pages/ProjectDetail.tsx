@@ -4,11 +4,12 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store/features/projects/projectDetailAction";
-import { claimTaskAction } from "../../../store/features/task/projectAction";
+import { claimTaskAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import type { FileAttachment, ActivityLog } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
 import TaskFormModal from "../components/TaskFormModal";
 import ClaimTaskModal from "../components/ClaimTaskModal";
+import UpdateTaskStatusModal from "../components/UpdateTaskStatusModal";
 import TaskInfo from "../components/TaskInfo";
 import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import TaskDetailsHeader, { TaskDetailsContent } from "../components/TaskDetailsHeader";
@@ -24,7 +25,6 @@ import type { ProjectResponse } from "../../../store/types/Project/ProjectRespon
 import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
 import { convertActivityLogItemsToLegacy } from "../utils/activityLogConverter";
 import type { ActivityLogItem } from "../../../store/types/ActivityLogs/ActivityLog";
-import { getActivityLogsByEntity } from "../../../store/apis/activityLogsApi";
 
 const ProjectDetail = () => {
   const theme = useTheme();
@@ -43,12 +43,17 @@ const ProjectDetail = () => {
     (state: RootState) => state.activityLogsReducer.api
   );
 
+
   const taskListState = useAppSelector(
     (state: RootState) => state.taskListReducer.api
   );
 
   const userState = useAppSelector(
     (state: RootState) => state.userReducer
+  );
+
+  const taskStatuses = useAppSelector(
+    (state: RootState) => state.taskListReducer.api.data.taskStatuses
   );
 
   const { taskDetails, projectDetails } = projectDetailState.api.data;
@@ -86,6 +91,8 @@ const ProjectDetail = () => {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
+  const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
   const [projectActivityLogs, setProjectActivityLogs] = useState<ActivityLogItem[]>([]);
 
@@ -96,6 +103,13 @@ const ProjectDetail = () => {
       dispatch(getUsersAction());
     }
   }, [dispatch, users.length, userState.loading]);
+
+  // Fetch task statuses if not already loaded
+  useEffect(() => {
+    if (taskStatuses.length === 0) {
+      dispatch(getTaskStatusesAction());
+    }
+  }, [dispatch, taskStatuses.length]);
 
   // Fetch project details
   useEffect(() => {
@@ -111,19 +125,20 @@ const ProjectDetail = () => {
     }
   }, [taskId, dispatch]);
 
-  // Fetch activity logs for the project
+  // Fetch activity logs for the project using Redux action
+  // Note: We store in local state because activity logs reducer doesn't support multiple entities simultaneously
+  // Task logs and project logs would overwrite each other in the shared state
   useEffect(() => {
     if (projectId) {
-      getActivityLogsByEntity("project", projectId)
-        .then((response) => {
-          setProjectActivityLogs(response.activityLogs || []);
+      (dispatch(fetchActivityLogsByEntity("project", projectId)) as Promise<{ items: ActivityLogItem[] }>)
+        .then((data) => {
+          setProjectActivityLogs(data?.items || []);
         })
         .catch(() => {
-          // Handle error silently
           setProjectActivityLogs([]);
         });
     }
-  }, [projectId]);
+  }, [projectId, dispatch]);
 
   // Calculate time spent from activity logs (both project and task level)
   const calculateProjectTimeSpent = useMemo(() => {
@@ -322,9 +337,36 @@ const ProjectDetail = () => {
   }, [claimTaskLoading, showClaimTaskModal, taskId, projectId, dispatch]);
 
   // Handlers
-  const handleStatusUpdate = async (newStatus: string) => {
-    if (!taskDetails || !taskId || !projectId) return;
-    dispatch(updateTaskStatusAction(taskId, newStatus, projectId, taskDetails));
+  const handleStatusChange = (newStatus: string) => {
+    // Store the selected status and show the modal
+    setSelectedStatus(newStatus);
+    setShowUpdateStatusModal(true);
+  };
+
+  const handleStatusUpdate = async (remark: string) => {
+    if (!taskDetails || !taskId || !projectId || !selectedStatus) return;
+    
+    try {
+      // Update task status with remark
+      await dispatch(updateTaskStatusAction(taskId, selectedStatus, projectId, remark, taskDetails));
+      
+      // Close the modal
+      setShowUpdateStatusModal(false);
+      setSelectedStatus(null);
+      
+      // Refresh task details and activity logs after status update
+      if (taskId && projectId) {
+        dispatch(fetchProjectDetailAction(taskId, projectId));
+        dispatch(fetchActivityLogsByEntity("task", taskId));
+      }
+    } catch {
+      // Error is already handled by the action with toast
+    }
+  };
+
+  const handleCloseUpdateStatusModal = () => {
+    setShowUpdateStatusModal(false);
+    setSelectedStatus(null);
   };
 
   const handleOpenFileUpload = () => setShowFileUploadModal(true);
@@ -405,12 +447,17 @@ const ProjectDetail = () => {
       </Link>
       <Box
         sx={{
-          paddingTop: { xs: "0px", sm: "28px" },
+          paddingTop: { xs: "0px", sm: "20px", md: "24px", lg: "28px" },
           display: "flex",
-          gap: { xs: "10px", sm: "28px" },
-          height: { xs: "auto", sm: "calc(100vh - 100px)" },
-          minHeight: { xs: "auto", sm: 0 },
-          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: "10px", sm: "16px", md: "20px", lg: "28px" },
+          height: { xs: "auto", sm: "auto", md: "calc(100vh - 100px)", lg: "calc(100vh - 100px)" },
+          minHeight: { xs: "auto", sm: "auto", md: 0, lg: 0 },
+          flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+          alignItems: { xs: "stretch", sm: "stretch", md: "flex-start", lg: "flex-start" },
+          "@media (min-width: 1200px) and (max-width: 1600px)": {
+            gap: "20px",
+            paddingTop: "24px",
+          },
         }}
       >
         {/* Project Info Sidebar */}
@@ -418,7 +465,18 @@ const ProjectDetail = () => {
           <ProjectInfoSidebar
             projectTitle={projectDetails?.title}
             projectDescription={projectDetails?.description}
-            reporter={projectDetails?.reporter}
+            reporter={
+              projectDetails?.ownerId
+                ? (() => {
+                    const ownerUser = users.find((u) => u.id === projectDetails.ownerId);
+                    return ownerUser
+                      ? {
+                          name: ownerUser.name || "Project Owner",
+                        }
+                      : undefined;
+                  })()
+                : undefined
+            }
             assignes={projectDetails?.assignes}
             priority={projectDetails?.priority}
             deadline={projectDetails?.deadline}
@@ -430,10 +488,11 @@ const ProjectDetail = () => {
         <Box sx={{ 
           width: "100%", 
           maxWidth: "100%",
+          minWidth: 0,
           display: "flex", 
           flexDirection: "column", 
           minHeight: 0, 
-          flex: 1,
+          flex: { xs: "1 1 100%", sm: "1 1 100%", md: "1 1 auto", lg: "1 1 auto" },
           overflowX: "hidden",
           boxSizing: "border-box",
         }}>
@@ -443,7 +502,18 @@ const ProjectDetail = () => {
               <ProjectInfoSidebar
                 projectTitle={projectDetails?.title}
                 projectDescription={projectDetails?.description}
-                reporter={projectDetails?.reporter}
+                reporter={
+                  projectDetails?.ownerId
+                    ? (() => {
+                        const ownerUser = users.find((u) => u.id === projectDetails.ownerId);
+                        return ownerUser
+                          ? {
+                              name: ownerUser.name || "Project Owner",
+                            }
+                          : undefined;
+                      })()
+                    : undefined
+                }
                 assignes={projectDetails?.assignes}
                 priority={projectDetails?.priority}
                 deadline={projectDetails?.deadline}
@@ -458,7 +528,7 @@ const ProjectDetail = () => {
             taskCode={taskDetails?.code}
             taskSubject={taskDetails?.subject}
             currentStatus={currentStatus}
-            onStatusChange={handleStatusUpdate}
+            onStatusChange={handleStatusChange}
             onClaimTaskClick={handleOpenClaimTask}
             project={projectDetails as ProjectResponse}
           >
@@ -499,11 +569,15 @@ const ProjectDetail = () => {
         {!isMobile && (
           <TaskInfo
             reporter={
-              projectDetails?.reporter
-                ? {
-                    name: projectDetails.reporter.name || "Unknown Reporter",
-                    avatar: projectDetails.reporter.avatar,
-                  }
+              projectDetails?.ownerId
+                ? (() => {
+                    const ownerUser = users.find((u) => u.id === projectDetails.ownerId);
+                    return ownerUser
+                      ? {
+                          name: ownerUser.name || "Unknown Reporter",
+                        }
+                      : undefined;
+                  })()
                 : undefined
             }
             assigned={
@@ -513,11 +587,11 @@ const ProjectDetail = () => {
                   }
                 : undefined
             }
-            priority={taskDetails?.priority || "Medium"}
+            priority={taskDetails?.priority}
             deadline={
               taskDetails?.deadline
                 ? new Date(taskDetails.deadline).toLocaleDateString()
-                : "No deadline set"
+                : undefined
             }
             timeLogged={timeLogged}
             originalEstimate={undefined}
@@ -545,10 +619,17 @@ const ProjectDetail = () => {
             subject: taskDetails.subject,
             code: taskDetails.code,
             status: taskDetails.status,
+            startDate: ("startDate" in taskDetails && typeof taskDetails.startDate === "string") ? taskDetails.startDate : "",
+            endDate: ("endDate" in taskDetails && typeof taskDetails.endDate === "string") ? taskDetails.endDate : "",
             deadline: taskDetails.deadline,
             priority: taskDetails.priority,
             assignTo: taskDetails.assignTo || null,
             projectId: taskDetails.projectId,
+            progress: taskDetails.progress ?? 0,
+            description: taskDetails.description || "",
+            timeSpent: taskDetails.timeSpent || [],
+            fileAttachments: taskDetails.fileAttachments || [],
+            activityLogs: taskDetails.activityLogs || [],
             createdAt: taskDetails.created || new Date(),
             updatedAt: new Date(),
           }}
@@ -563,6 +644,16 @@ const ProjectDetail = () => {
         onReject={handleRejectClaim}
         isLoading={claimTaskLoading}
       />
+
+      {selectedStatus && (
+        <UpdateTaskStatusModal
+          show={showUpdateStatusModal}
+          onClose={handleCloseUpdateStatusModal}
+          onUpdate={handleStatusUpdate}
+          status={selectedStatus}
+          isLoading={false}
+        />
+      )}
 
       {previewImage && previewImage.fileUrl && (
         <Modal show={!!previewImage} onClose={handleCloseImagePreview}>

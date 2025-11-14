@@ -40,12 +40,12 @@ type TaskInfoProps = {
 };
 
 const TaskInfo = ({
-  reporter = { name: "Evan Yates" },
-  assigned = { name: "Blake Silva" },
-  priority = "Medium",
-  deadline = "Feb 23, 2020",
-  timeLogged = "1d 3h 25m logged",
-  originalEstimate = "Original Estimate 3d 8h",
+  reporter,
+  assigned,
+  priority,
+  deadline,
+  timeLogged,
+  originalEstimate,
   projectId,
   taskId,
   task,
@@ -67,12 +67,17 @@ const TaskInfo = ({
   return (
     <Box
       sx={{
-        width: "265px",
+        width: { xs: "100%", sm: "100%", md: "240px", lg: "265px" },
         background: "#FFFFFF",
         borderRadius: "24px",
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-        height: "100%",
-        padding: "24px",
+        height: { xs: "auto", sm: "auto", md: "100%", lg: "100%" },
+        padding: { xs: "20px", sm: "20px", md: "20px", lg: "24px" },
+        flexShrink: 0,
+        "@media (min-width: 1200px) and (max-width: 1600px)": {
+          width: "240px",
+          padding: "20px",
+        },
       }}
     >
       {/* Header */}
@@ -89,62 +94,123 @@ const TaskInfo = ({
       </Typography>
 
       {/* Reporter Section */}
-      <Box sx={{ marginBottom: "24px" }}>
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "14px",
-            lineHeight: "1.36",
-            color: "#91929E",
-            marginBottom: "8px",
-          }}
-        >
-          Reporter
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Avatar
-            sx={{
-              width: "24px",
-              height: "24px",
-              border: "2px solid #FFFFFF",
-            }}
-            src={reporter.avatar || "/api/placeholder/24/24"}
-          />
+      {reporter && (
+        <Box sx={{ marginBottom: "24px" }}>
           <Typography
             sx={{
               fontWeight: 400,
-              fontSize: "16px",
-              lineHeight: "1.5",
-              color: "#0A1629",
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+              marginBottom: "8px",
             }}
           >
-            {reporter.name}
+            Reporter
           </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Avatar
+              sx={{
+                width: "24px",
+                height: "24px",
+                border: "2px solid #FFFFFF",
+              }}
+              src={reporter.avatar || "/api/placeholder/24/24"}
+            />
+            <Typography
+              sx={{
+                fontWeight: 400,
+                fontSize: "16px",
+                lineHeight: "1.5",
+                color: "#0A1629",
+              }}
+            >
+              {reporter.name}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
+      )}
 
       {/* Assigned Section */}
-      <Box sx={{ marginBottom: "24px" }}>
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "14px",
-            lineHeight: "1.36",
-            color: "#91929E",
-            marginBottom: "8px",
-          }}
-        >
-          Assigned
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Avatar
+      {assigned && (
+        <Box sx={{ marginBottom: "24px" }}>
+          <Typography
             sx={{
-              width: "24px",
-              height: "24px",
-              border: "2px solid #FFFFFF",
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+              marginBottom: "8px",
             }}
-            src={assigned.avatar || "/api/placeholder/24/24"}
-          />
+          >
+            Assigned
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Avatar
+              sx={{
+                width: "24px",
+                height: "24px",
+                border: "2px solid #FFFFFF",
+              }}
+              src={assigned.avatar || "/api/placeholder/24/24"}
+            />
+            <Typography
+              sx={{
+                fontWeight: 400,
+                fontSize: "16px",
+                lineHeight: "1.5",
+                color: "#0A1629",
+              }}
+            >
+              {assigned.name}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* Priority Section */}
+      {priority && (
+        <Box sx={{ marginBottom: "24px" }}>
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+              marginBottom: "8px",
+            }}
+          >
+            Priority
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <SvgIcon component={YellowArrow} />
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "14px",
+                lineHeight: "1.14",
+                color: "#FFBD21",
+              }}
+            >
+              {priority}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* Deadline Section */}
+      {deadline && (
+        <Box sx={{ marginBottom: "24px" }}>
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "1.36",
+              color: "#91929E",
+              marginBottom: "8px",
+            }}
+          >
+            Dead Line
+          </Typography>
           <Typography
             sx={{
               fontWeight: 400,
@@ -153,63 +219,10 @@ const TaskInfo = ({
               color: "#0A1629",
             }}
           >
-            {assigned.name}
+            {deadline}
           </Typography>
         </Box>
-      </Box>
-
-      {/* Priority Section */}
-      <Box sx={{ marginBottom: "24px" }}>
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "14px",
-            lineHeight: "1.36",
-            color: "#91929E",
-            marginBottom: "8px",
-          }}
-        >
-          Priority
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <SvgIcon component={YellowArrow} />
-          <Typography
-            sx={{
-              fontWeight: 700,
-              fontSize: "14px",
-              lineHeight: "1.14",
-              color: "#FFBD21",
-            }}
-          >
-            {priority}
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Deadline Section */}
-      <Box sx={{ marginBottom: "24px" }}>
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "14px",
-            lineHeight: "1.36",
-            color: "#91929E",
-            marginBottom: "8px",
-          }}
-        >
-          Dead Line
-        </Typography>
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "16px",
-            lineHeight: "1.5",
-            color: "#0A1629",
-          }}
-        >
-          {deadline}
-        </Typography>
-      </Box>
+      )}
 
       {/* Time Tracking Section */}
       <Box
@@ -232,17 +245,19 @@ const TaskInfo = ({
           Time tracking
         </Typography>
         
-        <Typography
-          sx={{
-            fontWeight: 400,
-            fontSize: "16px",
-            lineHeight: "1.5",
-            color: "#0A1629",
-            marginBottom: "4px",
-          }}
-        >
-          {timeLogged}
-        </Typography>
+        {timeLogged && (
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: "16px",
+              lineHeight: "1.5",
+              color: "#0A1629",
+              marginBottom: "4px",
+            }}
+          >
+            {timeLogged}
+          </Typography>
+        )}
         
         {originalEstimate ? (
           <Typography

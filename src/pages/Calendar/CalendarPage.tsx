@@ -239,11 +239,11 @@ const CalendarPage = () => {
       
       <Box
         sx={{
-          paddingTop: { xs: "16px", sm: "28px" },
+          paddingTop: { xs: "16px", sm: "20px", md: "24px", lg: "28px" },
           display: "flex",
-          gap: { xs: "16px", sm: "28px" },
+          gap: { xs: "16px", sm: "20px", md: "24px", lg: "28px" },
           height: "100%",
-          paddingX: { xs: "0px", sm: "0px" },
+          paddingX: { xs: "0px", sm: "0px", md: "0px", lg: "0px" },
         }}
       >
         <Box
@@ -286,9 +286,9 @@ const CalendarPage = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              gap: { xs: "12px", sm: "24px" },
-              paddingY: { xs: "16px", sm: "20px" },
-              paddingX: { xs: "20px", sm: "0px" },
+              gap: { xs: "12px", sm: "20px", md: "22px", lg: "24px" },
+              paddingY: { xs: "16px", sm: "18px", md: "19px", lg: "20px" },
+              paddingX: { xs: "20px", sm: "0px", md: "0px", lg: "0px" },
             }}
           >
             <SvgIcon 

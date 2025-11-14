@@ -81,8 +81,8 @@ const EmployeesPage = () => {
     >
       <Box
         sx={{
-          padding: { xs: "20px", sm: "0 0 20px 0" },
-          paddingX: { xs: "20px", sm: 0 }
+          padding: { xs: "20px", sm: "0 0 20px 0", md: "0 0 20px 0", lg: "0 0 20px 0" },
+          paddingX: { xs: "20px", sm: 0, md: 0, lg: 0 }
         }}
       >
         <PageHeader
@@ -91,9 +91,9 @@ const EmployeesPage = () => {
           <>
             <Box 
               sx={{
-                width: { xs: "100%", sm: "30%" },
-                marginBottom: { xs: "16px", sm: 0 },
-                order: { xs: -1, sm: 0 }
+                width: { xs: "100%", sm: "100%", md: "35%", lg: "30%" },
+                marginBottom: { xs: "16px", sm: "16px", md: 0, lg: 0 },
+                order: { xs: -1, sm: -1, md: 0, lg: 0 }
               }}
             >
               <Tab

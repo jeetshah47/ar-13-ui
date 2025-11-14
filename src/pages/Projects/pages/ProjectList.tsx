@@ -5,7 +5,7 @@ import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 
 import ListView from "../components/ListView";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import TileView from "../components/TileView";
 import TimelineView from "../components/TimelineView";
 import TaskForm from "../components/TaskForm";
@@ -20,7 +20,7 @@ import {
 import { updateSelectedProjectId } from "../../../store/features/projects/projectSlice";
 import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
-import { getTaskListAction } from "../../../store/features/task/projectAction";
+import { getTaskListAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import NoTaskMessage from "../components/NoTaskMessage";
 import { RequirePermission } from "../../../common/components/RBAC";
 
@@ -47,7 +47,12 @@ const ProjectList = () => {
     (state: RootState) => state.taskListReducer.api
   );
 
+  const taskStatuses = useAppSelector(
+    (state: RootState) => state.taskListReducer.api.data.taskStatuses
+  );
+
   const dispatch = useAppDispatch();
+  const lastFetchedProjectRef = useRef<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -95,8 +100,8 @@ const ProjectList = () => {
     setShowFilterModal(true);
   };
 
-  const handleOnClickDetails = () => {
-    navigate("/app/projects/details");
+  const handleOnClickDetails = (projectId: string) => {
+    navigate(`/app/projects/info/${projectId}`);
   };
 
   const handleSelectCurrentProjectId = (projectId: string) => {
@@ -121,12 +126,36 @@ const ProjectList = () => {
     }
   }, [dispatch, projectListState.api.data.projects, projectListState.common.selectedProjectId]);
 
+  // Fetch tasks when project changes, but prevent duplicate fetches
   useEffect(() => {
     const project_id = projectListState.common.selectedProjectId;
-    if (project_id) {
+    
+    // Only fetch if:
+    // 1. Project ID exists
+    // 2. Project ID changed from last fetch
+    // 3. Not already loading
+    if (
+      project_id && 
+      project_id !== lastFetchedProjectRef.current &&
+      !taskListState.loading
+    ) {
+      lastFetchedProjectRef.current = project_id;
       dispatch(getTaskListAction(project_id));
     }
-  }, [dispatch, projectListState.common.selectedProjectId]);
+    
+    // Reset ref when project is cleared
+    if (!project_id) {
+      lastFetchedProjectRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, projectListState.common.selectedProjectId]); // Don't include loading to avoid loops
+
+  // Fetch task statuses if not already loaded
+  useEffect(() => {
+    if (taskStatuses.length === 0) {
+      dispatch(getTaskStatusesAction());
+    }
+  }, [dispatch, taskStatuses.length]);
 
   // Force list view on mobile
   useEffect(() => {
@@ -138,14 +167,14 @@ const ProjectList = () => {
   const ProjectSidebar = (
     <Box
       sx={(theme) => ({
-        width: { xs: "100%", sm: "15%" },
+        width: { xs: "100%", sm: "100%", md: "18%", lg: "15%" },
         background: theme.palette.background.paper,
         borderRadius: "24px",
         boxShadow: theme.shadows[1],
         overflow: "auto",
         scrollBehavior: "smooth",
         WebkitOverflowScrolling: "touch",
-        height: { xs: "100%", sm: "auto" },
+        height: { xs: "100%", sm: "auto", md: "auto", lg: "auto" },
         "::-webkit-scrollbar": {
           width: "3px",
         },
@@ -182,7 +211,7 @@ const ProjectList = () => {
             <Typography
               onClick={(e) => {
                 e.stopPropagation();
-                handleOnClickDetails();
+                handleOnClickDetails(project.id);
               }}
               color="primary"
               sx={{
@@ -206,18 +235,18 @@ const ProjectList = () => {
       <PageHeader title="Projects" endElement={AddButton} />
       <Box
         sx={{
-          paddingTop: { xs: "16px", sm: "28px" },
+          paddingTop: { xs: "16px", sm: "20px", md: "24px", lg: "28px" },
           display: "flex",
-          gap: { xs: "16px", sm: "28px" },
+          gap: { xs: "16px", sm: "20px", md: "24px", lg: "28px" },
           height: "100%",
-          flexDirection: { xs: "column", sm: "row" },
+          flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
         }}
       >
         {/* Desktop Sidebar */}
         {!isMobile && ProjectSidebar}
 
         {/* Main Content Area */}
-        <Box sx={{ width: { xs: "100%", sm: "80%" }, flex: 1 }}>
+        <Box sx={{ width: { xs: "100%", sm: "100%", md: "78%", lg: "80%" }, flex: 1 }}>
           <>
             {/* Mobile: Show project selector dropdown */}
             {isMobile && (

@@ -108,20 +108,20 @@ const ProfilePage = () => {
       />
       <Box
         sx={{
-          padding: { xs: "10px", sm: "20px", md: "28px 0px" },
+          padding: { xs: "10px", sm: "16px", md: "24px 0px", lg: "28px 0px" },
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: { xs: "16px", md: "16px" },
+          flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
+          gap: { xs: "16px", sm: "16px", md: "20px", lg: "16px" },
           height: "100%",
         }}
       >
         <Box
           sx={(theme) => ({
-            width: { xs: "100%", md: "264px" },
-            height: { xs: "auto", md: "100%" },
+            width: { xs: "100%", sm: "100%", md: "280px", lg: "264px" },
+            height: { xs: "auto", sm: "auto", md: "100%", lg: "100%" },
             backgroundColor: theme.palette.background.paper,
-            borderRadius: { xs: "24px", md: "24px" },
-            padding: { xs: "20px 18px", md: "24px 18px" },
+            borderRadius: { xs: "24px", sm: "24px", md: "24px", lg: "24px" },
+            padding: { xs: "20px 18px", sm: "20px 18px", md: "22px 18px", lg: "24px 18px" },
             boxShadow: theme.shadows[1],
           })}
         >

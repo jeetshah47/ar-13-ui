@@ -8,9 +8,11 @@ import {
   Avatar,
 } from "@mui/material";
 import { mapStatusToUnified } from "../constants/taskStatus.constants";
-import { getAllTaskByProjectId } from "../../../store/apis/taskApis";
+import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
+import { getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 import { useNotifications } from "../../../contexts/NotificationContext";
+import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
 
 interface TaskItem {
   id: string;
@@ -59,38 +61,123 @@ const formatDuration = (dateString: string): string => {
 
 const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const taskListState = useAppSelector((state: RootState) => state.taskListReducer.api);
+  const taskStatuses = useAppSelector((state: RootState) => state.taskListReducer.api.data.taskStatuses);
   const { emit, onEvent, offEvent, isConnected } = useNotifications();
-  const [columns, setColumns] = useState<Column[]>([
-    {
-      id: "pending",
-      title: "Pending",
-      items: [],
-      status: "pending",
-    },
-    {
-      id: "todo",
-      title: "Todo",
-      items: [],
-      status: "todo",
-    },
-    {
-      id: "review",
-      title: "Review",
-      items: [],
-      status: "review",
-    },
-    {
-      id: "completed",
-      title: "Completed",
-      items: [],
-      status: "completed",
-    },
-  ]);
+  
+  // Initialize columns from API task statuses, fallback to default if not loaded
+  const getInitialColumns = useCallback((): Column[] => {
+    if (taskStatuses.length > 0) {
+      // Create a copy of the array before sorting (Redux state is read-only)
+      return [...taskStatuses]  
+        .sort((a, b) => {
+          // First, sort by order field if available (from API response)
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          
+          // Fallback: Sort by category: active first, then completed, then final
+          const categoryOrder: Record<string, number> = { active: 0, completed: 1, final: 2 };
+          const categoryDiff = (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99);
+          if (categoryDiff !== 0) return categoryDiff;
+          // Within same category, active statuses first
+          if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+          return 0;
+        })
+        .map((status: TaskStatus) => ({
+          id: status.value,
+          title: status.displayName,
+          items: [],
+          status: status.value,
+        }));
+    }
+    // Fallback to default columns if API statuses not loaded yet
+    return [
+      {
+        id: "pending",
+        title: "Pending",
+        items: [],
+        status: "pending",
+      },
+      {
+        id: "todo",
+        title: "Todo",
+        items: [],
+        status: "todo",
+      },
+      {
+        id: "review",
+        title: "Review",
+        items: [],
+        status: "review",
+      },
+      {
+        id: "completed",
+        title: "Completed",
+        items: [],
+        status: "completed",
+      },
+    ];
+  }, [taskStatuses]);
+
+  const [columns, setColumns] = useState<Column[]>(getInitialColumns());
 
   const [draggedItem, setDraggedItem] = useState<TaskItem | null>(null);
   const [draggedFromColumn, setDraggedFromColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const pendingUpdatesRef = useRef<Map<string, { fromColumn: string; toColumn: string; task: TaskItem }>>(new Map());
+
+  // Fetch task statuses if not already loaded
+  useEffect(() => {
+    if (taskStatuses.length === 0) {
+      dispatch(getTaskStatusesAction());
+    }
+  }, [dispatch, taskStatuses.length]);
+
+  // Update columns when task statuses are loaded
+  useEffect(() => {
+    if (taskStatuses.length > 0) {
+      // Create a copy of the array before sorting (Redux state is read-only)
+      // Create columns from API task statuses, ordered by order field from API response
+      const newColumns = [...taskStatuses]
+        .sort((a, b) => {
+          // First, sort by order field if available (from API response)
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          
+          // Fallback: Sort by category: active first, then completed, then final
+          const categoryOrder: Record<string, number> = { active: 0, completed: 1, final: 2 };
+          const categoryDiff = (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99);
+          if (categoryDiff !== 0) return categoryDiff;
+          // Within same category, active statuses first
+          if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+          return 0;
+        })
+        .map((status: TaskStatus) => ({
+          id: status.value,
+          title: status.displayName,
+          items: [],
+          status: status.value,
+        }));
+      
+      setColumns(prevColumns => {
+        // Preserve items when updating columns structure
+        return newColumns.map(newCol => {
+          const prevCol = prevColumns.find(col => col.id === newCol.id || col.status === newCol.status);
+          return {
+            ...newCol,
+            items: prevCol?.items || [],
+          };
+        });
+      });
+    }
+  }, [taskStatuses]);
 
   // Convert TaskResponse to TaskItem
   const convertTaskResponseToTaskItem = useCallback((task: TaskResponse): TaskItem => {
@@ -113,31 +200,67 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     };
   }, []);
 
-  // Fetch tasks from backend API
+  // Note: Tasks are fetched by ProjectList component when projectId changes
+  // ProjectBoard just reads from Redux state, no need to fetch here
+
+  // Update columns when tasks are loaded from Redux state
   useEffect(() => {
-    if (!projectId) return;
-
-    const fetchTasks = async () => {
-      try {
-        const response = await getAllTaskByProjectId(projectId);
-        const taskItems = response.tasks.map(convertTaskResponseToTaskItem);
-        setColumns(prevColumns => 
-          prevColumns.map(column => ({
+    if (taskListState?.data?.tasks && projectId && !taskListState.loading) {
+      const taskItems = taskListState.data.tasks.map(convertTaskResponseToTaskItem);
+      setColumns(prevColumns => {
+        const newColumns = prevColumns.map(column => {
+          // Match tasks by exact status value from API
+          // Use direct status matching first (most reliable)
+          const matchingTasks = taskItems.filter(task => {
+            if (!task.status) return false;
+            
+            const taskStatus = task.status.trim();
+            const columnStatus = column.status.trim();
+            const columnId = column.id.trim();
+            
+            // Direct exact match (case-sensitive first, then case-insensitive)
+            if (taskStatus === columnStatus || taskStatus === columnId) {
+              return true;
+            }
+            
+            // Case-insensitive match
+            if (taskStatus.toLowerCase() === columnStatus.toLowerCase() || 
+                taskStatus.toLowerCase() === columnId.toLowerCase()) {
+              return true;
+            }
+            
+            // Fallback: Use unified mapping only if direct match fails
+            // This handles legacy statuses and variations
+            const normalizedTaskStatus = mapStatusToUnified(task.status);
+            const normalizedColumnStatus = mapStatusToUnified(column.status);
+            
+            // Only use unified mapping if both normalize to the same value
+            if (normalizedTaskStatus === normalizedColumnStatus) {
+              return true;
+            }
+            
+            return false;
+          });
+          
+          return {
             ...column,
-            items: taskItems.filter(task => {
-              // Normalize task status to unified format for comparison
-              const normalizedTaskStatus = mapStatusToUnified(task.status);
-              return normalizedTaskStatus === column.status;
-            })
-          }))
-        );
-      } catch (error) {
-        console.error("Failed to fetch tasks:", error);
-      }
-    };
-
-    fetchTasks();
-  }, [projectId, convertTaskResponseToTaskItem]);
+            items: matchingTasks,
+          };
+        });
+        
+        // Only update if columns actually changed
+        const hasChanged = prevColumns.some((prevCol, index) => {
+          const newCol = newColumns[index];
+          return prevCol.items.length !== newCol.items.length ||
+            prevCol.items.some((item, itemIndex) => 
+              !newCol.items[itemIndex] || newCol.items[itemIndex].id !== item.id
+            );
+        });
+        
+        return hasChanged ? newColumns : prevColumns;
+      });
+    }
+  }, [taskListState?.data?.tasks, taskListState.loading, projectId, convertTaskResponseToTaskItem]);
 
   // Listen for task status updates from WebSocket
   useEffect(() => {
@@ -166,8 +289,19 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
           const filteredItems = column.items.filter(item => item.id !== messageData.taskId);
           
           // If this column matches the new status, add the task
-          const normalizedStatus = mapStatusToUnified(messageData.status);
-          if (normalizedStatus === column.status) {
+          // Use direct matching first, then fallback to unified mapping
+          const newStatus = messageData.status.trim();
+          const columnStatus = column.status.trim();
+          const columnId = column.id.trim();
+          
+          const statusMatches = 
+            newStatus === columnStatus || 
+            newStatus === columnId ||
+            newStatus.toLowerCase() === columnStatus.toLowerCase() ||
+            newStatus.toLowerCase() === columnId.toLowerCase() ||
+            mapStatusToUnified(messageData.status) === mapStatusToUnified(column.status);
+          
+          if (statusMatches) {
             // Find the task in any column to get its details
             let taskToMove: TaskItem | null = null;
             prevColumns.forEach(col => {

@@ -15,6 +15,7 @@ import { employeeReducer } from "./features/employees/employeeSlice";
 import { activityLogsReducer } from "./features/activityLogs/activityLogsSlice";
 import { infoPortalReducer } from "./features/infoPortal/infoPortalSlice";
 import { googleAccountReducer } from "./features/googleAccount/googleAccountSlice";
+import { backupReducer } from "./features/backup/backupSlice";
 
 export const store = configureStore({
   reducer: {
@@ -32,6 +33,7 @@ export const store = configureStore({
     activityLogsReducer,
     infoPortalReducer,
     googleAccountReducer,
+    backupReducer,
   },
 });
 
