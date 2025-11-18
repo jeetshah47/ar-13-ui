@@ -287,6 +287,10 @@ export class NotificationService {
         return "✅";
       case NotificationType.LEAVE_REQUEST_REJECTED:
         return "❌";
+      case NotificationType.USER_LOGIN:
+        return "🔓";
+      case NotificationType.USER_LOGOUT:
+        return "🔒";
       default:
         return "🔔";
     }
@@ -294,7 +298,7 @@ export class NotificationService {
 
   // Format notification message for display
   formatNotificationMessage(notification: Notification): string {
-    const { message, type } = notification;
+    const { message, type, updaterName, oldStatus, newStatus, memberName, hours, date, timeDescription } = notification;
     
     switch (type) {
       case NotificationType.TASK_ASSIGNED:
@@ -303,11 +307,28 @@ export class NotificationService {
         return `New project created: ${message}`;
       case NotificationType.TASK_CREATED:
         return `New task created: ${message}`;
+      case NotificationType.TASK_UPDATED:
+        if (updaterName) {
+          return `${updaterName} updated: ${message}`;
+        }
+        return message;
       case NotificationType.LEAVE_REQUEST_APPROVED:
         return `Your leave request has been approved: ${message}`;
       case NotificationType.LEAVE_REQUEST_REJECTED:
         return `Your leave request has been rejected: ${message}`;
+      case NotificationType.USER_LOGIN:
+        return message || "User logged in";
+      case NotificationType.USER_LOGOUT:
+        return message || "User logged out";
       default:
+        // Handle status updates
+        if (oldStatus && newStatus) {
+          return `Status changed from ${oldStatus} to ${newStatus}: ${message}`;
+        }
+        // Handle time logged
+        if (memberName && hours !== undefined && date) {
+          return `${memberName} logged ${hours} hours on ${date}${timeDescription ? `: ${timeDescription}` : ''}`;
+        }
         return message;
     }
   }

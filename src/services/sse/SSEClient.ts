@@ -2,7 +2,8 @@ import type {
   Notification,
   NotificationCount,
   SSEConfig, 
-  NotificationClientEvents 
+  NotificationClientEvents,
+  SSENotificationEvent
 } from './types';
 
 export class SSEClient {
@@ -33,7 +34,8 @@ export class SSEClient {
       baseUrl = `http://${baseUrl}`;
     }
     
-    // SSE endpoint
+    // SSE endpoint - token can be provided as query parameter or in Authorization header
+    // According to docs, both are supported, but query parameter is simpler for EventSource
     return `${baseUrl}/api/events?token=${this.config.authToken}`;
   }
 
@@ -97,6 +99,10 @@ export class SSEClient {
   private setupEventListeners(): void {
     if (!this.eventSource) return;
 
+    // Handle heartbeat comments (sent every 30 seconds)
+    // EventSource doesn't expose comment events directly, but we can handle them
+    // by monitoring the connection state and ignoring empty data
+
     this.eventSource.onopen = () => {
       // eslint-disable-next-line no-console
       console.log('SSEClient: Connected successfully');
@@ -105,13 +111,19 @@ export class SSEClient {
       this.eventListeners.connect?.();
     };
 
-    // Handle authenticated event
+    // Handle authenticated event (sent immediately after connection)
     this.eventSource.addEventListener('authenticated', (event) => {
       try {
         const data = JSON.parse(event.data);
         // eslint-disable-next-line no-console
         console.log('SSEClient: Authenticated', data);
-        this.eventListeners.authenticated?.(data);
+        // Validate that we received userId
+        if (data.userId) {
+          this.eventListeners.authenticated?.(data);
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn('SSEClient: Authenticated event missing userId', data);
+        }
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('SSEClient: Error parsing authenticated event:', error);
@@ -122,7 +134,28 @@ export class SSEClient {
     this.eventSource.addEventListener('notification', (event) => {
       try {
         const data = JSON.parse(event.data);
-        this.eventListeners.notification?.(data as Notification);
+        // Parse the SSE notification event structure
+        // According to docs: { notification: {...}, taskId, projectId, projectTitle }
+        const notificationEvent: SSENotificationEvent = {
+          notification: {
+            ...data.notification,
+            // Merge metadata from root level into notification object
+            taskId: data.taskId || data.notification?.taskId,
+            projectId: data.projectId || data.notification?.projectId,
+            projectTitle: data.projectTitle || data.notification?.projectTitle,
+            // Parse dates
+            createdAt: data.notification?.createdAt 
+              ? new Date(data.notification.createdAt) 
+              : new Date(),
+            created: data.notification?.created || data.notification?.createdAt
+              ? new Date(data.notification.created || data.notification.createdAt)
+              : new Date(),
+          },
+          taskId: data.taskId,
+          projectId: data.projectId,
+          projectTitle: data.projectTitle,
+        };
+        this.eventListeners.notification?.(notificationEvent);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('SSEClient: Error parsing notification event:', error);
@@ -187,19 +220,15 @@ export class SSEClient {
     });
 
     // Handle error events
-    this.eventSource.addEventListener('error', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Server error:', data.error);
-        // Trigger custom error listeners if any
-        const listeners = this.customEventListeners.get('error');
-        if (listeners) {
-          listeners.forEach(listener => listener(data));
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing error event:', error);
+    // Note: SSE error events are generic Event objects, not MessageEvent
+    // They don't have a data property, so we handle them differently
+    this.eventSource.addEventListener('error', () => {
+      // eslint-disable-next-line no-console
+      console.error('SSEClient: Server error event received');
+      // Trigger custom error listeners if any
+      const listeners = this.customEventListeners.get('error');
+      if (listeners) {
+        listeners.forEach(listener => listener({ error: 'Server error' }));
       }
     });
 

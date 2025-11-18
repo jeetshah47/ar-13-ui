@@ -12,6 +12,7 @@ import type {
   Notification,
   NotificationCount,
   NotificationContextType,
+  SSENotificationEvent,
 } from "../services/sse/types";
 import { SERVER_BASE_URL } from "../config/api";
 
@@ -68,6 +69,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [sseClient, setSseClient] = useState<SSEClient | null>(null);
   const refreshNotificationsRef = useRef<() => Promise<void>>();
+  const authenticatedUserIdRef = useRef<string | null>(null);
+  const notificationIdsRef = useRef<Set<string>>(new Set());
 
   // SSE methods for listening to events (SSE is unidirectional, no emit method)
   const onEvent = useCallback((event: string, listener: (...args: any[]) => void) => {
@@ -109,6 +112,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       setError(null);
       // Note: Server automatically extracts user ID from JWT token
       // and sends authenticated event
+      // We'll wait for authenticated event before proceeding
+    };
+
+    const handleAuthenticated = (data: { userId: string }) => {
+      authenticatedUserIdRef.current = data.userId;
+      // eslint-disable-next-line no-console
+      console.log('NotificationContext: Authenticated as user', data.userId);
+      // After authentication, refresh notifications to sync with server
+      if (refreshNotificationsRef.current) {
+        refreshNotificationsRef.current();
+      }
     };
 
     const handleDisconnect = (reason?: string) => {
@@ -119,12 +133,66 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       }
     };
 
-    const handleNotification = (notification: Notification) => {
-      setNotifications((prev) => [notification, ...prev]);
-      setNotificationCount((prev) => ({
-        total: prev.total + 1,
-        unread: prev.unread + 1,
-      }));
+    const handleNotification = (event: SSENotificationEvent) => {
+      const { notification: notificationData, taskId, projectId, projectTitle } = event;
+      
+      // Validate notification belongs to current user
+      if (authenticatedUserIdRef.current && notificationData.userId !== authenticatedUserIdRef.current) {
+        // eslint-disable-next-line no-console
+        console.warn('NotificationContext: Received notification for different user', {
+          notificationUserId: notificationData.userId,
+          currentUserId: authenticatedUserIdRef.current,
+        });
+        return;
+      }
+
+      // Deduplication: Check if we've already received this notification
+      if (notificationIdsRef.current.has(notificationData.id)) {
+        // eslint-disable-next-line no-console
+        console.log('NotificationContext: Duplicate notification ignored', notificationData.id);
+        return;
+      }
+
+      // Merge metadata from event into notification
+      const enrichedNotification: Notification = {
+        ...notificationData,
+        taskId: taskId || notificationData.taskId,
+        projectId: projectId || notificationData.projectId,
+        projectTitle: projectTitle || notificationData.projectTitle,
+        // Ensure dates are Date objects
+        createdAt: notificationData.createdAt instanceof Date 
+          ? notificationData.createdAt 
+          : new Date(notificationData.createdAt || Date.now()),
+        created: notificationData.created instanceof Date
+          ? notificationData.created
+          : new Date(notificationData.created || notificationData.createdAt || Date.now()),
+      };
+
+      // Add to deduplication set
+      notificationIdsRef.current.add(enrichedNotification.id);
+
+      // Update state
+      setNotifications((prev) => {
+        // Check again in case of race condition
+        const exists = prev.find(n => n.id === enrichedNotification.id);
+        if (exists) {
+          return prev;
+        }
+        return [enrichedNotification, ...prev];
+      });
+
+      // Update count only if notification is unread
+      if (!enrichedNotification.isRead) {
+        setNotificationCount((prev) => ({
+          total: prev.total + 1,
+          unread: prev.unread + 1,
+        }));
+      } else {
+        setNotificationCount((prev) => ({
+          total: prev.total + 1,
+          unread: prev.unread,
+        }));
+      }
     };
 
     const handleNotificationCount = (count: NotificationCount) => {
@@ -154,6 +222,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     // Register event listeners
     client.on("connect", handleConnect);
     client.on("disconnect", handleDisconnect);
+    client.on("authenticated", handleAuthenticated);
     client.on("notification", handleNotification);
     client.on("notification_count", handleNotificationCount);
     client.on("connect_error", handleConnectError);
@@ -164,6 +233,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       // Clean up event listeners
       client.off("connect");
       client.off("disconnect");
+      client.off("authenticated");
       client.off("notification");
       client.off("notification_count");
       client.off("connect_error");
@@ -176,6 +246,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         console.log('NotificationContext: Error during SSE cleanup (expected in dev mode)', error);
       }
       setSseClient(null);
+      authenticatedUserIdRef.current = null;
     };
   }, [sseUrl, actualAuthToken, actualUserId]);
 
@@ -207,7 +278,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         }),
       ]);
 
-      setNotifications(allNotifications);
+      // Update deduplication set with all notification IDs
+      notificationIdsRef.current = new Set(allNotifications.map(n => n.id));
+
+      // Ensure dates are Date objects
+      const parsedNotifications = allNotifications.map(notification => ({
+        ...notification,
+        createdAt: notification.createdAt instanceof Date 
+          ? notification.createdAt 
+          : new Date(notification.createdAt || Date.now()),
+        created: notification.created instanceof Date
+          ? notification.created
+          : new Date(notification.created || notification.createdAt || Date.now()),
+      }));
+
+      setNotifications(parsedNotifications);
       setNotificationCount(count);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load notifications";
@@ -261,17 +346,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       await notificationService.markAsRead(notificationId);
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
+        prev.map((notification) => {
+          if (notification.id === notificationId && !notification.isRead) {
+            return { ...notification, isRead: true };
+          }
+          return notification;
+        })
       );
 
-      setNotificationCount((prev) => ({
-        total: prev.total,
-        unread: Math.max(0, prev.unread - 1),
-      }));
+      // Only decrement if notification was actually unread
+      setNotificationCount((prev) => {
+        const notification = notifications.find(n => n.id === notificationId);
+        if (notification && !notification.isRead) {
+          return {
+            total: prev.total,
+            unread: Math.max(0, prev.unread - 1),
+          };
+        }
+        return prev;
+      });
     } catch (err) {
       setError(
         err instanceof Error
@@ -279,7 +372,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           : "Failed to mark notification as read"
       );
     }
-  }, []);
+  }, [notifications]);
 
   const markAllAsRead = useCallback(async () => {
     if (!actualUserId) return;

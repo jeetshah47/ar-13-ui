@@ -9,6 +9,8 @@ export const NotificationType = {
   LEAVE_REQUEST_CREATED: "LEAVE_REQUEST_CREATED",
   LEAVE_REQUEST_APPROVED: "LEAVE_REQUEST_APPROVED",
   LEAVE_REQUEST_REJECTED: "LEAVE_REQUEST_REJECTED",
+  USER_LOGIN: "USER_LOGIN",
+  USER_LOGOUT: "USER_LOGOUT",
 } as const;
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
@@ -33,6 +35,18 @@ export interface Notification {
   createdAt: Date;
   created: Date;
   updated?: Date;
+  // Additional metadata that may come from SSE events
+  taskId?: string;
+  projectId?: string;
+  projectTitle?: string;
+  // Event-specific additional data
+  updaterName?: string;
+  oldStatus?: string;
+  newStatus?: string;
+  memberName?: string;
+  hours?: number;
+  date?: string;
+  timeDescription?: string;
 }
 
 // Alias for backward compatibility
@@ -49,10 +63,18 @@ export interface SSEConfig {
   autoConnect?: boolean;
 }
 
+// SSE event payload structure as per documentation
+export interface SSENotificationEvent {
+  notification: Notification;
+  taskId?: string;
+  projectId?: string;
+  projectTitle?: string;
+}
+
 export interface NotificationClientEvents {
   connect: () => void;
   disconnect: (reason?: string) => void;
-  notification: (notification: Notification) => void;
+  notification: (event: SSENotificationEvent) => void;
   project_notification: (notification: Notification) => void;
   global_notification: (notification: Notification) => void;
   notification_count: (count: NotificationCount) => void;
