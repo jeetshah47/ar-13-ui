@@ -12,9 +12,9 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { formatDistanceToNow } from "date-fns";
 import { useNotifications } from "../../../contexts/NotificationContext";
-import { notificationService } from "../../../services/websocket/NotificationService";
-import type { Notification } from "../../../services/websocket/types";
-import { NotificationType } from "../../../services/websocket/types";
+import { notificationService } from "../../../services/sse/NotificationService";
+import type { Notification } from "../../../services/sse/types";
+import { NotificationType } from "../../../services/sse/types";
 
 interface NotificationModalProps {
   onClose: () => void;

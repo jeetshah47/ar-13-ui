@@ -54,7 +54,7 @@ const ListView = ({ tasks }: ListViewProps) => {
     return `${hours}h`;
   };
 
-  const calculateEstimate = (deadline: string | undefined) => {
+  const calculateEstimate = (_deadline: string | undefined) => {
     // For now, return a placeholder. This should be calculated from task estimate if available
     return "2d 4h"; // Placeholder - should come from task data
   };
@@ -208,7 +208,7 @@ const ListView = ({ tasks }: ListViewProps) => {
                   backgroundColor: "#3F8CFF"
                 }}
               >
-                {task.assignTo?.charAt(0).toUpperCase() || "U"}
+                {task.assignTo?.name?.charAt(0).toUpperCase() || "U"}
               </Avatar>
             </Box>
           </Box>
@@ -401,7 +401,7 @@ const ListView = ({ tasks }: ListViewProps) => {
               backgroundColor: "var(--color-primary, #3F8CFF)"
             }}
           >
-            {task.assignTo?.charAt(0).toUpperCase() || "U"}
+            {task.assignTo?.name?.charAt(0).toUpperCase() || "U"}
           </Avatar>
         </Box>
 

@@ -3,7 +3,7 @@ import type { AuthState } from "./authTypes";
 import type { AuthResponse } from "../../types/Auth/AuthResponse";
 import type { AuthError } from "../../types/Auth/AuthError";
 import { getPermissionsForRole } from "../../types/RBAC/config";
-import type { UserRole } from "../../types/RBAC";
+import type { UserRole, Permission } from "../../types/RBAC";
 
 const checkAuthFromToken = (): AuthState => {
   const token = localStorage.getItem("authToken");

@@ -6,13 +6,14 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { WebSocketClient } from "../services/websocket/WebSocketClient";
-import { notificationService } from "../services/websocket/NotificationService";
+import { SSEClient } from "../services/sse";
+import { notificationService } from "../services/sse/NotificationService";
 import type {
   Notification,
   NotificationCount,
   NotificationContextType,
-} from "../services/websocket/types";
+} from "../services/sse/types";
+import { SERVER_BASE_URL } from "../config/api";
 
 // Get user ID and token from localStorage
 const getUserFromStorage = () => {
@@ -45,14 +46,14 @@ interface NotificationProviderProps {
   children: React.ReactNode;
   userId?: string;
   authToken?: string;
-  websocketUrl?: string;
+  sseUrl?: string;
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
   userId,
   authToken,
-  websocketUrl = "ws://localhost:3000",
+  sseUrl = SERVER_BASE_URL,
 }) => {
   // Get user data from localStorage if not provided
   const userData = getUserFromStorage();
@@ -65,49 +66,41 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [wsClient, setWsClient] = useState<WebSocketClient | null>(null);
+  const [sseClient, setSseClient] = useState<SSEClient | null>(null);
   const refreshNotificationsRef = useRef<() => Promise<void>>();
 
-  // Expose WebSocket client methods for task updates and other features
-  const emit = useCallback((event: string, data?: any) => {
-    if (wsClient && wsClient.isConnected()) {
-      wsClient.emit(event, data);
-    } else {
-      console.warn('WebSocket: Cannot emit event - not connected');
-    }
-  }, [wsClient]);
-
+  // SSE methods for listening to events (SSE is unidirectional, no emit method)
   const onEvent = useCallback((event: string, listener: (...args: any[]) => void) => {
-    if (wsClient) {
-      wsClient.onEvent(event, listener);
+    if (sseClient) {
+      sseClient.onEvent(event, listener);
     }
-  }, [wsClient]);
+  }, [sseClient]);
 
   const offEvent = useCallback((event: string, listener?: (...args: any[]) => void) => {
-    if (wsClient) {
-      wsClient.offEvent(event, listener);
+    if (sseClient) {
+      sseClient.offEvent(event, listener);
     }
-  }, [wsClient]);
+  }, [sseClient]);
 
-  // Initialize WebSocket client
+  // Initialize SSE client
   useEffect(() => {
     // Don't create client if we don't have auth token or userId
     if (!actualAuthToken || !actualUserId) {
-      console.log('NotificationContext: Skipping WebSocket connection - missing token or userId');
+      console.log('NotificationContext: Skipping SSE connection - missing token or userId');
       return;
     }
 
-    console.log('NotificationContext: Initializing WebSocket client for', websocketUrl);
+    console.log('NotificationContext: Initializing SSE client for', sseUrl);
     
-    const client = new WebSocketClient({
-      serverUrl: websocketUrl,
+    const client = new SSEClient({
+      serverUrl: sseUrl,
       authToken: actualAuthToken,
       autoConnect: true,
     });
 
-    setWsClient(client);
+    setSseClient(client);
     
-    // Actually connect the websocket
+    // Actually connect the SSE
     client.connect();
 
     // Setup event listeners
@@ -115,14 +108,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       setIsConnected(true);
       setError(null);
       // Note: Server automatically extracts user ID from JWT token
-      // and joins user to their personal room, so manual join is not needed
+      // and sends authenticated event
     };
 
     const handleDisconnect = (reason?: string) => {
       setIsConnected(false);
       // Log disconnect reason for debugging
       if (reason) {
-        console.log('WebSocket disconnected:', reason);
+        console.log('SSE disconnected:', reason);
       }
     };
 
@@ -139,7 +132,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     };
 
     const handleConnectError = (error: Error) => {
-      setError(`WebSocket connection failed: ${error.message}`);
+      setError(`SSE connection failed: ${error.message}`);
       setIsConnected(false);
       // Handle authentication errors specifically
       if (error.message === 'unauthorized') {
@@ -167,7 +160,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     client.on("reconnect", handleReconnect);
 
     return () => {
-      console.log('NotificationContext: Cleaning up WebSocket client');
+      console.log('NotificationContext: Cleaning up SSE client');
       // Clean up event listeners
       client.off("connect");
       client.off("disconnect");
@@ -180,11 +173,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         client.disconnect();
       } catch (error) {
         // Ignore errors during cleanup (e.g., if connection was never established)
-        console.log('NotificationContext: Error during WebSocket cleanup (expected in dev mode)', error);
+        console.log('NotificationContext: Error during SSE cleanup (expected in dev mode)', error);
       }
-      setWsClient(null);
+      setSseClient(null);
     };
-  }, [websocketUrl, actualAuthToken, actualUserId]);
+  }, [sseUrl, actualAuthToken, actualUserId]);
 
   // Set auth token in notification service
   useEffect(() => {
@@ -193,7 +186,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   }, [actualAuthToken]);
 
-  // Real-time updates are handled by WebSocket client
+  // Real-time updates are handled by SSE client
   // No need for mock service setup
 
   const refreshNotifications = useCallback(async () => {
@@ -236,11 +229,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   }, [actualUserId, refreshNotifications]);
 
-  // Fallback to mock notifications if websocket fails to connect
+  // Fallback to mock notifications if SSE fails to connect
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isConnected && !isLoading && notifications.length === 0) {
-        // You can uncomment this to use mock data when websocket fails
+        // You can uncomment this to use mock data when SSE fails
         // const mockNotifications = [
         //   {
         //     id: "mock-1",
@@ -344,42 +337,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     [notifications]
   );
 
-  const joinProject = useCallback(
-    (projectId: string) => {
-      if (wsClient) {
-        wsClient.joinProject(projectId); // This will use the legacy method
-      }
-    },
-    [wsClient]
-  );
-
-  const leaveProject = useCallback(
-    (projectId: string) => {
-      if (wsClient) {
-        wsClient.leaveProject(projectId); // This will use the legacy method
-      }
-    },
-    [wsClient]
-  );
-
-  const joinUserRoom = useCallback(
-    (userId: string) => {
-      if (wsClient) {
-        wsClient.joinUserRoom(userId);
-      }
-    },
-    [wsClient]
-  );
-
-  const leaveUserRoom = useCallback(
-    (userId: string) => {
-      if (wsClient) {
-        wsClient.leaveUserRoom(userId);
-      }
-    },
-    [wsClient]
-  );
-
   const contextValue: NotificationContextType = {
     notifications,
     notificationCount,
@@ -389,12 +346,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    joinProject,
-    leaveProject,
-    joinUserRoom,
-    leaveUserRoom,
     refreshNotifications,
-    emit,
     onEvent,
     offEvent,
   };

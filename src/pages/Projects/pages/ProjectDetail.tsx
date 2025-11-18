@@ -623,7 +623,7 @@ const ProjectDetail = () => {
             endDate: ("endDate" in taskDetails && typeof taskDetails.endDate === "string") ? taskDetails.endDate : "",
             deadline: taskDetails.deadline,
             priority: taskDetails.priority,
-            assignTo: taskDetails.assignTo || null,
+            assignTo: (typeof taskDetails.assignTo === 'object' && taskDetails.assignTo !== null) ? taskDetails.assignTo.id : (taskDetails.assignTo || null),
             projectId: taskDetails.projectId,
             progress: taskDetails.progress ?? 0,
             description: taskDetails.description || "",

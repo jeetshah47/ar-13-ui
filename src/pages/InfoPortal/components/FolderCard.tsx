@@ -1,7 +1,9 @@
 import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import CustomCard from "../../../common/components/Card/CustomCard";
-import FolderIcon from "../../../assets/icons/infoportal/folder.svg";
+import FolderIcon from "../../../assets/icons/infoportal/folder.svg?react";
+
+// FolderCard component for displaying folder information
 
 interface FolderCardProps {
   id?: string;

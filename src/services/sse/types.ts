@@ -1,4 +1,4 @@
-// WebSocket Notification Service Types
+// SSE Notification Service Types
 
 export const NotificationType = {
   PROJECT_CREATED: "PROJECT_CREATED",
@@ -43,7 +43,7 @@ export interface NotificationCount {
   unread: number;
 }
 
-export interface WebSocketConfig {
+export interface SSEConfig {
   serverUrl: string;
   authToken: string;
   autoConnect?: boolean;
@@ -56,7 +56,7 @@ export interface NotificationClientEvents {
   project_notification: (notification: Notification) => void;
   global_notification: (notification: Notification) => void;
   notification_count: (count: NotificationCount) => void;
-  authenticated: (data: { success: boolean }) => void; // Kept for backward compatibility, but not used in new implementation
+  authenticated: (data: { userId: string }) => void;
   connect_error: (error: Error) => void;
   reconnect: (attemptNumber: number) => void;
   reconnect_error: (error: Error) => void;
@@ -71,13 +71,9 @@ export interface NotificationContextType {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
-  joinProject: (projectId: string) => void;
-  leaveProject: (projectId: string) => void;
-  joinUserRoom: (userId: string) => void;
-  leaveUserRoom: (userId: string) => void;
   refreshNotifications: () => Promise<void>;
-  // WebSocket methods for task updates and other features
-  emit: (event: string, data?: any) => void;
+  // SSE methods for listening to events (SSE is unidirectional, no emit method)
   onEvent: (event: string, listener: (...args: any[]) => void) => void;
   offEvent: (event: string, listener?: (...args: any[]) => void) => void;
 }
+

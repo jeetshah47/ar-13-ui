@@ -22,7 +22,7 @@ import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
 import { getTaskListAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import NoTaskMessage from "../components/NoTaskMessage";
-import { RequirePermission } from "../../../common/components/RBAC";
+import { usePermissions } from "../../../store/hooks/usePermissions";
 
 const getActiveCardStyles = (theme: Theme) => ({
   borderRight: `4px solid ${theme.palette.primary.main}`,
@@ -53,6 +53,7 @@ const ProjectList = () => {
 
   const dispatch = useAppDispatch();
   const lastFetchedProjectRef = useRef<string | null>(null);
+  const { checkPermission } = usePermissions();
 
   const navigate = useNavigate();
 
@@ -60,20 +61,21 @@ const ProjectList = () => {
     navigate("/app/projects/add-project");
   };
 
+  const hasProjectWritePermission = checkPermission("projects:write");
+
   const AddButton = (
-    <RequirePermission permission="projects:write">
-      <Button
-        variant="contained"
-        startIcon={<SvgIcon component={PlusIcon} />}
-        onClick={handleAddProject}
-        size={isMobile ? "small" : "medium"}
-        sx={{
-          fontSize: { xs: "12px", sm: "14px" },
-        }}
-      >
-        Add Project
-      </Button>
-    </RequirePermission>
+    <Button
+      variant="contained"
+      startIcon={<SvgIcon component={PlusIcon} />}
+      onClick={handleAddProject}
+      disabled={!hasProjectWritePermission}
+      size={isMobile ? "small" : "medium"}
+      sx={{
+        fontSize: { xs: "12px", sm: "14px" },
+      }}
+    >
+      Add Project
+    </Button>
   );
 
   const handleCloseModal = () => {
@@ -133,14 +135,18 @@ const ProjectList = () => {
     // Only fetch if:
     // 1. Project ID exists
     // 2. Project ID changed from last fetch
-    // 3. Not already loading
+    // 3. Not already loading (allow fetch if this is initial selection - lastFetchedProjectRef is null)
     if (
       project_id && 
-      project_id !== lastFetchedProjectRef.current &&
-      !taskListState.loading
+      project_id !== lastFetchedProjectRef.current
     ) {
-      lastFetchedProjectRef.current = project_id;
-      dispatch(getTaskListAction(project_id));
+      // If this is the initial fetch (no previous project), always fetch
+      // Otherwise, only fetch if not currently loading
+      const isInitialFetch = lastFetchedProjectRef.current === null;
+      if (isInitialFetch || !taskListState.loading) {
+        lastFetchedProjectRef.current = project_id;
+        dispatch(getTaskListAction(project_id));
+      }
     }
     
     // Reset ref when project is cleared
@@ -148,7 +154,7 @@ const ProjectList = () => {
       lastFetchedProjectRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, projectListState.common.selectedProjectId]); // Don't include loading to avoid loops
+  }, [dispatch, projectListState.common.selectedProjectId]);
 
   // Fetch task statuses if not already loaded
   useEffect(() => {

@@ -19,6 +19,7 @@ import { getEmployeeByIdAction } from "../../store/features/employees/employeeAc
 import { clearSelectedEmployee, clearEmployeeStats } from "../../store/features/employees/employeeSlice";
 import { getUserProfileAction } from "../../store/features/user/userActions";
 import StatsSection from "./components/StatsSection";
+import EmployeePermissionsSection from "./components/EmployeePermissionsSection";
 
 // Helper function to generate initials from name
 const getInitials = (name: string | null | undefined): string => {
@@ -30,7 +31,7 @@ const getInitials = (name: string | null | undefined): string => {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
-const tabList = ["Projects", "Team", "Statistics"];
+const tabList = ["Projects", "Team", "Statistics", "Permissions"];
 
 const EmployeeProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -230,6 +231,7 @@ const EmployeeProfilePage = () => {
           {currentTab === "Projects" && <ProjectSection />}
           {currentTab === "Team" && <TeamSection />}
           {currentTab === "Statistics" && userId && <StatsSection userId={userId} />}
+          {currentTab === "Permissions" && userId && <EmployeePermissionsSection userId={userId} />}
         </Box>
       </Box>
     </Box>

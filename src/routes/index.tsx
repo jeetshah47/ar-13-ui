@@ -12,7 +12,6 @@ import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
 import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
-import { Navigate } from "react-router";
 
 const authRoutes = [
   {
@@ -26,7 +25,7 @@ const authRoutes = [
   {
     path: "/projects/*",
     component: (
-      <PermissionRoute permission="projects:read" redirectTo="/app/dashboard">
+      <PermissionRoute>
         <ProjectPage />
       </PermissionRoute>
     ),

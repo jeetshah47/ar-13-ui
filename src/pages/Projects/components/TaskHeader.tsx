@@ -2,7 +2,7 @@ import { Box, IconButton, SvgIcon, Typography, Button, useMediaQuery, useTheme }
 import { ViewButtonOptions } from "../constants/project.contants";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
-import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
+import { usePermissions } from "../../../store/hooks/usePermissions";
 
 type TaskHeaderProps = {
   onClickAddButton: () => void;
@@ -21,6 +21,9 @@ const TaskHeader = ({
 }: TaskHeaderProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { checkPermission } = usePermissions();
+  
+  const hasTaskWritePermission = checkPermission("tasks:write");
 
   // Filter out tile and timeline views on mobile
   const availableViewOptions = isMobile 
@@ -40,33 +43,35 @@ const TaskHeader = ({
       >
         <Box sx={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
           <Typography sx={{ fontWeight: "bold", fontSize: { xs: "18px", sm: "22px" } }}>Tasks</Typography>
-          <RequirePermission permission="tasks:write">
-            <IconButton
+          <IconButton
+            size="small"
+            onClick={onClickAddButton}
+            disabled={!hasTaskWritePermission}
+            sx={{
+              backgroundColor: "#3F8CFF",
+              ":hover": { backgroundColor: "#3F8CFF" },
+              "&.Mui-disabled": {
+                backgroundColor: "rgba(63, 140, 255, 0.3)",
+                color: "rgba(0, 0, 0, 0.26)",
+              },
+            }}
+          >
+            <PlusIcon />
+          </IconButton>
+          {onClickAddDrawing && !isMobile && (
+            <Button
+              variant="outlined"
               size="small"
-              onClick={onClickAddButton}
+              onClick={onClickAddDrawing}
+              disabled={!hasTaskWritePermission}
               sx={{
-                backgroundColor: "#3F8CFF",
-                ":hover": { backgroundColor: "#3F8CFF" },
+                ml: 1,
+                textTransform: "none",
+                fontSize: "12px",
               }}
             >
-              <PlusIcon />
-            </IconButton>
-          </RequirePermission>
-          {onClickAddDrawing && !isMobile && (
-            <RequirePermission permission="tasks:write">
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={onClickAddDrawing}
-                sx={{
-                  ml: 1,
-                  textTransform: "none",
-                  fontSize: "12px",
-                }}
-              >
-                Add Drawing
-              </Button>
-            </RequirePermission>
+              Add Drawing
+            </Button>
           )}
         </Box>
         <Box sx={{ display: "flex", gap: { xs: "8px", sm: "16px" }, alignItems: "center" }}>

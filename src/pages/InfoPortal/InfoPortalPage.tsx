@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, Fab } from "@mui/material";
+import { Box, Button, SvgIcon, Fab, Typography, CircularProgress } from "@mui/material";
 import { Routes, Route, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
@@ -12,10 +12,11 @@ import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import AnimatedPage from "../../common/components/AnimatedPage/AnimatedPage";
 import { useInfoPortal } from "../../store/hooks/useInfoPortal";
 import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
+import CustomCard from "../../common/components/Card/CustomCard";
 
 const InfoPortalList = () => {
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
-  const { folders, statistics, getFolders, createFolder, getStatistics } = useInfoPortal();
+  const { folders, statistics, loading, getFolders, createFolder, getStatistics } = useInfoPortal();
 
   useEffect(() => {
     getFolders();
@@ -145,29 +146,78 @@ const InfoPortalList = () => {
         </Box>
 
         {/* Folders Grid */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(4, 1fr)",
-            },
-            gap: { xs: "20px", sm: "30px" },
-            paddingX: { xs: 0, sm: 0 },
-          }}
-        >
-          {folders.map((folder) => (
-            <FolderCard
-              key={folder.id}
-              id={folder.id}
-              name={folder.name}
-              pageCount={folder.pageCount}
-              color={folder.color}
-            />
-          ))}
-        </Box>
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "200px",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : folders.length === 0 ? (
+          <CustomCard>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                padding: "40px",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                variant="h2"
+                sx={(theme) => ({
+                  fontWeight: 700,
+                  fontSize: "22px",
+                  lineHeight: 1.364,
+                  color: theme.palette.text.primary,
+                })}
+              >
+                No folders yet
+              </Typography>
+              <Typography
+                sx={(theme) => ({
+                  fontSize: "16px",
+                  fontWeight: 400,
+                  lineHeight: 1.5,
+                  color: theme.palette.text.primary,
+                  opacity: 0.7,
+                })}
+              >
+                Click the "+" button to create your first folder.
+              </Typography>
+            </Box>
+          </CustomCard>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+                lg: "repeat(4, 1fr)",
+              },
+              gap: { xs: "20px", sm: "30px" },
+              paddingX: { xs: 0, sm: 0 },
+            }}
+          >
+            {folders.map((folder) => (
+              <FolderCard
+                key={folder.id}
+                id={folder.id}
+                name={folder.name}
+                pageCount={folder.pageCount}
+                color={folder.color}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
 
       {FloatingActionButton}

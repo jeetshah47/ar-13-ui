@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Typography, useMediaQuery, useTheme } from "@mui/material";
 import LogTimeModal from "./LogTimeModal";
 import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
 import { useState } from "react";

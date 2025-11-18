@@ -23,6 +23,11 @@ export interface AssignableUser {
   avatar?: string;
 }
 
+export interface AssignToUser {
+  id: string;
+  name: string;
+}
+
 export interface ActivityLog {
   id: string;
   type: "time_spent_added" | "file_uploaded" | "task_assigned" | "status_changed" | "task_created";
@@ -44,13 +49,17 @@ export interface ActivityLog {
 }
 
 export interface TaskStatus {
-  value: string;
-  displayName: string;
-  description: string;
-  category: "active" | "completed" | "final";
-  isActive: boolean;
-  isCompleted: boolean;
-  order?: number; // Order field from API response for sorting statuses
+  id: string; // Status ID from API
+  value: string; // Status value (e.g., "pending")
+  displayName: string; // Display name (e.g., "Pending")
+  description: string; // Status description
+  category: "active" | "completed" | "final"; // Status category
+  isActive: boolean; // Whether status is active
+  isCompleted: boolean; // Whether status represents completion
+  order: number; // Order field from API response for sorting statuses
+  createdAt: string; // Creation timestamp (ISO 8601)
+  updatedAt: string; // Last update timestamp (ISO 8601)
+  _id?: string; // MongoDB document ID (optional, may be present in some responses)
 }
 
 export interface TaskStatusResponse {

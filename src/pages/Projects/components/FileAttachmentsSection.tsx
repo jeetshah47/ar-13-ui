@@ -1,4 +1,4 @@
-import { Box, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, SvgIcon, Typography } from "@mui/material";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
@@ -23,9 +23,6 @@ const FileAttachmentsSection = ({
   parseFirebaseTimestamp,
   isImageAttachment,
 }: FileAttachmentsSectionProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   return (
     <Box sx={{ 
       paddingTop: { xs: "16px", sm: "16px" },

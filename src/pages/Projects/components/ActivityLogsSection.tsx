@@ -1,4 +1,4 @@
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import ActivityLogItem from "./ActivityLogItem";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
 
@@ -19,9 +19,6 @@ const ActivityLogsSection = ({
   parseFirebaseTimestamp,
   activityLogsRef,
 }: ActivityLogsSectionProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   return (
     <Box
       sx={{

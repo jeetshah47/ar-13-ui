@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -11,7 +11,6 @@ import {
 import { blurAnimation } from "../../../common/animation/cssAnimation";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { getTaskListAction } from "../../../store/features/task/projectAction";
-import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 import type { TimeSpentEntry } from "../../../store/types/Task/TaskTypes";
 
 // Helper function to format time spent
@@ -59,15 +58,31 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
 
 const TaskTimelineFlex: React.FC = () => {
   const dispatch = useAppDispatch();
-  const projectListState = useAppSelector((state: RootState) => state.projectListReducer);
+  const selectedProjectId = useAppSelector((state: RootState) => state.projectListReducer.common.selectedProjectId);
   const taskListState = useAppSelector((state: RootState) => state.taskListReducer.api);
+  const lastFetchedProjectRef = useRef<string | null>(null);
 
-  // Fetch tasks using Redux action when project changes
+  // Fetch tasks using Redux action when project changes, but prevent duplicate fetches
   useEffect(() => {
-    if (projectListState.common.selectedProjectId) {
-      dispatch(getTaskListAction(projectListState.common.selectedProjectId));
+    // Only fetch if:
+    // 1. Project ID exists
+    // 2. Project ID changed from last fetch
+    // 3. Not already loading
+    if (
+      selectedProjectId && 
+      selectedProjectId !== lastFetchedProjectRef.current &&
+      !taskListState?.loading
+    ) {
+      lastFetchedProjectRef.current = selectedProjectId;
+      dispatch(getTaskListAction(selectedProjectId));
     }
-  }, [dispatch, projectListState.common.selectedProjectId]);
+    
+    // Reset ref when project is cleared
+    if (!selectedProjectId) {
+      lastFetchedProjectRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, selectedProjectId]); // Don't include loading to avoid loops
 
   const tasks = taskListState?.data?.tasks || [];
   const loading = taskListState?.loading || false;

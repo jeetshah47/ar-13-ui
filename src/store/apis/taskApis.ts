@@ -24,8 +24,12 @@ export async function addMultipleTasks(tasks: ITask[]): Promise<{ message: strin
   return result.data;
 }
 
-export async function updateTask(task: ITask): Promise<{ message: string }> {
-  const url = `${API_BASE_URL}/tasks/update`;
+export async function updateTask(
+  projectId: string,
+  taskId: string,
+  task: Omit<ITask, 'id' | 'projectId'>
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/update/${projectId}/${taskId}`;
   const result = await http.put(url, task);
   return result.data;
 }

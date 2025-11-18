@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography, useTheme, useMediaQuery } from "@mui/material";
+import { Avatar, Box, Typography } from "@mui/material";
 import type { VacationResponse } from "../../../store/types/Vacation/VacationTypes";
 
 interface EmpVacationCardProps {
@@ -17,9 +17,6 @@ interface EmpVacationCardProps {
 }
 
 const EmpVacationCard = ({ employee }: EmpVacationCardProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  
   // If employee data provided, show employee vacation stats card (Figma design)
   if (employee) {
     return (

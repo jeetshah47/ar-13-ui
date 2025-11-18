@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "../../config/api";
-import type { PermissionsResponse } from "../../types/RBAC";
+import type { PermissionsResponse } from "../types/RBAC";
 export type User = {
   first_name: string;
   last_name: string;
@@ -109,6 +109,62 @@ export async function getPermissionsApi(): Promise<PermissionsResponse> {
       "Content-Type": "application/json",
     },
   });
+  
+  return result.data;
+}
+
+/**
+ * Fetch permissions for a specific user by userId
+ * @param userId - The user ID to fetch permissions for
+ * @returns PermissionsResponse containing role and permissions array
+ */
+export async function getUserPermissionsApi(userId: string): Promise<PermissionsResponse> {
+  const url = `${API_BASE_URL}/users/${userId}/permissions`;
+  const token = localStorage.getItem("authToken");
+  
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  const result = await axios.get<PermissionsResponse>(url, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  
+  return result.data;
+}
+
+/**
+ * Update permissions for a specific user
+ * @param userId - The user ID to update permissions for
+ * @param permissions - Array of permissions to set
+ * @param role - Optional role to update
+ * @returns Success message
+ */
+export async function updateUserPermissionsApi(
+  userId: string,
+  permissions: string[],
+  role?: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/users/${userId}/permissions`;
+  const token = localStorage.getItem("authToken");
+  
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  const result = await axios.put(
+    url,
+    { permissions, role },
+    {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
   
   return result.data;
 }

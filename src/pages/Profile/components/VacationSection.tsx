@@ -12,11 +12,11 @@ const VacationSection = () => {
   const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
   const leaveRequests = profile?.leaveRequests || [];
 
-  // Format Firestore timestamp to date string
-  const formatDate = (timestamp: { _seconds: number; _nanoseconds?: number } | undefined): string => {
-    if (!timestamp) return "N/A";
+  // Format ISO date string to readable format
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "N/A";
     try {
-      const dateObj = new Date(timestamp._seconds * 1000 + (timestamp._nanoseconds || 0) / 1000000);
+      const dateObj = new Date(dateString);
       if (isNaN(dateObj.getTime())) return "Invalid Date";
       return dateObj.toLocaleDateString("en-US", {
         year: "numeric",

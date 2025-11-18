@@ -40,9 +40,9 @@ export const useResourceAccess = () => {
   };
   
   const getTaskAccess = (task: TaskResponse): TaskAccess => {
-    // Check if task is assigned to current user (handle both string and array formats)
-    const assignToArray = Array.isArray(task.assignTo) ? task.assignTo : (task.assignTo ? [task.assignTo] : []);
-    const isAssigned = assignToArray.includes(currentUserId);
+    // Check if task is assigned to current user
+    // assignTo is now an object with {id, name} or null
+    const isAssigned = task.assignTo?.id === currentUserId;
     
     // Admin has full access to all tasks
     if (isAdmin()) {

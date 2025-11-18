@@ -13,6 +13,7 @@ import { getTaskStatusesAction } from "../../../store/features/task/projectActio
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
+import { updateTaskStatus } from "../../../store/apis/taskApis";
 
 interface TaskItem {
   id: string;
@@ -64,7 +65,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const dispatch = useAppDispatch();
   const taskListState = useAppSelector((state: RootState) => state.taskListReducer.api);
   const taskStatuses = useAppSelector((state: RootState) => state.taskListReducer.api.data.taskStatuses);
-  const { emit, onEvent, offEvent, isConnected } = useNotifications();
+  const { onEvent, offEvent, isConnected } = useNotifications();
   
   // Initialize columns from API task statuses, fallback to default if not loaded
   const getInitialColumns = useCallback((): Column[] => {
@@ -183,7 +184,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const convertTaskResponseToTaskItem = useCallback((task: TaskResponse): TaskItem => {
     const assigneeName = task.assignDetails && task.assignDetails.length > 0 
       ? task.assignDetails[0].name 
-      : "Unassigned";
+      : (task.assignTo?.name || "Unassigned");
     const assigneeAvatar = "/api/placeholder/24/24";
 
     return {
@@ -208,44 +209,48 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     if (taskListState?.data?.tasks && projectId && !taskListState.loading) {
       const taskItems = taskListState.data.tasks.map(convertTaskResponseToTaskItem);
       setColumns(prevColumns => {
-        const newColumns = prevColumns.map(column => {
-          // Match tasks by exact status value from API
-          // Use direct status matching first (most reliable)
-          const matchingTasks = taskItems.filter(task => {
-            if (!task.status) return false;
-            
-            const taskStatus = task.status.trim();
+        // Initialize all columns with empty items
+        const newColumns = prevColumns.map(column => ({
+          ...column,
+          items: [] as TaskItem[],
+        }));
+        
+        // Assign each task to exactly one column (the first matching one)
+        taskItems.forEach(task => {
+          if (!task.status) return;
+          
+          const taskStatus = task.status.trim();
+          
+          // Find the first matching column for this task
+          for (const column of newColumns) {
             const columnStatus = column.status.trim();
             const columnId = column.id.trim();
             
-            // Direct exact match (case-sensitive first, then case-insensitive)
+            // Try direct exact match first (most reliable)
             if (taskStatus === columnStatus || taskStatus === columnId) {
-              return true;
+              column.items.push(task);
+              return; // Task assigned, move to next task
             }
             
-            // Case-insensitive match
+            // Try case-insensitive match
             if (taskStatus.toLowerCase() === columnStatus.toLowerCase() || 
                 taskStatus.toLowerCase() === columnId.toLowerCase()) {
-              return true;
+              column.items.push(task);
+              return; // Task assigned, move to next task
             }
-            
-            // Fallback: Use unified mapping only if direct match fails
-            // This handles legacy statuses and variations
-            const normalizedTaskStatus = mapStatusToUnified(task.status);
-            const normalizedColumnStatus = mapStatusToUnified(column.status);
-            
-            // Only use unified mapping if both normalize to the same value
-            if (normalizedTaskStatus === normalizedColumnStatus) {
-              return true;
-            }
-            
-            return false;
-          });
+          }
           
-          return {
-            ...column,
-            items: matchingTasks,
-          };
+          // If no direct match found, try unified mapping as fallback
+          const normalizedTaskStatus = mapStatusToUnified(task.status);
+          for (const column of newColumns) {
+            const normalizedColumnStatus = mapStatusToUnified(column.status);
+            if (normalizedTaskStatus === normalizedColumnStatus) {
+              column.items.push(task);
+              return; // Task assigned, move to next task
+            }
+          }
+          
+          // If no match found at all, task won't appear in any column
         });
         
         // Only update if columns actually changed
@@ -262,7 +267,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     }
   }, [taskListState?.data?.tasks, taskListState.loading, projectId, convertTaskResponseToTaskItem]);
 
-  // Listen for task status updates from WebSocket
+  // Listen for task status updates from SSE
   useEffect(() => {
     if (!isConnected || !projectId) return;
 
@@ -277,7 +282,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       // Only process updates for this project
       if (messageData.projectId !== projectId) return;
 
-      console.log('Task status updated via WebSocket:', messageData);
+      console.log('Task status updated via SSE:', messageData);
 
       // If we have a pending update for this task, remove it (server confirmed)
       pendingUpdatesRef.current.delete(messageData.taskId);
@@ -351,54 +356,14 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       pendingUpdatesRef.current.delete(messageData.taskId);
     };
 
-    // Listen for error response to our own updates
-    const handleUpdateError = (errorData: {
-      projectId: string;
-      taskId: string;
-      error: string;
-    }) => {
-      // Only process errors for this project
-      if (errorData.projectId !== projectId) return;
-
-      console.error('Task status update failed:', errorData);
-
-      // Revert the optimistic update
-      const pendingUpdate = pendingUpdatesRef.current.get(errorData.taskId);
-      if (pendingUpdate) {
-        setColumns(prevColumns => 
-          prevColumns.map(column => {
-            if (column.id === pendingUpdate.toColumn) {
-              return {
-                ...column,
-                items: column.items.filter(item => item.id !== errorData.taskId)
-              };
-            }
-            if (column.id === pendingUpdate.fromColumn) {
-              return {
-                ...column,
-                items: [...column.items, pendingUpdate.task]
-              };
-            }
-            return column;
-          })
-        );
-        pendingUpdatesRef.current.delete(errorData.taskId);
-      }
-
-      // Show error notification (you can add a toast here)
-      alert(`Failed to update task status: ${errorData.error}`);
-    };
-
     // Register event listeners
     onEvent('task:status-updated', handleTaskStatusUpdated);
     onEvent('task:update-status:success', handleUpdateSuccess);
-    onEvent('task:update-status:error', handleUpdateError);
 
     // Cleanup
     return () => {
       offEvent('task:status-updated', handleTaskStatusUpdated);
       offEvent('task:update-status:success', handleUpdateSuccess);
-      offEvent('task:update-status:error', handleUpdateError);
     };
   }, [isConnected, projectId, onEvent, offEvent, convertTaskResponseToTaskItem]);
 
@@ -450,13 +415,6 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       const targetColumn = columns.find(col => col.id === targetColumnId);
       if (!targetColumn) return;
 
-      // Check if WebSocket is connected
-      if (!isConnected) {
-        console.error("WebSocket not connected. Cannot update task status.");
-        alert("WebSocket not connected. Please refresh the page.");
-        return;
-      }
-
       // Store the original state for potential rollback
       const originalTask = { ...draggedItem };
       pendingUpdatesRef.current.set(draggedItem.id, {
@@ -484,18 +442,46 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
         })
       );
 
-      // Emit WebSocket event to update task status
-      emit('task:update-status', {
-        projectId: projectId,
-        taskId: draggedItem.id,
-        status: targetColumn.status,
-      });
+      // Update task status via REST API (SSE is unidirectional)
+      updateTaskStatus(projectId, draggedItem.id, targetColumn.status, '')
+        .then(() => {
+          console.log('Task status update API call successful:', {
+            projectId: projectId,
+            taskId: draggedItem.id,
+            status: targetColumn.status,
+          });
+          // The SSE event will be received separately to update the UI
+        })
+        .catch((error) => {
+          console.error('Task status update failed:', error);
+          
+          // Revert the optimistic update
+          const pendingUpdate = pendingUpdatesRef.current.get(draggedItem.id);
+          if (pendingUpdate) {
+            setColumns(prevColumns => 
+              prevColumns.map(column => {
+                if (column.id === pendingUpdate.toColumn) {
+                  return {
+                    ...column,
+                    items: column.items.filter(item => item.id !== draggedItem.id)
+                  };
+                }
+                if (column.id === pendingUpdate.fromColumn) {
+                  return {
+                    ...column,
+                    items: [...column.items, pendingUpdate.task]
+                  };
+                }
+                return column;
+              })
+            );
+            pendingUpdatesRef.current.delete(draggedItem.id);
+          }
 
-      console.log('Emitted task:update-status event:', {
-        projectId: projectId,
-        taskId: draggedItem.id,
-        status: targetColumn.status,
-      });
+          // Show error notification
+          const errorMessage = error instanceof Error ? error.message : 'Failed to update task status';
+          alert(`Failed to update task status: ${errorMessage}`);
+        });
     }
 
     setDraggedItem(null);

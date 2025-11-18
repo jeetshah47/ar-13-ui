@@ -60,7 +60,7 @@ const Event = ({ event, onClick }: EventProps) => {
     >
       <Box 
         sx={{ 
-          borderLeft: (theme) => `${isMobile ? "2px" : "3px"} solid ${getCategoryColor(event.category)}`,
+          borderLeft: `${isMobile ? "2px" : "3px"} solid ${getCategoryColor(event.category)}`,
           paddingLeft: { xs: "3px", sm: "4px" },
           width: "100%"
         }}

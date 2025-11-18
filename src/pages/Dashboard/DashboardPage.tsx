@@ -1,4 +1,4 @@
-import { Box, Typography, Button, CircularProgress, Alert, Skeleton } from "@mui/material";
+import { Box, Typography, Button, CircularProgress, Alert, Skeleton, useMediaQuery, useTheme } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import CustomCard from "../../common/components/Card/CustomCard";
 import CardHeader from "../../common/components/Card/CardHeader";
@@ -28,6 +28,10 @@ const ProjectStatusChart = lazy(() => import("./components/ProjectStatusChart"))
 const SupportModal = lazy(() => import("../../common/components/SupportModal/SupportModal"));
 
 const DashboardPage = () => {
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.only("xs"));
+  const isSm = useMediaQuery(theme.breakpoints.only("sm"));
+  
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   // const [workloadTab, setWorkloadTab] = useState("Overall");
@@ -194,8 +198,8 @@ const DashboardPage = () => {
               <Box>
                 <Skeleton 
                   variant="text" 
-                  width={{ xs: "60%", sm: "50%", md: "40%" }} 
-                  height={{ xs: 32, sm: 36, md: 40 }} 
+                  width={isXs ? "60%" : isSm ? "50%" : "40%"} 
+                  height={isXs ? 32 : isSm ? 36 : 40} 
                   sx={{ marginBottom: { xs: "16px", sm: "20px", md: "24px" } }} 
                 />
                 <Box 
@@ -219,7 +223,7 @@ const DashboardPage = () => {
                     >
                       <Skeleton 
                         variant="rectangular" 
-                        height={{ xs: 120, sm: 130, md: 140 }} 
+                        height={isXs ? 120 : isSm ? 130 : 140} 
                         sx={{ borderRadius: "12px" }} 
                       />
                     </Box>
@@ -245,12 +249,12 @@ const DashboardPage = () => {
                   >
                     <Skeleton 
                       variant="rectangular" 
-                      height={{ xs: 200, sm: 250, md: 300 }} 
+                      height={isXs ? 200 : isSm ? 250 : 300} 
                       sx={{ borderRadius: "12px" }} 
                     />
                     <Skeleton 
                       variant="rectangular" 
-                      height={{ xs: 200, sm: 250, md: 300 }} 
+                      height={isXs ? 200 : isSm ? 250 : 300} 
                       sx={{ borderRadius: "12px" }} 
                     />
                   </Box>
@@ -283,7 +287,7 @@ const DashboardPage = () => {
                     <Skeleton 
                       key={i} 
                       variant="rectangular" 
-                      height={{ xs: 150, sm: 175, md: 200 }} 
+                      height={isXs ? 150 : isSm ? 175 : 200} 
                       sx={{ borderRadius: "12px" }} 
                     />
                   ))}
@@ -309,7 +313,7 @@ const DashboardPage = () => {
                   <Skeleton 
                     key={i} 
                     variant="rectangular" 
-                    height={{ xs: 100, sm: 110, md: 120 }} 
+                    height={isXs ? 100 : isSm ? 110 : 120} 
                     sx={{ 
                       borderRadius: { xs: "12px", sm: "20px", md: "24px" }, 
                       marginBottom: { xs: "8px", sm: "10px", md: "12px" } 

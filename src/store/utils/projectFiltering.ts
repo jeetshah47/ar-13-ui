@@ -3,8 +3,8 @@ import type { UserRole } from '../types/RBAC';
 
 export const filterProjectsByRole = (
   projects: ProjectResponse[],
-  userRole: UserRole,
-  userId: string
+  _userRole: UserRole,
+  _userId: string
 ): ProjectResponse[] => {
   // All users can view all projects (no filtering for read access)
   // Filtering is only applied for write/delete operations, which is handled in useResourceAccess
@@ -13,8 +13,8 @@ export const filterProjectsByRole = (
 
 export const filterTasksByRole = (
   tasks: any[],
-  userRole: UserRole,
-  userId: string
+  _userRole: UserRole,
+  _userId: string
 ): any[] => {
   // All users can view all tasks (no filtering for read access)
   // Filtering is only applied for write/delete operations, which is handled in useResourceAccess

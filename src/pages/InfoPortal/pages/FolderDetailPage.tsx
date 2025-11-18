@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Link, Typography, SvgIcon } from "@mui/material";
+import { Box, Link, Typography, SvgIcon, Button } from "@mui/material";
 import { useParams, useNavigate } from "react-router";
 import PagesSidebar from "../components/PagesSidebar";
 import PageContent from "../components/PageContent";
@@ -10,7 +10,7 @@ import { useInfoPortal } from "../../../store/hooks/useInfoPortal";
 const FolderDetailPage = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
-  const { currentFolder, loading, getFolderById, createPage, updatePage } = useInfoPortal();
+  const { currentFolder, loading, error, getFolderById, createPage, updatePage } = useInfoPortal();
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const FolderDetailPage = () => {
     }
   };
 
-  if (loading || !currentFolder) {
+  if (loading) {
     return (
       <Box
         sx={(theme) => ({
@@ -67,6 +67,50 @@ const FolderDetailPage = () => {
         })}
       >
         <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
+
+  if (!currentFolder) {
+    return (
+      <Box
+        sx={(theme) => ({
+          width: "100%",
+          height: "100%",
+          backgroundColor: theme.palette.grey[50],
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+        })}
+      >
+        <Typography
+          variant="h2"
+          sx={(theme) => ({
+            fontWeight: 700,
+            fontSize: "22px",
+            lineHeight: 1.364,
+            color: theme.palette.text.primary,
+          })}
+        >
+          Folder not found
+        </Typography>
+        {error && (
+          <Typography
+            sx={(theme) => ({
+              fontSize: "16px",
+              fontWeight: 400,
+              color: theme.palette.error.main,
+            })}
+          >
+            {error}
+          </Typography>
+        )}
+        <Button variant="contained" onClick={handleBack}>
+          Back to Info Portal
+        </Button>
       </Box>
     );
   }

@@ -60,7 +60,7 @@ export const fetchActivityLogsByEntityType = (
 /**
  * Fetch supported entity types
  */
-export const fetchEntityTypes = () => async (dispatch: AppDispatch) => {
+export const fetchEntityTypes = () => async (_dispatch: AppDispatch) => {
   try {
     const response = await getEntityTypes();
     return response.entityTypes;

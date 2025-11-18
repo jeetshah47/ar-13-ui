@@ -41,6 +41,26 @@ const handleServerError = (rootError: AxiosError<{ message?: string; error?: str
     
     // Check for "Admin access required" error
     if (isAdminAccessError(errorMessage)) {
+      // For GET requests to read-only project/task endpoints, don't redirect
+      // Users should be able to view projects/tasks even if not assigned
+      const requestUrl = rootError.config?.url || "";
+      const isGetRequest = rootError.config?.method?.toLowerCase() === 'get';
+      const isReadOnlyEndpoint = 
+        requestUrl.includes('/project/all') ||
+        requestUrl.includes('/tasks/all') ||
+        requestUrl.includes('/tasks/detail/') ||
+        requestUrl.includes('/project/details/');
+      
+      // Only redirect for write/delete operations, not for read operations
+      if (isGetRequest && isReadOnlyEndpoint) {
+        // For read operations, just show a warning but don't redirect
+        // This allows users to see the page even if the API call fails
+        toast.dismiss();
+        toast.error("Unable to load data. You may not have access to this resource.");
+        return Promise.reject(errorMessage);
+      }
+      
+      // For write/delete operations, redirect as before
       toast.dismiss();
       toast.error("Admin access required");
       // Stop any ongoing loading states by dispatching failed actions for common reducers

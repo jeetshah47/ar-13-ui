@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, Typography, Chip, Divider, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, Chip, Divider } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 import { useAppSelector } from "../../../store/store";
@@ -11,8 +11,6 @@ type EventDetailsModalProps = {
 };
 
 const EventDetailsModal = ({ event, onClose, onEdit }: EventDetailsModalProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { users } = useAppSelector((state) => state.userReducer);
 
   const formatDate = (dateString: string) => {

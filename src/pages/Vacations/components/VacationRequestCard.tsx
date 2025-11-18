@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Avatar, TextField, Chip, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Typography, Button, Avatar, TextField, Chip } from "@mui/material";
 import { Check as CheckIcon, Close as CloseIcon } from "@mui/icons-material";
 import { useState } from "react";
 import type { VacationResponse } from "../../../store/types/Vacation/VacationTypes";
@@ -22,8 +22,6 @@ const VacationRequestCard = ({
   onReject,
   isLoading = false,
 }: VacationRequestCardProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [reviewComments, setReviewComments] = useState("");
   const [showCommentField, setShowCommentField] = useState(false);
 

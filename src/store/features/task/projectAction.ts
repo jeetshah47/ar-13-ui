@@ -33,7 +33,6 @@ import {
   getTaskStatuses,
 } from "../../apis/taskApis";
 import type { ITask } from "../../types/Task/Task";
-import type { TaskResponse } from "../../types/Task/TaskResponse";
 import {
   addTaskRequest,
   addTaskSuccess,
@@ -146,7 +145,17 @@ export const addMultipleTasksAction = (tasks: ITask[]) => async (dispatch: AppDi
 export const updateTaskAction = (task: ITask) => async (dispatch: AppDispatch) => {
   dispatch(updateTaskRequest());
   try {
-    await updateTask(task);
+    // Extract projectId and taskId from task object
+    if (!task.id) {
+      throw new Error("Task ID is required for update");
+    }
+    if (!task.projectId) {
+      throw new Error("Project ID is required for update");
+    }
+
+    const { id: taskId, projectId, ...taskUpdateData } = task;
+    
+    await updateTask(projectId, taskId, taskUpdateData);
     dispatch(updateTaskSuccess());
     toast.success(MSG_TASK_UPDATED);
   } catch (error: unknown) {

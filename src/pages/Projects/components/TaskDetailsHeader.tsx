@@ -11,9 +11,7 @@ interface TaskDetailsHeaderProps {
 }
 
 const TaskDetailsHeader = ({ onEditClick }: TaskDetailsHeaderProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  // theme and useMediaQuery are used in TaskDetailsContent component below
   return (
       <Box
         sx={{

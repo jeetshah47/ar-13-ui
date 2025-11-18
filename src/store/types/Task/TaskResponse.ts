@@ -1,5 +1,5 @@
 import type { UserResponse } from "../User/UserResponse";
-import type { TimeSpentEntry, FileAttachment, ActivityLog } from "./TaskTypes";
+import type { TimeSpentEntry, FileAttachment, ActivityLog, AssignToUser } from "./TaskTypes";
 
 export interface TaskResponse {
   id: string;
@@ -8,7 +8,7 @@ export interface TaskResponse {
   status: string;
   deadline: string; // RFC3339 format (ISO 8601) - replaced deprecated 'duration' field
   priority: string;
-  assignTo: string | null;
+  assignTo: AssignToUser | null;
   assignDetails: UserResponse[];
   projectId: string;
   timeSpent?: TimeSpentEntry[];

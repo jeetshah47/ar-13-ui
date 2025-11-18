@@ -136,7 +136,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
         : "",
       priority: isEditMode && task ? task.priority || "" : "high",
       description: isEditMode && task ? task.description || "" : "",
-      assignTo: isEditMode && task ? task.assignTo || null : null,
+      assignTo: isEditMode && task ? (typeof task.assignTo === 'object' && task.assignTo !== null ? task.assignTo.id : task.assignTo) || null : null,
     },
     validationSchema: taskValidationSchema,
     validateOnChange: true,
@@ -165,7 +165,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
                   ? (task.deadline as Date).toISOString() 
                   : parseFirebaseTimestamp(task.deadline as string | { _seconds: number; _nanoseconds: number }).toISOString()),
             priority: task.priority,
-            assignTo: task.assignTo,
+            assignTo: typeof task.assignTo === 'object' && task.assignTo !== null ? task.assignTo : null,
             assignDetails: [],
             projectId: task.projectId,
             description: task.description || '',
