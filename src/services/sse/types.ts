@@ -64,21 +64,16 @@ export interface SSEConfig {
 }
 
 // SSE event payload structure as per documentation
-export interface SSENotificationEvent {
-  notification: Notification;
-  taskId?: string;
-  projectId?: string;
-  projectTitle?: string;
+// notifications-available event data structure
+export interface NotificationsAvailableEvent {
+  userId: string;
 }
 
 export interface NotificationClientEvents {
   connect: () => void;
   disconnect: (reason?: string) => void;
-  notification: (event: SSENotificationEvent) => void;
-  project_notification: (notification: Notification) => void;
-  global_notification: (notification: Notification) => void;
-  notification_count: (count: NotificationCount) => void;
   authenticated: (data: { userId: string }) => void;
+  'notifications-available': (data: NotificationsAvailableEvent) => void;
   connect_error: (error: Error) => void;
   reconnect: (attemptNumber: number) => void;
   reconnect_error: (error: Error) => void;

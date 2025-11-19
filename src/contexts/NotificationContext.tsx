@@ -12,7 +12,6 @@ import type {
   Notification,
   NotificationCount,
   NotificationContextType,
-  SSENotificationEvent,
 } from "../services/sse/types";
 import { SERVER_BASE_URL } from "../config/api";
 
@@ -89,11 +88,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   useEffect(() => {
     // Don't create client if we don't have auth token or userId
     if (!actualAuthToken || !actualUserId) {
-      console.log('NotificationContext: Skipping SSE connection - missing token or userId');
       return;
     }
-
-    console.log('NotificationContext: Initializing SSE client for', sseUrl);
     
     const client = new SSEClient({
       serverUrl: sseUrl,
@@ -110,93 +106,31 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     const handleConnect = () => {
       setIsConnected(true);
       setError(null);
-      // Note: Server automatically extracts user ID from JWT token
-      // and sends authenticated event
-      // We'll wait for authenticated event before proceeding
     };
 
     const handleAuthenticated = (data: { userId: string }) => {
       authenticatedUserIdRef.current = data.userId;
-      // eslint-disable-next-line no-console
-      console.log('NotificationContext: Authenticated as user', data.userId);
       // After authentication, refresh notifications to sync with server
       if (refreshNotificationsRef.current) {
         refreshNotificationsRef.current();
       }
     };
 
-    const handleDisconnect = (reason?: string) => {
+    const handleDisconnect = () => {
       setIsConnected(false);
-      // Log disconnect reason for debugging
-      if (reason) {
-        console.log('SSE disconnected:', reason);
-      }
     };
 
-    const handleNotification = (event: SSENotificationEvent) => {
-      const { notification: notificationData, taskId, projectId, projectTitle } = event;
-      
-      // Validate notification belongs to current user
-      if (authenticatedUserIdRef.current && notificationData.userId !== authenticatedUserIdRef.current) {
-        // eslint-disable-next-line no-console
-        console.warn('NotificationContext: Received notification for different user', {
-          notificationUserId: notificationData.userId,
-          currentUserId: authenticatedUserIdRef.current,
-        });
+    // Handle notifications-available event - fetch notifications via REST API
+    const handleNotificationsAvailable = (data: { userId: string }) => {
+      // Validate userId matches current user
+      if (authenticatedUserIdRef.current && data.userId !== authenticatedUserIdRef.current) {
         return;
       }
 
-      // Deduplication: Check if we've already received this notification
-      if (notificationIdsRef.current.has(notificationData.id)) {
-        // eslint-disable-next-line no-console
-        console.log('NotificationContext: Duplicate notification ignored', notificationData.id);
-        return;
+      // Fetch notifications via REST API when notifications-available event is received
+      if (refreshNotificationsRef.current) {
+        refreshNotificationsRef.current();
       }
-
-      // Merge metadata from event into notification
-      const enrichedNotification: Notification = {
-        ...notificationData,
-        taskId: taskId || notificationData.taskId,
-        projectId: projectId || notificationData.projectId,
-        projectTitle: projectTitle || notificationData.projectTitle,
-        // Ensure dates are Date objects
-        createdAt: notificationData.createdAt instanceof Date 
-          ? notificationData.createdAt 
-          : new Date(notificationData.createdAt || Date.now()),
-        created: notificationData.created instanceof Date
-          ? notificationData.created
-          : new Date(notificationData.created || notificationData.createdAt || Date.now()),
-      };
-
-      // Add to deduplication set
-      notificationIdsRef.current.add(enrichedNotification.id);
-
-      // Update state
-      setNotifications((prev) => {
-        // Check again in case of race condition
-        const exists = prev.find(n => n.id === enrichedNotification.id);
-        if (exists) {
-          return prev;
-        }
-        return [enrichedNotification, ...prev];
-      });
-
-      // Update count only if notification is unread
-      if (!enrichedNotification.isRead) {
-        setNotificationCount((prev) => ({
-          total: prev.total + 1,
-          unread: prev.unread + 1,
-        }));
-      } else {
-        setNotificationCount((prev) => ({
-          total: prev.total + 1,
-          unread: prev.unread,
-        }));
-      }
-    };
-
-    const handleNotificationCount = (count: NotificationCount) => {
-      setNotificationCount(count);
     };
 
     const handleConnectError = (error: Error) => {
@@ -210,7 +144,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleReconnect = (_attemptNumber: number) => {
-      // attemptNumber is provided for reconnection tracking but we don't need it
       setIsConnected(true);
       setError(null);
       // Refresh notifications after reconnection
@@ -223,27 +156,23 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     client.on("connect", handleConnect);
     client.on("disconnect", handleDisconnect);
     client.on("authenticated", handleAuthenticated);
-    client.on("notification", handleNotification);
-    client.on("notification_count", handleNotificationCount);
+    client.on("notifications-available", handleNotificationsAvailable);
     client.on("connect_error", handleConnectError);
     client.on("reconnect", handleReconnect);
 
     return () => {
-      console.log('NotificationContext: Cleaning up SSE client');
       // Clean up event listeners
       client.off("connect");
       client.off("disconnect");
       client.off("authenticated");
-      client.off("notification");
-      client.off("notification_count");
+      client.off("notifications-available");
       client.off("connect_error");
       client.off("reconnect");
       // Disconnect the client only if it exists and is connected/connecting
       try {
         client.disconnect();
-      } catch (error) {
+      } catch {
         // Ignore errors during cleanup (e.g., if connection was never established)
-        console.log('NotificationContext: Error during SSE cleanup (expected in dev mode)', error);
       }
       setSseClient(null);
       authenticatedUserIdRef.current = null;
@@ -256,9 +185,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       notificationService.setAuthToken(actualAuthToken);
     }
   }, [actualAuthToken]);
-
-  // Real-time updates are handled by SSE client
-  // No need for mock service setup
 
   const refreshNotifications = useCallback(async () => {
     if (!actualUserId) {
@@ -313,33 +239,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       refreshNotifications();
     }
   }, [actualUserId, refreshNotifications]);
-
-  // Fallback to mock notifications if SSE fails to connect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isConnected && !isLoading && notifications.length === 0) {
-        // You can uncomment this to use mock data when SSE fails
-        // const mockNotifications = [
-        //   {
-        //     id: "mock-1",
-        //     title: "Test Notification",
-        //     message: "This is a mock notification for testing",
-        //     type: "TASK_ASSIGNED" as any,
-        //     userId: actualUserId,
-        //     relatedEntityId: "task-1",
-        //     relatedEntityType: "TASK" as any,
-        //     isRead: false,
-        //     createdAt: new Date(),
-        //     created: new Date(),
-        //   }
-        // ];
-        // setNotifications(mockNotifications);
-        // setNotificationCount({ total: 1, unread: 1 });
-      }
-    }, 5000); // Wait 5 seconds before showing fallback
-
-    return () => clearTimeout(timer);
-  }, [isConnected, isLoading, notifications.length, actualUserId]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {

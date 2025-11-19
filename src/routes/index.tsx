@@ -11,6 +11,7 @@ import ProjectPage from "../pages/Projects/ProjectPage";
 import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
+import DrawingListPage from "../pages/DrawingList/DrawingListPage";
 import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
 
 const authRoutes = [
@@ -90,6 +91,17 @@ const authRoutes = [
         redirectTo="/app/dashboard"
       >
         <BackupPage />
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/drawing-list",
+    component: (
+      <PermissionRoute 
+        permission="drawingList:read"
+        redirectTo="/app/dashboard"
+      >
+        <DrawingListPage />
       </PermissionRoute>
     ),
   },

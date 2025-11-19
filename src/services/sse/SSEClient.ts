@@ -1,9 +1,6 @@
 import type { 
-  Notification,
-  NotificationCount,
   SSEConfig, 
   NotificationClientEvents,
-  SSENotificationEvent
 } from './types';
 
 export class SSEClient {
@@ -58,21 +55,15 @@ export class SSEClient {
 
     // Validate token before attempting connection
     if (!this.config.authToken) {
-      // eslint-disable-next-line no-console
-      console.error('SSEClient: Cannot connect without auth token');
       return;
     }
 
     const url = this.getSSEUrl();
-    // eslint-disable-next-line no-console
-    console.log(`SSEClient: Attempting to connect to ${url}`);
     
     try {
       this.eventSource = new EventSource(url);
       this.setupEventListeners();
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('SSEClient: Failed to create SSE connection:', error);
+    } catch {
       this.attemptReconnect();
     }
   }
@@ -86,10 +77,8 @@ export class SSEClient {
     if (this.eventSource) {
       try {
         this.eventSource.close();
-      } catch (error) {
+      } catch {
         // Ignore errors when closing (connection might already be closed)
-        // eslint-disable-next-line no-console
-        console.log('SSEClient: Error closing connection (expected in some cases)', error);
       }
       this.eventSource = null;
     }
@@ -104,8 +93,6 @@ export class SSEClient {
     // by monitoring the connection state and ignoring empty data
 
     this.eventSource.onopen = () => {
-      // eslint-disable-next-line no-console
-      console.log('SSEClient: Connected successfully');
       this.reconnectAttempts = 0;
       this.reconnectDelay = 1000;
       this.eventListeners.connect?.();
@@ -115,84 +102,26 @@ export class SSEClient {
     this.eventSource.addEventListener('authenticated', (event) => {
       try {
         const data = JSON.parse(event.data);
-        // eslint-disable-next-line no-console
-        console.log('SSEClient: Authenticated', data);
         // Validate that we received userId
         if (data.userId) {
           this.eventListeners.authenticated?.(data);
-        } else {
-          // eslint-disable-next-line no-console
-          console.warn('SSEClient: Authenticated event missing userId', data);
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing authenticated event:', error);
+      } catch {
+        // Ignore parsing errors
       }
     });
 
-    // Handle notification events
-    this.eventSource.addEventListener('notification', (event) => {
+    // Handle notifications-available event (lightweight signal to fetch notifications)
+    this.eventSource.addEventListener('notifications-available', (event) => {
       try {
         const data = JSON.parse(event.data);
-        // Parse the SSE notification event structure
-        // According to docs: { notification: {...}, taskId, projectId, projectTitle }
-        const notificationEvent: SSENotificationEvent = {
-          notification: {
-            ...data.notification,
-            // Merge metadata from root level into notification object
-            taskId: data.taskId || data.notification?.taskId,
-            projectId: data.projectId || data.notification?.projectId,
-            projectTitle: data.projectTitle || data.notification?.projectTitle,
-            // Parse dates
-            createdAt: data.notification?.createdAt 
-              ? new Date(data.notification.createdAt) 
-              : new Date(),
-            created: data.notification?.created || data.notification?.createdAt
-              ? new Date(data.notification.created || data.notification.createdAt)
-              : new Date(),
-          },
-          taskId: data.taskId,
-          projectId: data.projectId,
-          projectTitle: data.projectTitle,
-        };
-        this.eventListeners.notification?.(notificationEvent);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing notification event:', error);
+        this.eventListeners['notifications-available']?.(data);
+      } catch {
+        // Ignore parsing errors
       }
     });
 
-    this.eventSource.addEventListener('project_notification', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.eventListeners.project_notification?.(data as Notification);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing project_notification event:', error);
-      }
-    });
-
-    this.eventSource.addEventListener('global_notification', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.eventListeners.global_notification?.(data as Notification);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing global_notification event:', error);
-      }
-    });
-
-    this.eventSource.addEventListener('notification_count', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.eventListeners.notification_count?.(data as NotificationCount);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing notification_count event:', error);
-      }
-    });
-
-    // Handle task status update events
+    // Handle task status update events (custom events for real-time task updates)
     this.eventSource.addEventListener('task:status-updated', (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -200,9 +129,8 @@ export class SSEClient {
         if (listeners) {
           listeners.forEach(listener => listener(data));
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing task:status-updated event:', error);
+      } catch {
+        // Ignore parsing errors
       }
     });
 
@@ -213,9 +141,8 @@ export class SSEClient {
         if (listeners) {
           listeners.forEach(listener => listener(data));
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Error parsing task:update-status:success event:', error);
+      } catch {
+        // Ignore parsing errors
       }
     });
 
@@ -223,8 +150,6 @@ export class SSEClient {
     // Note: SSE error events are generic Event objects, not MessageEvent
     // They don't have a data property, so we handle them differently
     this.eventSource.addEventListener('error', () => {
-      // eslint-disable-next-line no-console
-      console.error('SSEClient: Server error event received');
       // Trigger custom error listeners if any
       const listeners = this.customEventListeners.get('error');
       if (listeners) {
@@ -232,9 +157,7 @@ export class SSEClient {
       }
     });
 
-    this.eventSource.onerror = (error) => {
-      // eslint-disable-next-line no-console
-      console.error('SSEClient: SSE connection error:', error);
+    this.eventSource.onerror = () => {
       this.eventListeners.connect_error?.(new Error('SSE connection error'));
 
       // Attempt reconnection if connection is closed
@@ -251,10 +174,6 @@ export class SSEClient {
 
   private attemptReconnect(): void {
     if (!this.shouldReconnect || this.reconnectAttempts >= this.maxReconnectAttempts) {
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        // eslint-disable-next-line no-console
-        console.error('SSEClient: Max reconnection attempts reached');
-      }
       return;
     }
 
@@ -262,11 +181,6 @@ export class SSEClient {
     const delay = Math.min(
       this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
       this.maxReconnectDelay
-    );
-
-    // eslint-disable-next-line no-console
-    console.log(
-      `SSEClient: Reconnecting in ${delay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
     );
 
     this.reconnectTimeout = setTimeout(() => {
@@ -280,10 +194,6 @@ export class SSEClient {
       this.customEventListeners.set(event, new Set());
     }
     this.customEventListeners.get(event)!.add(listener);
-
-    // If eventSource is already connected, we need to ensure the listener is registered
-    // Note: EventSource listeners are registered via addEventListener, which we do in setupEventListeners
-    // Custom events are handled by routing to customEventListeners
   }
 
   // Remove listener for any event
@@ -336,4 +246,3 @@ export class SSEClient {
     return this.eventSource?.readyState === EventSource.OPEN;
   }
 }
-

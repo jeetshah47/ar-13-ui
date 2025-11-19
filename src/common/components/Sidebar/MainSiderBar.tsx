@@ -225,6 +225,24 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
               </Typography>
             </Item>
           )}
+          {/* Drawing List sidebar - Only visible to users with drawingList:read permission */}
+          {checkPermission("drawingList:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/drawing-list")}
+              active={checkActiveStatus("drawing-list")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={GearIcon}
+                color={checkActiveStatus("drawing-list") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("drawing-list") ? "primary" : "secondary"}
+              >
+                Drawing List
+              </Typography>
+            </Item>
+          )}
         </Stack>
       </Box>
     </Box>
