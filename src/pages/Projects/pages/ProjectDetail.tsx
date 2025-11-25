@@ -7,6 +7,7 @@ import { fetchProjectDetailAction, updateTaskStatusAction } from "../../../store
 import { claimTaskAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import type { FileAttachment, ActivityLog } from "../../../store/types/Task/TaskTypes";
 import FileUploadModal from "../components/FileUploadModal";
+import FileBrowserModal from "../components/FileBrowserModal";
 import TaskFormModal from "../components/TaskFormModal";
 import ClaimTaskModal from "../components/ClaimTaskModal";
 import UpdateTaskStatusModal from "../components/UpdateTaskStatusModal";
@@ -15,6 +16,7 @@ import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import TaskDetailsHeader, { TaskDetailsContent } from "../components/TaskDetailsHeader";
 import FileAttachmentsSection from "../components/FileAttachmentsSection";
 import ActivityLogsSection from "../components/ActivityLogsSection";
+import ActivityLogThreadSidebar from "../components/ActivityLogThreadSidebar";
 import TimeTrackingSection from "../components/TimeTrackingSection";
 import Modal from "../../../common/components/Modal/Modal";
 import { parseFirebaseTimestamp, isImageAttachment } from "../utils/taskUtils";
@@ -23,8 +25,15 @@ import { getUsersAction } from "../../../store/features/user/userAction";
 import { SERVER_BASE_URL } from "../../../config/api";
 import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
 import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
+import { fetchActivityLogReplies } from "../../../store/features/activityLogReplies/activityLogRepliesAction";
+import { addReplyToCache } from "../../../store/features/activityLogReplies/activityLogRepliesSlice";
 import { convertActivityLogItemsToLegacy } from "../utils/activityLogConverter";
 import type { ActivityLogItem } from "../../../store/types/ActivityLogs/ActivityLog";
+import { useNotifications } from "../../../contexts/NotificationContext";
+import { linkFileAttachment } from "../../../store/apis/taskApis";
+import type { StorageObject } from "../../../store/apis/storageApi";
+import toast from "react-hot-toast";
+import { useImageWithAuth } from "../../../utils/useImageWithAuth";
 
 const ProjectDetail = () => {
   const theme = useTheme();
@@ -66,6 +75,21 @@ const ProjectDetail = () => {
 
   // Get file attachments from task details
   const fileAttachments = taskDetails?.fileAttachments || [];
+  
+  // Debug: Log file attachments to see if previewUrl is present
+  useEffect(() => {
+    if (fileAttachments.length > 0) {
+      console.log("File attachments received:", fileAttachments);
+      fileAttachments.forEach((att, idx) => {
+        console.log(`Attachment ${idx}:`, {
+          fileName: att.fileName,
+          fileUrl: att.fileUrl,
+          previewUrl: att.previewUrl,
+          downloadUrl: att.downloadUrl,
+        });
+      });
+    }
+  }, [fileAttachments]);
 
   // Calculate time logged from timeSpent entries
   const calculateTimeLogged = (timeSpent?: Array<{ timeSpent: number }>) => {
@@ -89,12 +113,17 @@ const ProjectDetail = () => {
 
   // Modal states
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [showFileBrowserModal, setShowFileBrowserModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
   const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
   const [projectActivityLogs, setProjectActivityLogs] = useState<ActivityLogItem[]>([]);
+  const [selectedActivityLog, setSelectedActivityLog] = useState<ActivityLog | null>(null);
+  const [showThreadSidebar, setShowThreadSidebar] = useState(false);
+  
+  const { onEvent, offEvent } = useNotifications();
 
 
   // Fetch users if not already loaded
@@ -139,6 +168,23 @@ const ProjectDetail = () => {
         });
     }
   }, [projectId, dispatch]);
+
+  // Listen for SSE events for new replies
+  useEffect(() => {
+    const handleReplyAdded = (data: { activityLogId?: string; replyId?: string }) => {
+      if (data.activityLogId) {
+        // Re-fetch replies for this activity log
+        dispatch(fetchActivityLogReplies(data.activityLogId));
+      }
+    };
+
+    onEvent("activity-log:reply-added", handleReplyAdded);
+
+    // Cleanup
+    return () => {
+      offEvent("activity-log:reply-added", handleReplyAdded);
+    };
+  }, [dispatch, onEvent, offEvent]);
 
   // Calculate time spent from activity logs (both project and task level)
   const calculateProjectTimeSpent = useMemo(() => {
@@ -263,6 +309,14 @@ const ProjectDetail = () => {
     });
   }, [activityLogItems, users]);
 
+  // Get preview image URL (use previewUrl if available, otherwise fallback to fileUrl)
+  const previewImageUrl = previewImage?.previewUrl 
+    ? previewImage.previewUrl 
+    : (previewImage?.fileUrl ? `${SERVER_BASE_URL}${previewImage.fileUrl}` : null);
+
+  // Load image with JWT token using the utility hook
+  const { blobUrl: previewImageBlobUrl, loading: previewImageLoading } = useImageWithAuth(previewImageUrl || undefined);
+
   // TODO: Replace with backend API polling or WebSocket for real-time activity logs
   // Real-time activity logs subscription removed (Firebase dependency)
   // Activity logs are now fetched via the backend API in fetchProjectDetailAction
@@ -371,6 +425,47 @@ const ProjectDetail = () => {
 
   const handleOpenFileUpload = () => setShowFileUploadModal(true);
   const handleCloseFileUpload = () => setShowFileUploadModal(false);
+  const handleOpenFileBrowser = () => setShowFileBrowserModal(true);
+  const handleCloseFileBrowser = () => setShowFileBrowserModal(false);
+  
+  const handleLinkFile = async (file: StorageObject) => {
+    if (!projectId || !taskId) {
+      toast.error("Project ID or Task ID is missing");
+      return;
+    }
+
+    // Check if there's already a linked file
+    // A linked file is identified by having a fileUrl that contains "/" (path separator)
+    // and is longer than just a filename, suggesting it's a NAS path
+    const hasLinkedFile = fileAttachments.some((att) => {
+      return att.fileUrl && att.fileUrl.includes("/") && att.fileUrl.length > att.fileName.length + 5;
+    });
+
+    try {
+      await linkFileAttachment(projectId, taskId, {
+        fileName: file.name,
+        originalName: file.name,
+        fileSize: file.size,
+        mimeType: file.contentType || "application/octet-stream",
+        fileUrl: file.path,
+      });
+      
+      if (hasLinkedFile) {
+        toast.success("File linked successfully (replaced existing linked file)");
+      } else {
+        toast.success("File linked successfully");
+      }
+      
+      // Refresh task details to show the new attachment
+      if (taskId && projectId) {
+        dispatch(fetchProjectDetailAction(taskId, projectId));
+      }
+      handleCloseFileBrowser();
+    } catch (error: any) {
+      console.error("Failed to link file:", error);
+      toast.error(error?.message || "Failed to link file");
+    }
+  };
   const handleOpenEditTask = () => setShowEditTaskModal(true);
   const handleCloseEditTask = () => setShowEditTaskModal(false);
   const handleOpenClaimTask = () => setShowClaimTaskModal(true);
@@ -392,6 +487,16 @@ const ProjectDetail = () => {
 
   const handleCloseImagePreview = () => {
     setPreviewImage(null);
+  };
+
+  const handleReplyClick = (activity: ActivityLog) => {
+    setSelectedActivityLog(activity);
+    setShowThreadSidebar(true);
+  };
+
+  const handleCloseThreadSidebar = () => {
+    setShowThreadSidebar(false);
+    setSelectedActivityLog(null);
   };
 
 
@@ -526,7 +631,7 @@ const ProjectDetail = () => {
           </Box>
           <TaskDetailsContent
             taskCode={taskDetails?.code}
-            taskSubject={taskDetails?.subject}
+            taskSubject={taskDetails?.drawingInfo?.typeName || taskDetails?.subject}
             currentStatus={currentStatus}
             onStatusChange={handleStatusChange}
             onClaimTaskClick={handleOpenClaimTask}
@@ -537,6 +642,7 @@ const ProjectDetail = () => {
               fileAttachments={fileAttachments}
               loading={loading}
               onFileUploadClick={handleOpenFileUpload}
+              onLinkFileClick={handleOpenFileBrowser}
               onImagePreview={handleOpenImagePreview}
               parseFirebaseTimestamp={parseFirebaseTimestamp}
               isImageAttachment={isImageAttachment}
@@ -561,6 +667,7 @@ const ProjectDetail = () => {
               getActivityIcon={getActivityIcon}
               parseFirebaseTimestamp={parseFirebaseTimestamp}
               activityLogsRef={activityLogsRef}
+              onReplyClick={handleReplyClick}
             />
           </TaskDetailsContent>
         </Box>
@@ -609,6 +716,13 @@ const ProjectDetail = () => {
       {showFileUploadModal && (
         <FileUploadModal onClose={handleCloseFileUpload} projectId={projectId} taskId={taskId} />
       )}
+      {showFileBrowserModal && (
+        <FileBrowserModal
+          isOpen={showFileBrowserModal}
+          onClose={handleCloseFileBrowser}
+          onSelectFile={handleLinkFile}
+        />
+      )}
 
       {showEditTaskModal && taskDetails && (
         <TaskFormModal
@@ -655,6 +769,15 @@ const ProjectDetail = () => {
         />
       )}
 
+      {/* Activity Log Thread Sidebar */}
+      {selectedActivityLog && (
+        <ActivityLogThreadSidebar
+          open={showThreadSidebar}
+          onClose={handleCloseThreadSidebar}
+          activityLog={selectedActivityLog}
+        />
+      )}
+
       {previewImage && previewImage.fileUrl && (
         <Modal show={!!previewImage} onClose={handleCloseImagePreview}>
           <Box
@@ -693,9 +816,35 @@ const ProjectDetail = () => {
             >
               <Typography sx={{ fontSize: "20px", lineHeight: 1 }}>×</Typography>
             </Box>
+            {previewImageLoading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "200px",
+                  width: "100%",
+                }}
+              >
+                <Typography>Loading image...</Typography>
+              </Box>
+            ) : !previewImageBlobUrl ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "200px",
+                  width: "100%",
+                }}
+              >
+                <Typography color="error">No image URL available</Typography>
+              </Box>
+            ) : (
             <Box
               component="img"
-              src={`${SERVER_BASE_URL}${previewImage.fileUrl}`}
+                key={previewImageBlobUrl}
+                src={previewImageBlobUrl}
               alt={previewImage.originalName}
               sx={{
                 maxWidth: "100%",
@@ -703,7 +852,11 @@ const ProjectDetail = () => {
                 objectFit: "contain",
                 borderRadius: "12px",
               }}
+                onError={(e) => {
+                  console.error("Failed to load image");
+                }}
             />
+            )}
             <Typography
               sx={{
                 marginTop: "16px",

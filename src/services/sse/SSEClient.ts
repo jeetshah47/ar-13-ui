@@ -146,6 +146,24 @@ export class SSEClient {
       }
     });
 
+    // Handle activity-log:reply-added event
+    this.eventSource.addEventListener('activity-log:reply-added', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const listeners = this.customEventListeners.get('activity-log:reply-added');
+        if (listeners) {
+          listeners.forEach(listener => listener(data));
+        }
+      } catch {
+        // Ignore parsing errors
+      }
+    });
+
+    // Generic handler for any other custom events
+    // Note: EventSource requires explicit addEventListener for each event type
+    // For dynamic events, we need to add them as they're registered
+    // This is a limitation of the EventSource API
+
     // Handle error events
     // Note: SSE error events are generic Event objects, not MessageEvent
     // They don't have a data property, so we handle them differently
@@ -192,6 +210,21 @@ export class SSEClient {
   onEvent(event: string, listener: (...args: unknown[]) => void): void {
     if (!this.customEventListeners.has(event)) {
       this.customEventListeners.set(event, new Set());
+      
+      // Dynamically add EventSource listener for this event type if eventSource exists
+      if (this.eventSource) {
+        this.eventSource.addEventListener(event, (e: MessageEvent) => {
+          try {
+            const data = JSON.parse(e.data);
+            const listeners = this.customEventListeners.get(event);
+            if (listeners) {
+              listeners.forEach(l => l(data));
+            }
+          } catch {
+            // Ignore parsing errors
+          }
+        });
+      }
     }
     this.customEventListeners.get(event)!.add(listener);
   }

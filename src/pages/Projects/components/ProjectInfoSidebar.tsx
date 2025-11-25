@@ -4,6 +4,8 @@ import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?re
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
+import EditIcon from "../../../assets/icons/general/gear.svg?react";
+import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 
 interface ProjectInfoSidebarProps {
   projectTitle?: string;
@@ -20,6 +22,12 @@ interface ProjectInfoSidebarProps {
   priority?: string;
   deadline?: string;
   timeSpent?: string | null;
+  agencyContact?: {
+    contact_name?: string;
+    contact_agency_type?: string;
+  };
+  onEditClick?: () => void;
+  onAddAgencyContact?: () => void;
 }
 
 const ProjectInfoSidebar = ({
@@ -30,6 +38,9 @@ const ProjectInfoSidebar = ({
   priority,
   deadline,
   timeSpent,
+  agencyContact,
+  onEditClick,
+  onAddAgencyContact,
 }: ProjectInfoSidebarProps) => {
   return (
     <Box
@@ -55,14 +66,35 @@ const ProjectInfoSidebar = ({
         }}
       >
         <Typography color="secondary">{projectTitle || "Project"}</Typography>
-        <Box
-          sx={{
-            backgroundColor: "#F4F9FD",
-            display: "flex",
-            padding: "10px",
-          }}
-        >
-          <SvgIcon component={FilterIcon} />
+        <Box sx={{ display: "flex", gap: "8px" }}>
+          {onEditClick && (
+            <Box
+              onClick={onEditClick}
+              sx={{
+                backgroundColor: "#fff",
+                display: "flex",
+                padding: "10px",
+                borderRadius: "14px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                  transform: "scale(1.05)",
+                },
+              }}
+            >
+              <SvgIcon component={EditIcon} />
+            </Box>
+          )}
+          <Box
+            sx={{
+              backgroundColor: "#F4F9FD",
+              display: "flex",
+              padding: "10px",
+            }}
+          >
+            <SvgIcon component={FilterIcon} />
+          </Box>
         </Box>
       </Box>
       <Box sx={{ paddingTop: "24px" }}>
@@ -107,6 +139,51 @@ const ProjectInfoSidebar = ({
           <Typography>
             {deadline ? new Date(deadline).toLocaleDateString() : "No deadline set"}
           </Typography>
+        </Box>
+        <Box sx={{ paddingTop: "10px" }}>
+          <Typography color="secondary.main">Agency Contact</Typography>
+          {agencyContact?.contact_name ? (
+            <Box sx={{ paddingTop: "4px" }}>
+              <Typography>{agencyContact.contact_name}</Typography>
+              {agencyContact.contact_agency_type && (
+                <Typography color="secondary.main" fontSize="14px">
+                  {agencyContact.contact_agency_type}
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                paddingTop: "4px",
+              }}
+            >
+              <Typography color="secondary.main" fontSize="14px">
+                No agency contact added
+              </Typography>
+              {onAddAgencyContact && (
+                <Box
+                  onClick={onAddAgencyContact}
+                  sx={{
+                    backgroundColor: "#F4F9FD",
+                    display: "flex",
+                    padding: "6px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "#e3f2fd",
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                >
+                  <SvgIcon component={PlusIcon} sx={{ fontSize: "16px" }} />
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
         {timeSpent && (
           <Box sx={{ paddingTop: "10px" }}>

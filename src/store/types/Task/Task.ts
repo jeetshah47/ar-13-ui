@@ -1,3 +1,5 @@
+import type { DrawingInfo } from "./TaskResponse";
+
 export interface ITask {
   id?: string;
   subject: string;
@@ -16,4 +18,6 @@ export interface ITask {
   activityLogs: any[]; // Array of activity logs
   createdAt?: Date | { _seconds: number; _nanoseconds: number } | string;
   updatedAt?: Date;
+  drawingId?: string; // Drawing type UUID
+  drawingInfo?: DrawingInfo; // Drawing type and category information
 }

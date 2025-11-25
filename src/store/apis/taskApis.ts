@@ -185,6 +185,22 @@ export async function addFileAttachment(
   return result.data;
 }
 
+export async function linkFileAttachment(
+  projectId: string,
+  taskId: string,
+  fileAttachment: {
+    fileName: string;
+    originalName: string;
+    fileSize: number;
+    mimeType: string;
+    fileUrl: string;
+  }
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/add-file-attachment/${projectId}/${taskId}`;
+  const result = await http.post(url, fileAttachment);
+  return result.data;
+}
+
 export async function removeFileAttachment(
   projectId: string,
   taskId: string,

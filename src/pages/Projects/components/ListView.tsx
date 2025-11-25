@@ -60,6 +60,9 @@ const ListView = ({ tasks }: ListViewProps) => {
   };
 
   const TaskCard = (task: TaskResponse) => {
+    // Use drawing type name if available, otherwise fall back to subject
+    const taskTitle = task.drawingInfo?.typeName || task.subject;
+
     if (isMobile) {
       // Mobile layout matching Figma design
       return (
@@ -114,7 +117,7 @@ const ListView = ({ tasks }: ListViewProps) => {
               paddingRight: "40px", // Space for progress indicator
             }}
           >
-            {task.subject}
+            {taskTitle}
           </Typography>
 
           {/* Divider */}
@@ -344,7 +347,7 @@ const ListView = ({ tasks }: ListViewProps) => {
               color: "var(--color-text-primary, #0A1629)",
             }}
           >
-            {task.subject}
+            {task.drawingInfo?.typeName || task.subject}
           </Typography>
         </Box>
 

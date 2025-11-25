@@ -33,3 +33,22 @@ export const getServerBaseUrl = (): string => {
 
 export const SERVER_BASE_URL = getServerBaseUrl();
 
+/**
+ * Get the filebrowser service base URL from environment variables
+ * Defaults to http://localhost:8082 if not set
+ */
+const getFilebrowserBaseUrl = (): string => {
+  const baseUrl = import.meta.env.VITE_FILEBROWSER_BASE_URL;
+  
+  if (!baseUrl) {
+    // eslint-disable-next-line no-console
+    console.warn('VITE_FILEBROWSER_BASE_URL is not set in environment variables. Using default: http://localhost:8082');
+    return 'http://localhost:8082';
+  }
+  
+  // Ensure the URL doesn't end with a slash
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+};
+
+export const FILEBROWSER_BASE_URL = getFilebrowserBaseUrl();
+

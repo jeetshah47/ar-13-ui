@@ -13,7 +13,10 @@ export interface FileAttachment {
   fileSize: number;
   mimeType: string;
   uploadDate: string | { _seconds: number; _nanoseconds: number };
+  uploadedBy?: string;
   fileUrl: string;
+  previewUrl?: string; // Pre-signed URL for image preview (from backend, 1 hour expiry)
+  downloadUrl?: string; // Pre-signed URL for download (from backend, 1 hour expiry)
 }
 
 export interface AssignableUser {

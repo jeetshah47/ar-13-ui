@@ -19,6 +19,7 @@ interface ActivityLogItemProps {
   activityIcon: React.ComponentType;
   formattedDate: string;
   formattedTime: string;
+  onReplyClick?: (activity: ActivityLog) => void;
 }
 
 const ActivityLogItem = ({
@@ -26,6 +27,7 @@ const ActivityLogItem = ({
   activityIcon: ActivityIcon,
   formattedDate,
   formattedTime,
+  onReplyClick,
 }: ActivityLogItemProps) => {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -47,10 +49,16 @@ const ActivityLogItem = ({
   const hasReplies = mockReplies.length > 0;
 
   const handleToggleReplyInput = () => {
-    setShowReplyInput((prev) => !prev);
-    if (showReplyInput) {
-      setReplyText("");
-      setSelectedFiles([]);
+    if (onReplyClick) {
+      // Open sidebar instead of inline reply
+      onReplyClick(activity);
+    } else {
+      // Fallback to inline reply (for backward compatibility)
+      setShowReplyInput((prev) => !prev);
+      if (showReplyInput) {
+        setReplyText("");
+        setSelectedFiles([]);
+      }
     }
   };
 

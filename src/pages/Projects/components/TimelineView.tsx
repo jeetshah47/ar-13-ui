@@ -137,7 +137,9 @@ const TaskTimelineFlex: React.FC = () => {
                   px: 1,
                 })}
               >
-                <Typography sx={{ fontSize: "14px" }}>{task.subject}</Typography>
+                <Typography sx={{ fontSize: "14px" }}>
+                  {task.drawingInfo?.typeName || task.subject}
+                </Typography>
               </Box>
             ))}
           </Box>
@@ -199,7 +201,7 @@ const TaskTimelineFlex: React.FC = () => {
                         title={
                           <Box>
                             <Typography color="inherit" variant="subtitle2">
-                              {task.subject}
+                              {task.drawingInfo?.typeName || task.subject}
                             </Typography>
                             <Typography variant="body2">
                               Date: {day}/{new Date().getMonth() + 1}/{new Date().getFullYear()}

@@ -187,9 +187,12 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       : (task.assignTo?.name || "Unassigned");
     const assigneeAvatar = "/api/placeholder/24/24";
 
+    // Use drawing type name if available, otherwise fall back to subject
+    const taskTitle = task.drawingInfo?.typeName || task.subject;
+
     return {
       id: task.id,
-      title: task.subject,
+      title: taskTitle,
       code: task.code,
       priority: task.priority as "Low" | "Medium" | "High",
       deadline: formatDuration(task.deadline),

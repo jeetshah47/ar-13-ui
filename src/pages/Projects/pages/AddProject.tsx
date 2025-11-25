@@ -30,13 +30,14 @@ import Icon10 from "../../../assets/icons/project/Image-10.svg?react";
 import Icon from "../../../assets/icons/project/Image.svg?react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { addProjectAction } from "../../../store/features/projects/projectAction";
+import { addProjectAction, updateProjectAction } from "../../../store/features/projects/projectAction";
 import type { AppDispatch, RootState } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import type { SelectChangeEvent } from "@mui/material";
+import type { ProjectDetailResponse } from "../../../store/types/Project/ProjectDetailResponse";
 
 const steps = ["Basic Details", "Team Members"];
 
@@ -71,27 +72,51 @@ const AddProject = () => {
   
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { users } = useSelector((state: RootState) => state.userReducer);
   const [activeStep, setActiveStep] = useState(0);
+
+  // Check if we're in edit mode
+  const editData = location.state as { project: ProjectDetailResponse['projectDetails']; isEditMode: boolean } | null;
+  const isEditMode = editData?.isEditMode ?? false;
+  const projectData = editData?.project ?? null;
+  const projectId = projectData?.id ?? null;
 
   useEffect(() => {
     dispatch(getUsersAction());
   }, [dispatch]);
 
+  // Helper function to format ISO date to YYYY-MM-DD for date input
+  const formatDateForInput = (isoDate: string | undefined): string => {
+    if (!isoDate) return "";
+    try {
+      const date = new Date(isoDate);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  };
+
+  // Get deadline date for initializing endDate
+  const deadlineDate = projectData?.deadline || projectData?.deadLine;
+  const endDateFromDeadline = deadlineDate ? formatDateForInput(deadlineDate) : "";
+
   const formik = useFormik({
     initialValues: {
-      title: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      deadLine: "",
-      membersIds: [] as string[],
-      ownerId: localStorage.getItem("uid") ?? "",
-      logoUrl: "",
+      title: projectData?.title ?? "",
+      description: projectData?.description ?? "",
+      startDate: "", // ProjectResponse doesn't have startDate, so we'll leave it empty for edit
+      endDate: endDateFromDeadline, // Initialize from deadLine if available
+      deadLine: deadlineDate ? formatDateForInput(deadlineDate) : "",
+      membersIds: (projectData?.membersIds ?? []) as string[],
+      ownerId: projectData?.ownerId ?? localStorage.getItem("uid") ?? "",
+      logoUrl: (projectData as any)?.logoUrl ?? "",
     },
     validationSchema: step1ValidationSchema,
     validateOnChange: true,
     validateOnBlur: true,
+    enableReinitialize: true, // Allow form to reinitialize when projectData changes
     onSubmit: (values) => {
       // Format dates to ISO strings
       const start = values.startDate ? new Date(values.startDate + "T00:00:00") : null;
@@ -99,16 +124,24 @@ const AddProject = () => {
       
       const finalFormData = {
         ...values,
-        startDate: start ? start.toISOString() : "",
-        endDate: end ? end.toISOString() : "",
-        deadLine: end ? end.toISOString() : "",
+        startDate: start ? start.toISOString() : (projectData as any)?.startDate ?? "",
+        endDate: end ? end.toISOString() : (projectData as any)?.endDate ?? "",
+        deadLine: end ? end.toISOString() : ((projectData?.deadline || projectData?.deadLine) ?? ""),
       };
       
-      dispatch(
-        addProjectAction(finalFormData, () => {
-          navigate("/app/projects");
-        })
-      );
+      if (isEditMode && projectId) {
+        dispatch(
+          updateProjectAction(projectId, finalFormData, () => {
+            navigate(`/app/projects/info/${projectId}`);
+          })
+        );
+      } else {
+        dispatch(
+          addProjectAction(finalFormData, () => {
+            navigate("/app/projects");
+          })
+        );
+      }
     },
   });
 
@@ -196,6 +229,7 @@ const AddProject = () => {
                   error={Boolean(formik.touched.title && formik.errors.title)}
                   helperText={formik.touched.title && formik.errors.title}
                   required
+                  disabled={isEditMode}
                 />
               </Box>
               <Box sx={{ width: "100%", paddingTop: "16px" }}>
@@ -347,7 +381,7 @@ const AddProject = () => {
         margin: { xs: "0 auto", sm: "0 auto", md: "0 auto", lg: "0 auto" },
       }}
     >
-      <PageHeader title="Add Project" />
+      <PageHeader title={isEditMode ? "Edit Project" : "Add Project"} />
       
       <Stepper activeStep={activeStep} sx={{ mb: 4, mt: 2 }}>
         {steps.map((label) => (
@@ -374,11 +408,11 @@ const AddProject = () => {
             <Button 
               variant="contained" 
               onClick={handleSubmit}
-              disabled={!formik.values.title.trim() || !formik.values.startDate || !formik.values.endDate}
+              disabled={!formik.values.title.trim() || (!isEditMode && (!formik.values.startDate || !formik.values.endDate))}
               fullWidth={!isLargeScreen}
               sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}
             >
-              Save Project
+              {isEditMode ? "Update Project" : "Save Project"}
             </Button>
           ) : (
             <Button 

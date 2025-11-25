@@ -1,14 +1,31 @@
-import { Box, Link, SvgIcon, Typography, useMediaQuery, useTheme, CircularProgress } from "@mui/material";
+import { Box, Link, SvgIcon, Typography, useMediaQuery, useTheme, CircularProgress, TextField, Button } from "@mui/material";
 import LeftIcon from "../../../assets/icons/general/left.svg?react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { getTaskListAction } from "../../../store/features/task/projectAction";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import { fetchProjectInfoAction } from "../../../store/features/projects/projectDetailAction";
+import { updateAgencyContactAction } from "../../../store/features/projects/projectAction";
 import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import ListView from "../components/ListView";
 import NoTaskMessage from "../components/NoTaskMessage";
+import Modal from "../../../common/components/Modal/Modal";
+import type { AgencyContact } from "../../../store/types/Project/ProjectRequest";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+
+// Validation schema for agency contact form
+const agencyContactValidationSchema = Yup.object({
+  contact_name: Yup.string()
+    .trim()
+    .required("Contact name is required")
+    .min(1, "Contact name cannot be empty"),
+  contact_agency_type: Yup.string()
+    .trim()
+    .required("Agency type is required")
+    .min(1, "Agency type cannot be empty"),
+});
 
 const ProjectInfo = () => {
   const theme = useTheme();
@@ -16,6 +33,7 @@ const ProjectInfo = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [showAgencyContactModal, setShowAgencyContactModal] = useState(false);
 
   const taskListState = useAppSelector(
     (state: RootState) => state.taskListReducer.api
@@ -86,6 +104,56 @@ const ProjectInfo = () => {
       avatar: "/api/placeholder/24/24",
     };
   }, [projectDetails?.ownerId, users]);
+
+  // Formik form for agency contact - must be before early returns
+  const formik = useFormik({
+    initialValues: {
+      contact_name: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.contact_name || "",
+      contact_agency_type: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.contact_agency_type || "",
+    },
+    validationSchema: agencyContactValidationSchema,
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      if (!projectId || !projectDetails) return;
+
+      const agencyContact = {
+        contact_name: values.contact_name,
+        contact_agency_type: values.contact_agency_type,
+      };
+
+      dispatch(
+        updateAgencyContactAction(projectId, agencyContact, () => {
+          setShowAgencyContactModal(false);
+          formik.resetForm();
+          // Refresh project details
+          if (projectId) {
+            dispatch(fetchProjectInfoAction(projectId));
+          }
+        })
+      );
+    },
+  });
+
+  const handleEditClick = () => {
+    if (projectId && projectDetails) {
+      // Navigate to AddProject with project data in state
+      navigate("/app/projects/add", {
+        state: {
+          project: projectDetails,
+          isEditMode: true,
+        },
+      });
+    }
+  };
+
+  const handleOpenAgencyContactModal = () => {
+    setShowAgencyContactModal(true);
+  };
+
+  const handleCloseAgencyContactModal = () => {
+    setShowAgencyContactModal(false);
+    formik.resetForm();
+  };
 
   // Loading state
   if (projectLoading) {
@@ -167,6 +235,9 @@ const ProjectInfo = () => {
             priority={projectDetails.priority}
             deadline={projectDetails.deadline || projectDetails.deadLine}
             timeSpent={undefined}
+            agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
+            onEditClick={handleEditClick}
+            onAddAgencyContact={handleOpenAgencyContactModal}
           />
         )}
 
@@ -193,6 +264,9 @@ const ProjectInfo = () => {
                 priority={projectDetails.priority}
                 deadline={projectDetails.deadline || projectDetails.deadLine}
                 timeSpent={undefined}
+                agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
+                onEditClick={handleEditClick}
+                onAddAgencyContact={handleOpenAgencyContactModal}
               />
             </Box>
           )}
@@ -223,6 +297,76 @@ const ProjectInfo = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* Agency Contact Modal */}
+      <Modal show={showAgencyContactModal} onClose={handleCloseAgencyContactModal}>
+        <Box
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "24px",
+            padding: { xs: "20px", sm: "24px", md: "28px" },
+            width: { xs: "90%", sm: "500px", md: "600px" },
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3 }}>
+            {formik.values.contact_name ? "Edit Agency Contact" : "Add Agency Contact"}
+          </Typography>
+          <form onSubmit={formik.handleSubmit}>
+            <TextField
+              fullWidth
+              label="Contact Name"
+              name="contact_name"
+              value={formik.values.contact_name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.contact_name && Boolean(formik.errors.contact_name)}
+              helperText={formik.touched.contact_name && formik.errors.contact_name}
+              sx={{ mb: 2 }}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Agency Type"
+              name="contact_agency_type"
+              value={formik.values.contact_agency_type}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.contact_agency_type && Boolean(formik.errors.contact_agency_type)}
+              helperText={formik.touched.contact_agency_type && formik.errors.contact_agency_type}
+              sx={{ mb: 3 }}
+              required
+            />
+            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+              <Button
+                variant="outlined"
+                onClick={handleCloseAgencyContactModal}
+                sx={{
+                  borderRadius: "14px",
+                  textTransform: "none",
+                  px: 3,
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={formik.isSubmitting}
+                sx={{
+                  borderRadius: "14px",
+                  textTransform: "none",
+                  px: 3,
+                }}
+              >
+                {formik.isSubmitting ? "Saving..." : "Save"}
+              </Button>
+            </Box>
+          </form>
+        </Box>
+      </Modal>
     </Box>
   );
 };

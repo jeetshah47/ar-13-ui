@@ -57,4 +57,58 @@ export async function getRecentActivityLogs(
   return getActivityLogsByEntityType(entityType, limit);
 }
 
+/**
+ * Get replies for a specific activity log
+ * @param activityLogId - The unique identifier of the activity log
+ * @returns Replies for the specified activity log
+ */
+export async function getActivityLogReplies(activityLogId: string): Promise<{
+  replies: Array<{
+    id: string;
+    activityLogId: string;
+    message: string;
+    createdBy: string;
+    createdAt: string;
+    createdByUser?: {
+      id: string;
+      name: string;
+      email?: string;
+    };
+  }>;
+}> {
+  const url = `${BASE_URL}/replies/get`;
+  console.log("[ActivityLogReplies] Fetching replies for activityLogId:", activityLogId);
+  const result = await http.post(url, { activityLogId });
+  return result.data;
+}
+
+/**
+ * Create a reply to an activity log
+ * @param activityLogId - The unique identifier of the activity log
+ * @param message - The reply message
+ * @returns The created reply
+ */
+export async function createActivityLogReply(
+  activityLogId: string,
+  message: string
+): Promise<{
+  reply: {
+    id: string;
+    activityLogId: string;
+    message: string;
+    createdBy: string;
+    createdAt: string;
+    createdByUser?: {
+      id: string;
+      name: string;
+      email?: string;
+    };
+  };
+}> {
+  const url = `${BASE_URL}/replies`;
+  console.log("[ActivityLogReplies] Creating reply for activityLogId:", activityLogId, "message:", message);
+  const result = await http.post(url, { activityLogId, message });
+  return result.data;
+}
+
 

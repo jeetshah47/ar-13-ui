@@ -19,5 +19,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    fs: {
+      strict: false, // Allow accessing files outside of project root
+    },
+  },
+  cacheDir: 'node_modules/.vite',
+  optimizeDeps: {
+    force: false, // Set to true if you need to force re-optimization
   },
 })

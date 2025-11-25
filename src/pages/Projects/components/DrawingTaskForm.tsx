@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { addMultipleTasksAction, getTaskListAction } from "../../../store/features/task/projectAction";
@@ -30,7 +30,7 @@ import {
   type RootState,
 } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
-import { DRAWING_LIST } from "../constants/task.constants";
+import { getCategoriesWithTypesAction } from "../../../store/features/drawingList/drawingListActions";
 
 interface DrawingItem {
   name: string;
@@ -89,10 +89,33 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
   const projectId = useAppSelector(
     (state: RootState) => state.projectListReducer.common.selectedProjectId
   );
+  const { categories, types } = useAppSelector(
+    (state: RootState) => state.drawingListReducer
+  );
 
   useEffect(() => {
     dispatch(getUsersAction());
+    dispatch(getCategoriesWithTypesAction());
   }, [dispatch]);
+
+  // Helper function to build drawings list from Redux data
+  const buildDrawingsList = useCallback((): DrawingItem[] => {
+    const allDrawings: DrawingItem[] = [];
+    categories
+      .filter((category) => category.isActive)
+      .forEach((category) => {
+        const categoryTypes = types.filter((type) => type.categoryId === category.id && type.isActive);
+        categoryTypes.forEach((type) => {
+          allDrawings.push({
+            name: type.name,
+            description: type.description || "",
+            key: type.id,
+            type: category.name,
+          });
+        });
+      });
+    return allDrawings;
+  }, [categories, types]);
 
   const formik = useFormik({
     initialValues: {
@@ -122,22 +145,37 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
       const endDateISO = values.endDate ? new Date(values.endDate + "T23:59:59").toISOString() : "";
       const deadlineISO = values.deadline ? new Date(values.deadline + "T23:59:59").toISOString() : "";
 
-      const tasks: ITask[] = rightList.map((drawing) => ({
-        subject: drawing.name,
-        code: `DWG-${drawing.key.toUpperCase()}`,
-        status: values.status || "todo",
-        startDate: startDateISO,
-        endDate: endDateISO,
-        deadline: deadlineISO,
-        priority: values.priority ? values.priority.toLowerCase() : "high",
-        assignTo: values.assignTo,
-        projectId,
-        progress: 0,
-        description: "",
-        timeSpent: [],
-        fileAttachments: [],
-        activityLogs: [],
-      }));
+      const tasks: ITask[] = rightList.map((drawing) => {
+        // Find the drawing type and category from Redux store
+        const drawingType = types.find((type) => type.id === drawing.key);
+        const drawingCategory = drawingType 
+          ? categories.find((category) => category.id === drawingType.categoryId)
+          : null;
+
+        return {
+          subject: drawing.name,
+          code: `DWG-${drawing.key.toUpperCase()}`,
+          status: values.status || "todo",
+          startDate: startDateISO,
+          endDate: endDateISO,
+          deadline: deadlineISO,
+          priority: values.priority ? values.priority.toLowerCase() : "high",
+          assignTo: values.assignTo,
+          projectId,
+          progress: 0,
+          description: "",
+          timeSpent: [],
+          fileAttachments: [],
+          activityLogs: [],
+          drawingId: drawing.key, // Drawing type UUID
+          drawingInfo: drawingType && drawingCategory ? {
+            typeId: drawingType.id,
+            typeName: drawingType.name,
+            categoryId: drawingCategory.id,
+            categoryName: drawingCategory.name,
+          } : undefined,
+        };
+      });
 
       try {
         await dispatch(addMultipleTasksAction(tasks));
@@ -151,17 +189,8 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
         formik.resetForm();
         setRightList([]);
         
-        // Reinitialize left list
-        const allDrawings: DrawingItem[] = [];
-        DRAWING_LIST.forEach((category) => {
-          category.items.forEach((item) => {
-            allDrawings.push({
-              ...item,
-              type: category.type,
-            });
-          });
-        });
-        setLeftList(allDrawings);
+        // Reinitialize left list from Redux
+        setLeftList(buildDrawingsList());
         onClose?.();
       } catch {
         // Error is already handled in the action with toast
@@ -178,20 +207,15 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.endDate]);
 
-  // Initialize left list with all drawing items
+  // Initialize left list with all drawing items from Redux
   useEffect(() => {
-    const allDrawings: DrawingItem[] = [];
-    DRAWING_LIST.forEach((category) => {
-      category.items.forEach((item) => {
-        allDrawings.push({
-          ...item,
-          type: category.type,
-        });
-      });
-    });
-    setLeftList(allDrawings);
+    if (categories.length === 0 && types.length === 0) {
+      return;
+    }
+
+    setLeftList(buildDrawingsList());
     setRightList([]);
-  }, []);
+  }, [categories, types, buildDrawingsList]);
 
   const handleToggle = (item: DrawingItem) => () => {
     const currentIndex = rightList.findIndex((i) => i.key === item.key);
@@ -224,17 +248,8 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
     formik.resetForm();
     setRightList([]);
     
-    // Reinitialize left list
-    const allDrawings: DrawingItem[] = [];
-    DRAWING_LIST.forEach((category) => {
-      category.items.forEach((item) => {
-        allDrawings.push({
-          ...item,
-          type: category.type,
-        });
-      });
-    });
-    setLeftList(allDrawings);
+    // Reinitialize left list from Redux
+    setLeftList(buildDrawingsList());
     onClose?.();
   };
 

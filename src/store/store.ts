@@ -13,6 +13,7 @@ import { calendarReducer } from "./features/calendar/calendarSlice";
 import { vacationReducer } from "./features/vacation/vacationSlice";
 import { employeeReducer } from "./features/employees/employeeSlice";
 import { activityLogsReducer } from "./features/activityLogs/activityLogsSlice";
+import { activityLogRepliesReducer } from "./features/activityLogReplies/activityLogRepliesSlice";
 import { infoPortalReducer } from "./features/infoPortal/infoPortalSlice";
 import { googleAccountReducer } from "./features/googleAccount/googleAccountSlice";
 import { backupReducer } from "./features/backup/backupSlice";
@@ -32,6 +33,7 @@ export const store = configureStore({
     vacationReducer,
     employeeReducer,
     activityLogsReducer,
+    activityLogRepliesReducer,
     infoPortalReducer,
     googleAccountReducer,
     backupReducer,

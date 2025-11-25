@@ -10,6 +10,7 @@ interface ActivityLogsSectionProps {
     timestamp: string | { _seconds: number; _nanoseconds: number }
   ) => Date;
   activityLogsRef: React.RefObject<{ [key: string]: HTMLDivElement | null }>;
+  onReplyClick?: (activity: ActivityLog) => void;
 }
 
 const ActivityLogsSection = ({
@@ -18,6 +19,7 @@ const ActivityLogsSection = ({
   getActivityIcon,
   parseFirebaseTimestamp,
   activityLogsRef,
+  onReplyClick,
 }: ActivityLogsSectionProps) => {
   return (
     <Box
@@ -76,6 +78,7 @@ const ActivityLogsSection = ({
                   activityIcon={ActivityIcon}
                   formattedDate={formattedDate}
                   formattedTime={formattedTime}
+                  onReplyClick={onReplyClick}
                 />
               </Box>
             );

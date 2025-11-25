@@ -64,6 +64,31 @@ const projectListSlice = createSlice({
     setFilteredProjects(state, action: PayloadAction<ProjectResponse[]>) {
       state.api.data.filteredProjects = action.payload;
     },
+    updateProjectRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    updateProjectSuccess(state, action: PayloadAction<ProjectResponse>) {
+      state.api.loading = false;
+      state.api.error = "";
+      const index = state.api.data.projects.findIndex(
+        (p) => p.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.api.data.projects[index] = action.payload;
+      }
+      // Update filtered projects if the updated project is in the filtered list
+      const filteredIndex = state.api.data.filteredProjects.findIndex(
+        (p) => p.id === action.payload.id
+      );
+      if (filteredIndex !== -1) {
+        state.api.data.filteredProjects[filteredIndex] = action.payload;
+      }
+    },
+    updateProjectFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -76,6 +101,9 @@ export const {
   addProjectSuccess,
   addProjectFailed,
   setFilteredProjects,
+  updateProjectRequest,
+  updateProjectSuccess,
+  updateProjectFailed,
 } = projectListSlice.actions;
 
 export const projectListReducer = projectListSlice.reducer;
