@@ -6,16 +6,16 @@ import type { ProjectRequest, AgencyContact } from "../types/Project/ProjectRequ
 import type { ProjectStatisticsResponse } from "../types/Project/ProjectStatisticsResponse";
 
 
-export async function getAllProjects(): Promise<{
+export async function getAllProjects(limit?: number): Promise<{
   projects: ProjectResponse[];
 }> {
   const url = `${API_BASE_URL}/project/all`;
-  //   const token = localStorage.getItem("authToken");
-  const result = await http.get(url);
+  const params = limit ? { limit } : {};
+  const result = await http.get(url, { params });
   return result.data;
 }
 
-export async function addProject(project: ProjectRequest): Promise<ProjectResponse> {
+export async function addProject(project: ProjectRequest): Promise<{ message: string }> {
   const url = `${API_BASE_URL}/project/add`;
   const result = await http.post(url, project);
   return result.data;
@@ -29,6 +29,29 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
 
 export async function getAllProjectsStatistics(): Promise<ProjectStatisticsResponse> {
   const url = `${API_BASE_URL}/project/all/statistics`;
+  const result = await http.get(url);
+  return result.data;
+}
+
+export async function getProjectStatistics(projectId: string): Promise<{
+  statistics: {
+    totalTasks: number;
+    completedTasks: number;
+    activeTasks: number;
+    backlogTasks: number;
+    tasksInProgress: number;
+    tasksInReview: number;
+    pendingTasks: number;
+    cancelledTasks: number;
+    byStatus: Record<string, number>;
+    byPriority: Record<string, number>;
+    completionRate: number;
+    totalTimeSpent: number;
+    assignedUsers: number;
+    tasksByAssignee: Record<string, number>;
+  };
+}> {
+  const url = `${API_BASE_URL}/project/${projectId}/statistics`;
   const result = await http.get(url);
   return result.data;
 }

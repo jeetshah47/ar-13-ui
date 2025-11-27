@@ -13,6 +13,7 @@ export interface ProjectStatistics {
   totalTimeSpent: number;
   assignedUsers: number;
   tasksByAssignee: Record<string, number>;
+  completedTasksByAssignee: Record<string, number>;
 }
 
 export interface ProjectWithStatistics {

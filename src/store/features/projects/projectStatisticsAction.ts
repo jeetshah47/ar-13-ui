@@ -3,10 +3,13 @@ import {
   getProjectStatisticsRequest,
   getProjectStatisticsSuccess,
   getProjectStatisticsFailed,
+  getSingleProjectStatisticsRequest,
+  getSingleProjectStatisticsSuccess,
+  getSingleProjectStatisticsFailed,
 } from "./projectStatisticsSlice";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
-import { getAllProjectsStatistics } from "../../apis/projectApis";
+import { getAllProjectsStatistics, getProjectStatistics } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 
 export const getProjectStatisticsAction =
@@ -26,6 +29,24 @@ export const getProjectStatisticsAction =
     } catch {
       toast.error("Failed to get project statistics");
       dispatch(getProjectStatisticsFailed({ error: "Unknown Error" }));
+    }
+  };
+
+export const getSingleProjectStatisticsAction =
+  (projectId: string) => async (dispatch: AppDispatch) => {
+    dispatch(getSingleProjectStatisticsRequest());
+    try {
+      const data = await getProjectStatistics(projectId);
+      dispatch(getSingleProjectStatisticsSuccess(data.statistics));
+    } catch (error) {
+      const axiosError = error as AxiosError<ProjectErrorResponse>;
+      if (axiosError?.response?.data) {
+        dispatch(getSingleProjectStatisticsFailed(axiosError.response.data));
+        toast.error(axiosError.response.data.error || "Failed to get project statistics");
+      } else {
+        dispatch(getSingleProjectStatisticsFailed({ error: "Unknown Error" }));
+        toast.error("Failed to get project statistics");
+      }
     }
   };
 

@@ -22,28 +22,26 @@ import { filterProjectsByRole } from "../../utils/projectFiltering";
 export const getProjectListAction = () => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(getProjectListRequest());
   try {
-    getAllProjects()
-      .then((data) => {
-        dispatch(getProjectListSuccess(data));
-        
-        // Apply role-based filtering
-        const state = getState();
-        const userRole = state.authReducer.user.role;
-        const userId = state.authReducer.api.uid;
-        
-        if (userRole && userId) {
-          const filteredProjects = filterProjectsByRole(data.projects, userRole, userId);
-          dispatch(setFilteredProjects(filteredProjects));
-        }
-      })
-      .catch((error: AxiosError<ProjectErrorResponse>) => {
-        if (error?.response?.data) {
-          dispatch(getProjectListFailed(error?.response?.data));
-        }
-      });
-  } catch {
-    toast.success("Failed to get projects");
-    dispatch(getProjectListFailed({ error: "Unkown Error" }));
+    const data = await getAllProjects();
+    dispatch(getProjectListSuccess(data));
+    
+    // Apply role-based filtering
+    const state = getState();
+    const userRole = state.authReducer.user.role;
+    const userId = state.authReducer.api.uid;
+    
+    // Always set filteredProjects (filtering function returns all projects if no filtering needed)
+    const filteredProjects = filterProjectsByRole(data.projects, userRole || "user", userId || "");
+    dispatch(setFilteredProjects(filteredProjects));
+  } catch (error) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(getProjectListFailed(axiosError.response.data));
+      toast.error(axiosError.response.data.error || "Failed to get projects");
+    } else {
+      dispatch(getProjectListFailed({ error: "Unknown Error" }));
+      toast.error("Failed to get projects");
+    }
   }
 };
 
@@ -54,8 +52,10 @@ export const addProjectAction =
     try {
       addProject(project)
         .then((data) => {
-          dispatch(addProjectSuccess(data));
-          toast.success("Project added successfully");
+          // API returns { message: "Project created successfully" }
+          // We still need to update the store, so we'll refresh the project list
+          dispatch(getProjectListAction());
+          toast.success(data.message || "Project added successfully");
           if (cb) cb();
         })
         .catch((error: AxiosError<ProjectErrorResponse>) => {

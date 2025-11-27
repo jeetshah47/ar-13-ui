@@ -21,6 +21,7 @@ import { updateSelectedProjectId } from "../../../store/features/projects/projec
 import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
 import { getTaskListAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
+import { getProjectListAction } from "../../../store/features/projects/projectAction";
 import NoTaskMessage from "../components/NoTaskMessage";
 import { usePermissions } from "../../../store/hooks/usePermissions";
 
@@ -43,6 +44,11 @@ const ProjectList = () => {
     (state: RootState) => state.projectListReducer
   );
 
+  // Use filteredProjects if available, otherwise fall back to projects
+  const projects = projectListState.api.data?.filteredProjects !== undefined
+    ? projectListState.api.data.filteredProjects 
+    : (projectListState.api.data?.projects || []);
+
   const taskListState = useAppSelector(
     (state: RootState) => state.taskListReducer.api
   );
@@ -53,7 +59,8 @@ const ProjectList = () => {
 
   const dispatch = useAppDispatch();
   const lastFetchedProjectRef = useRef<string | null>(null);
-  const { checkPermission } = usePermissions();
+  const projectsFetchedRef = useRef<boolean>(false);
+  const { checkPermission, userRole, isAdmin } = usePermissions();
 
   const navigate = useNavigate();
 
@@ -119,14 +126,13 @@ const ProjectList = () => {
 
   // Auto-select first project if none is selected
   useEffect(() => {
-    const projects = projectListState.api.data.projects;
     const selectedProjectId = projectListState.common.selectedProjectId;
     
     // If no project is selected and there are projects available, select the first one
     if (!selectedProjectId && projects.length > 0) {
       dispatch(updateSelectedProjectId(projects[0].id));
     }
-  }, [dispatch, projectListState.api.data.projects, projectListState.common.selectedProjectId]);
+  }, [dispatch, projects, projectListState.common.selectedProjectId]);
 
   // Fetch tasks when project changes, but prevent duplicate fetches
   useEffect(() => {
@@ -155,6 +161,16 @@ const ProjectList = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, projectListState.common.selectedProjectId]);
+
+  // Fetch projects on component mount
+  useEffect(() => {
+    // Fetch projects on mount if not already fetched
+    if (!projectsFetchedRef.current && !projectListState.api.loading) {
+      projectsFetchedRef.current = true;
+      dispatch(getProjectListAction());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch task statuses if not already loaded
   useEffect(() => {
@@ -200,38 +216,54 @@ const ProjectList = () => {
         </Typography>
       </Box>
       <Box>
-        {projectListState.api.data.projects.map((project) => (
-          <Box
-            onClick={() => handleSelectCurrentProjectId(project.id)}
-            key={project.id}
-            sx={(theme) =>
-              projectListState.common.selectedProjectId === project.id
-                ? getActiveCardStyles(theme)
-                : { padding: { xs: "12px", sm: "8px" } }
-            }
-          >
-            <Typography color="secondary" sx={{ fontSize: { xs: "12px", sm: "14px" } }}>PN0001245</Typography>
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", fontSize: { xs: "14px", sm: "16px" } }}>
-              {project.title}
-            </Typography>
+        {projects.length === 0 ? (
+          <Box sx={{ padding: { xs: "16px", sm: "20px" }, textAlign: "center" }}>
             <Typography
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOnClickDetails(project.id);
-              }}
-              color="primary"
+              color="secondary"
               sx={{
-                fontWeight: "600",
-                cursor: "pointer",
-                width: "fit-content",
-                fontSize: { xs: "12px", sm: "14px" },
-                ":hover": { textDecoration: "underline" },
+                fontSize: { xs: "14px", sm: "16px" },
+                lineHeight: 1.6,
               }}
             >
-              View Details
+              {isAdmin()
+                ? "No projects available. Please add a project to get started."
+                : "No projects assigned to you."}
             </Typography>
           </Box>
-        ))}
+        ) : (
+          projects.map((project) => (
+            <Box
+              onClick={() => handleSelectCurrentProjectId(project.id)}
+              key={project.id}
+              sx={(theme) =>
+                projectListState.common.selectedProjectId === project.id
+                  ? getActiveCardStyles(theme)
+                  : { padding: { xs: "12px", sm: "8px" } }
+              }
+            >
+              <Typography color="secondary" sx={{ fontSize: { xs: "12px", sm: "14px" } }}>PN0001245</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold", fontSize: { xs: "14px", sm: "16px" } }}>
+                {project.title}
+              </Typography>
+              <Typography
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOnClickDetails(project.id);
+                }}
+                color="primary"
+                sx={{
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  width: "fit-content",
+                  fontSize: { xs: "12px", sm: "14px" },
+                  ":hover": { textDecoration: "underline" },
+                }}
+              >
+                View Details
+              </Typography>
+            </Box>
+          ))
+        )}
       </Box>
     </Box>
   );
@@ -253,56 +285,94 @@ const ProjectList = () => {
 
         {/* Main Content Area */}
         <Box sx={{ width: { xs: "100%", sm: "100%", md: "78%", lg: "80%" }, flex: 1 }}>
-          <>
-            {/* Mobile: Show project selector dropdown */}
-            {isMobile && (
-              <Box sx={{ mb: 2 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Select Project</InputLabel>
-                  <Select
-                    value={projectListState.common.selectedProjectId || ""}
-                    onChange={handleProjectSelectChange}
-                    input={<OutlinedInput label="Select Project" />}
-                    sx={{
-                      borderRadius: "14px",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
-                    {projectListState.api.data.projects.map((project) => (
-                      <MenuItem key={project.id} value={project.id}>
-                        {project.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            )}
-            <TaskHeader
-              currentViewOption={currentView}
-              onChangeViewOptions={(view) => {
-                // Prevent changing to tile/timeline on mobile
-                if (isMobile && view !== "list") return;
-                setCurrentView(view);
+          {projects.length === 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "60px 20px",
+                textAlign: "center",
+                height: "100%",
+                minHeight: "400px",
               }}
-              onClickAddButton={handleShowModal}
-              onClickAddDrawing={handleShowDrawingModal}
-              onClickFilterShow={handleShowFilterModal}
-            />
-            <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
-              {projectListState.common.selectedProjectId && 
-               (!taskListState?.data?.tasks || taskListState.data.tasks.length === 0) ? (
-                <NoTaskMessage />
-              ) : (
-                <>
-                  {currentView === "list" && (
-                    <ListView tasks={taskListState?.data?.tasks} />
-                  )}
-                  {!isMobile && currentView === "tile" && <TileView />}
-                  {!isMobile && currentView === "time" && <TimelineView />}
-                </>
-              )}
+            >
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: "bold",
+                  color: "text.primary",
+                  marginBottom: "8px",
+                }}
+              >
+                {isAdmin() ? "No Projects Available" : "No Projects Assigned"}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "text.secondary",
+                  maxWidth: "500px",
+                  lineHeight: 1.6,
+                }}
+              >
+                {isAdmin()
+                  ? "Get started by creating your first project. Click the 'Add Project' button above to begin."
+                  : "You don't have any projects assigned to you yet. Please contact your administrator to get assigned to a project."}
+              </Typography>
             </Box>
-          </>
+          ) : (
+            <>
+              {/* Mobile: Show project selector dropdown */}
+              {isMobile && (
+                <Box sx={{ mb: 2 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Select Project</InputLabel>
+                    <Select
+                      value={projectListState.common.selectedProjectId || ""}
+                      onChange={handleProjectSelectChange}
+                      input={<OutlinedInput label="Select Project" />}
+                      sx={{
+                        borderRadius: "14px",
+                        backgroundColor: "background.paper",
+                      }}
+                    >
+                      {projects.map((project) => (
+                        <MenuItem key={project.id} value={project.id}>
+                          {project.title}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+              <TaskHeader
+                currentViewOption={currentView}
+                onChangeViewOptions={(view) => {
+                  // Prevent changing to tile/timeline on mobile
+                  if (isMobile && view !== "list") return;
+                  setCurrentView(view);
+                }}
+                onClickAddButton={handleShowModal}
+                onClickAddDrawing={handleShowDrawingModal}
+                onClickFilterShow={handleShowFilterModal}
+              />
+              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+                {projectListState.common.selectedProjectId && 
+                 (!taskListState?.data?.tasks || taskListState.data.tasks.length === 0) ? (
+                  <NoTaskMessage />
+                ) : (
+                  <>
+                    {currentView === "list" && (
+                      <ListView tasks={taskListState?.data?.tasks} />
+                    )}
+                    {!isMobile && currentView === "tile" && <TileView />}
+                    {!isMobile && currentView === "time" && <TimelineView />}
+                  </>
+                )}
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
       <Modal show={showModal} onClose={handleCloseModal}>

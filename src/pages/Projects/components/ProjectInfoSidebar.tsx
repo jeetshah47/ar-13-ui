@@ -1,4 +1,4 @@
-import { Avatar, AvatarGroup, Box, SvgIcon, Typography } from "@mui/material";
+import { Avatar, AvatarGroup, Box, SvgIcon, Typography, Tooltip } from "@mui/material";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
@@ -10,6 +10,9 @@ import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 interface ProjectInfoSidebarProps {
   projectTitle?: string;
   projectDescription?: string;
+  projectCode?: string;
+  productionDuration?: number;
+  siteDuration?: number;
   reporter?: {
     name: string;
     avatar?: string;
@@ -26,6 +29,8 @@ interface ProjectInfoSidebarProps {
     contact_name?: string;
     contact_agency_type?: string;
   };
+  created?: string | { _seconds: number; _nanoseconds: number };
+  updated?: string;
   onEditClick?: () => void;
   onAddAgencyContact?: () => void;
 }
@@ -33,15 +38,47 @@ interface ProjectInfoSidebarProps {
 const ProjectInfoSidebar = ({
   projectTitle,
   projectDescription,
+  projectCode,
+  productionDuration,
+  siteDuration,
   reporter,
   assignes,
   priority,
   deadline,
   timeSpent,
   agencyContact,
+  created,
+  updated,
   onEditClick,
   onAddAgencyContact,
 }: ProjectInfoSidebarProps) => {
+  // Format date from string or Firebase timestamp
+  const formatDate = (date?: string | { _seconds: number; _nanoseconds: number }): string => {
+    if (!date) return "N/A";
+    if (typeof date === "string") {
+      try {
+        return new Date(date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } catch {
+        return "Invalid date";
+      }
+    }
+    if (typeof date === "object" && "_seconds" in date) {
+      try {
+        return new Date(date._seconds * 1000).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } catch {
+        return "Invalid date";
+      }
+    }
+    return "N/A";
+  };
   return (
     <Box
       sx={{
@@ -98,6 +135,16 @@ const ProjectInfoSidebar = ({
         </Box>
       </Box>
       <Box sx={{ paddingTop: "24px" }}>
+        {projectCode && (
+          <Box sx={{ paddingBottom: "16px" }}>
+            <Typography color="secondary.main" fontSize="14px">
+              Project Code
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {projectCode}
+            </Typography>
+          </Box>
+        )}
         <Typography variant="h6">Description</Typography>
         <Typography color="secondary.main">
           {projectDescription || "No description available"}
@@ -118,12 +165,13 @@ const ProjectInfoSidebar = ({
           <Typography color="secondary.main">Assignes</Typography>
           <AvatarGroup sx={{ justifyContent: "start" }} spacing="medium">
             {assignes?.map((assigne) => (
-              <Avatar
-                key={assigne.id}
-                sx={{ width: "24px", height: "24px" }}
-                alt={assigne.name}
-                src={assigne.avatar || "/api/placeholder/24/24"}
-              />
+              <Tooltip key={assigne.id} title={assigne.name} arrow>
+                <Avatar
+                  sx={{ width: "24px", height: "24px", cursor: "pointer" }}
+                  alt={assigne.name}
+                  src={assigne.avatar || "/api/placeholder/24/24"}
+                />
+              </Tooltip>
             ))}
           </AvatarGroup>
         </Box>
@@ -134,6 +182,22 @@ const ProjectInfoSidebar = ({
             <Typography color="#FFBD21">{priority || "Medium"}</Typography>
           </Box>
         </Box>
+        {productionDuration && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Production Duration</Typography>
+            <Typography>
+              {productionDuration} {productionDuration === 1 ? "week" : "weeks"}
+            </Typography>
+          </Box>
+        )}
+        {siteDuration && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Site Duration</Typography>
+            <Typography>
+              {siteDuration} {siteDuration === 1 ? "month" : "months"}
+            </Typography>
+          </Box>
+        )}
         <Box sx={{ paddingTop: "10px" }}>
           <Typography color="secondary.main">Dead Line</Typography>
           <Typography>
@@ -201,9 +265,24 @@ const ProjectInfoSidebar = ({
         >
           <SvgIcon component={CalendarIcon} />
           <Typography variant="subtitle2" color="secondary.main">
-            Created May 28, 2020
+            Created {formatDate(created)}
           </Typography>
         </Box>
+        {updated && (
+          <Box
+            sx={{
+              paddingTop: "6px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <SvgIcon component={CalendarIcon} />
+            <Typography variant="subtitle2" color="secondary.main">
+              Updated {formatDate(updated)}
+            </Typography>
+          </Box>
+        )}
         <Box
           sx={{
             paddingTop: "15px",

@@ -1,15 +1,19 @@
-import { Box, Link, SvgIcon, Typography, useMediaQuery, useTheme, CircularProgress, TextField, Button } from "@mui/material";
+import { Box, Link, SvgIcon, Typography, useMediaQuery, useTheme, CircularProgress, TextField, Button, Tabs, Tab } from "@mui/material";
 import LeftIcon from "../../../assets/icons/general/left.svg?react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { getTaskListAction } from "../../../store/features/task/projectAction";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import { fetchProjectInfoAction } from "../../../store/features/projects/projectDetailAction";
 import { updateAgencyContactAction } from "../../../store/features/projects/projectAction";
+import { getSingleProjectStatisticsAction } from "../../../store/features/projects/projectStatisticsAction";
+import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
 import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import ListView from "../components/ListView";
 import NoTaskMessage from "../components/NoTaskMessage";
+import ProjectStatsView from "../components/ProjectStatsView";
+import ProjectActivityLogsView from "../components/ProjectActivityLogsView";
 import Modal from "../../../common/components/Modal/Modal";
 import type { AgencyContact } from "../../../store/types/Project/ProjectRequest";
 import { useFormik } from "formik";
@@ -34,6 +38,9 @@ const ProjectInfo = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [showAgencyContactModal, setShowAgencyContactModal] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const fetchedStatsProjectIdRef = useRef<string | null>(null);
+  const fetchedActivityLogsProjectIdRef = useRef<string | null>(null);
 
   const taskListState = useAppSelector(
     (state: RootState) => state.taskListReducer.api
@@ -45,6 +52,14 @@ const ProjectInfo = () => {
 
   const projectDetailState = useAppSelector(
     (state: RootState) => state.projectDetailReducer
+  );
+
+  const projectStatisticsState = useAppSelector(
+    (state: RootState) => state.projectStatisticsReducer.singleProject
+  );
+
+  const activityLogsState = useAppSelector(
+    (state: RootState) => state.activityLogsReducer.api
   );
 
   const { users } = userState;
@@ -74,6 +89,47 @@ const ProjectInfo = () => {
       dispatch(getTaskListAction(projectId));
     }
   }, [dispatch, projectId]);
+
+  // Fetch project statistics when Stats tab is active
+  useEffect(() => {
+    if (
+      projectId && 
+      activeTab === 1 && 
+      !projectStatisticsState.loading && 
+      !projectStatisticsState.data &&
+      fetchedStatsProjectIdRef.current !== projectId
+    ) {
+      fetchedStatsProjectIdRef.current = projectId;
+      dispatch(getSingleProjectStatisticsAction(projectId));
+    }
+  }, [dispatch, projectId, activeTab, projectStatisticsState.loading, projectStatisticsState.data]);
+
+  // Reset stats ref when project changes
+  useEffect(() => {
+    if (fetchedStatsProjectIdRef.current !== projectId) {
+      fetchedStatsProjectIdRef.current = null;
+    }
+  }, [projectId]);
+
+  // Fetch activity logs when Activity Logs tab is active
+  useEffect(() => {
+    if (
+      projectId && 
+      activeTab === 2 && 
+      !activityLogsState.loading &&
+      fetchedActivityLogsProjectIdRef.current !== projectId
+    ) {
+      fetchedActivityLogsProjectIdRef.current = projectId;
+      dispatch(fetchActivityLogsByEntity("project", projectId));
+    }
+  }, [dispatch, projectId, activeTab, activityLogsState.loading]);
+
+  // Reset activity logs ref when project changes
+  useEffect(() => {
+    if (fetchedActivityLogsProjectIdRef.current !== projectId) {
+      fetchedActivityLogsProjectIdRef.current = null;
+    }
+  }, [projectId]);
 
   // Map membersIds to assignes format for ProjectInfoSidebar
   const assignes = useMemo(() => {
@@ -230,12 +286,17 @@ const ProjectInfo = () => {
           <ProjectInfoSidebar
             projectTitle={projectDetails.title}
             projectDescription={projectDetails.description}
+            projectCode={projectDetails.code}
+            productionDuration={projectDetails.productionDuration}
+            siteDuration={projectDetails.siteDuration}
             reporter={reporter}
             assignes={assignes}
             priority={projectDetails.priority}
             deadline={projectDetails.deadline || projectDetails.deadLine}
             timeSpent={undefined}
             agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
+            created={projectDetails.created}
+            updated={projectDetails.updated}
             onEditClick={handleEditClick}
             onAddAgencyContact={handleOpenAgencyContactModal}
           />
@@ -259,41 +320,98 @@ const ProjectInfo = () => {
               <ProjectInfoSidebar
                 projectTitle={projectDetails.title}
                 projectDescription={projectDetails.description}
+                projectCode={projectDetails.code}
+                productionDuration={projectDetails.productionDuration}
+                siteDuration={projectDetails.siteDuration}
                 reporter={reporter}
                 assignes={assignes}
                 priority={projectDetails.priority}
                 deadline={projectDetails.deadline || projectDetails.deadLine}
                 timeSpent={undefined}
                 agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
+                created={projectDetails.created}
+                updated={projectDetails.updated}
                 onEditClick={handleEditClick}
                 onAddAgencyContact={handleOpenAgencyContactModal}
               />
             </Box>
           )}
 
-          {/* Task List Section */}
+          {/* Tabs Section */}
           <Box sx={{ mb: { xs: "10px", sm: 0 } }}>
-            <Typography 
-              variant="h5" 
+            <Tabs 
+              value={activeTab} 
+              onChange={(_, newValue) => setActiveTab(newValue)}
               sx={{ 
-                fontWeight: "bold", 
-                mb: 2,
-                fontSize: { xs: "18px", sm: "20px", md: "24px" }
+                borderBottom: 1, 
+                borderColor: "divider",
+                mb: 2
               }}
             >
-              Tasks
-            </Typography>
-            <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
-              {loading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
-                  <CircularProgress />
-                </Box>
-              ) : tasks.length === 0 ? (
-                <NoTaskMessage />
-              ) : (
-                <ListView tasks={tasks} />
-              )}
-            </Box>
+              <Tab label="Tasks" />
+              <Tab label="Stats" />
+              <Tab label="Activity Logs" />
+            </Tabs>
+
+            {/* Tasks Tab */}
+            {activeTab === 0 && (
+              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+                {loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+                    <CircularProgress />
+                  </Box>
+                ) : tasks.length === 0 ? (
+                  <NoTaskMessage />
+                ) : (
+                  <ListView tasks={tasks} />
+                )}
+              </Box>
+            )}
+
+            {/* Stats Tab */}
+            {activeTab === 1 && (
+              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+                {projectStatisticsState.loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+                    <CircularProgress />
+                  </Box>
+                ) : projectStatisticsState.error ? (
+                  <Box sx={{ padding: "20px", textAlign: "center" }}>
+                    <Typography color="error">{projectStatisticsState.error}</Typography>
+                  </Box>
+                ) : projectStatisticsState.data ? (
+                  <ProjectStatsView statistics={projectStatisticsState.data} users={users} />
+                ) : (
+                  <Box sx={{ padding: "20px", textAlign: "center" }}>
+                    <Typography color="secondary">No statistics available</Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Activity Logs Tab */}
+            {activeTab === 2 && (
+              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+                {activityLogsState.loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+                    <CircularProgress />
+                  </Box>
+                ) : activityLogsState.error ? (
+                  <Box sx={{ padding: "20px", textAlign: "center" }}>
+                    <Typography color="error">{activityLogsState.error}</Typography>
+                  </Box>
+                ) : activityLogsState.data.items.length === 0 ? (
+                  <Box sx={{ padding: "20px", textAlign: "center" }}>
+                    <Typography color="secondary">No activity logs available</Typography>
+                  </Box>
+                ) : (
+                  <ProjectActivityLogsView 
+                    activityLogs={activityLogsState.data.items} 
+                    users={users}
+                  />
+                )}
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>

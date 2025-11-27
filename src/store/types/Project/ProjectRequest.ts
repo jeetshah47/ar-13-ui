@@ -9,9 +9,9 @@ export interface ProjectRequest {
   description: string;
   ownerId: string;
   membersIds: string[];
-  startDate: string;
-  endDate: string;
-  deadLine: string;
+  productionDuration: number; // weeks
+  siteDuration: number; // months
+  deadLine?: string;
   logoUrl?: string;
   code?: string;
   agencyContact?: AgencyContact;

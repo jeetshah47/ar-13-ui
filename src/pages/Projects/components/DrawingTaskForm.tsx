@@ -295,15 +295,14 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
                   id={labelId}
                   primary={item.name}
                   secondary={
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
+                    <>
+                      <Typography component="span" variant="caption" color="text.secondary" display="block">
                         {item.type}
                       </Typography>
-                      <br />
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography component="span" variant="caption" color="text.secondary" display="block">
                         {item.description}
                       </Typography>
-                    </Box>
+                    </>
                   }
                 />
               </ListItemButton>

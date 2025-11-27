@@ -30,7 +30,7 @@ export const fetchProjectDetailAction =
       dispatch(
         fetchProjectDetailSuccess({
           taskDetails: taskResponse.task,
-          projectDetails: projectResponse.projectDetails,
+          projectDetails: projectResponse.project || projectResponse.projectDetails,
         })
       );
     } catch (error: unknown) {
@@ -103,25 +103,29 @@ export const fetchProjectInfoAction =
       const projectResponse = await getProjectDetails(projectId);
       
       // Handle different response structures
-      // The API might return { projectDetails: {...} } or just the project object directly
-      let projectDetails: ProjectDetailResponse['projectDetails'] | null = null;
+      // The API might return { project: {...} }, { projectDetails: {...} } or just the project object directly
+      let projectDetails: ProjectDetailResponse['project'] | ProjectDetailResponse['projectDetails'] | null = null;
       
       if (projectResponse) {
-        // Check if response has projectDetails property (wrapped response)
-        if ('projectDetails' in projectResponse && projectResponse.projectDetails) {
+        // Check if response has project property (new API format)
+        if ('project' in projectResponse && projectResponse.project) {
+          projectDetails = projectResponse.project;
+        }
+        // Check if response has projectDetails property (old API format)
+        else if ('projectDetails' in projectResponse && projectResponse.projectDetails) {
           projectDetails = projectResponse.projectDetails;
         }
         // Check if response is the project object directly (has id, title, etc.)
         else if ('id' in projectResponse && 'title' in projectResponse) {
           // Type assertion: treat the response as project details
-          projectDetails = projectResponse as unknown as ProjectDetailResponse['projectDetails'];
+          projectDetails = projectResponse as unknown as ProjectDetailResponse['project'];
         }
       }
       
       if (projectDetails) {
         dispatch(
           fetchProjectInfoSuccess({
-            projectDetails,
+            projectDetails: projectDetails as ProjectDetailResponse['projectDetails'],
           })
         );
       } else {
