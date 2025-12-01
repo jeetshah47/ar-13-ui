@@ -293,7 +293,7 @@ const ContextMenu = ({
       </Box>
 
       {/* Menu Items */}
-      {menuItems.map((item, index) => (
+      {menuItems.map((item) => (
         <MenuItem
           key={item.id}
           onClick={() => {

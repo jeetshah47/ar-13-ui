@@ -1,10 +1,10 @@
-import { Box } from "@mui/material";
+import { Box, type SxProps, type Theme } from "@mui/material";
 import { useImageWithAuth } from "../utils/useImageWithAuth";
 
 interface ImageWithAuthProps {
   src: string | undefined;
   alt?: string;
-  sx?: any;
+  sx?: SxProps<Theme>;
   onError?: () => void;
 }
 

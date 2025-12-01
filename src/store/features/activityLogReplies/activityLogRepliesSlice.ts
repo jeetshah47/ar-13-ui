@@ -72,7 +72,13 @@ const activityLogRepliesSlice = createSlice({
       if (!state.repliesByActivityLog[activityLogId]) {
         state.repliesByActivityLog[activityLogId] = [];
       }
-      state.repliesByActivityLog[activityLogId].push(reply);
+      // Check if reply already exists to avoid duplicates
+      const exists = state.repliesByActivityLog[activityLogId].some(
+        (r) => r.id === reply.id
+      );
+      if (!exists) {
+        state.repliesByActivityLog[activityLogId].push(reply);
+      }
       state.creating[activityLogId] = false;
       state.error[activityLogId] = null;
     },

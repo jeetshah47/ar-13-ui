@@ -114,11 +114,17 @@ const VacationPage = () => {
     <RequirePermission permission="vacation:write">
       <Button 
         variant="contained" 
-        startIcon={<SvgIcon component={PlusIcon} />}
+        startIcon={<SvgIcon component={PlusIcon} sx={{ fontSize: { xs: "18px", sm: "20px" } }} />}
         onClick={handleOpenModal}
         sx={{
+          textTransform: "none",
+          fontSize: { xs: "12px", sm: "14px" },
+          padding: { xs: "8px 16px", sm: "10px 20px" },
+          borderRadius: "8px",
+          fontWeight: 600,
+          whiteSpace: "nowrap",
           width: { xs: "100%", md: "auto" },
-          mt: { xs: 1, md: 0 }
+          minWidth: { xs: "auto", md: "140px" },
         }}
       >
         Add Request
@@ -132,20 +138,25 @@ const VacationPage = () => {
         endElement={
           <Box sx={{
             display: "flex",
-            flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
-            gap: { xs: "12px", sm: "14px", md: "14px", lg: "16px" },
-            width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
-            alignItems: { xs: "stretch", sm: "stretch", md: "center", lg: "center" },
-            flex: { xs: "1 1 100%", sm: "1 1 100%", md: "0 0 auto", lg: "0 0 auto" }
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: "12px", sm: "16px" },
+            width: { xs: "100%", sm: "auto" },
+            alignItems: { xs: "stretch", sm: "center" },
           }}>
-            <Box sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" }, minWidth: { md: "280px", lg: "300px" } }}>
+            <Box sx={{ 
+              width: { xs: "100%", sm: "auto" }, 
+              minWidth: { xs: "100%", sm: "400px", md: "450px" },
+              flexShrink: 0,
+            }}>
               <Tab
                 tabList={tabList}
                 currentTab={currentTab}
                 onChangeTab={(tab) => setCurrentTab(tab)}
               />
             </Box>
-            {AddButton}
+            <Box sx={{ flexShrink: 0 }}>
+              {AddButton}
+            </Box>
           </Box>
         }
       />

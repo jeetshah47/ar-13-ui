@@ -46,7 +46,7 @@ interface EditPermissionsModalProps {
 const EditPermissionsModal = ({
   open,
   onClose,
-  userId,
+  userId: _userId,
   currentPermissions,
   currentRole,
   onSave,
@@ -186,7 +186,6 @@ const EditPermissionsModal = ({
         <Box sx={{ maxHeight: "400px", overflowY: "auto", pr: 1 }}>
           {Object.entries(groupedPermissions).map(([category, permissions]) => {
             const allSelected = permissions.every((p) => selectedPermissions.has(p));
-            const someSelected = permissions.some((p) => selectedPermissions.has(p));
 
             return (
               <Box key={category} sx={{ marginBottom: 3 }}>

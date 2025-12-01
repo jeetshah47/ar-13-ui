@@ -72,3 +72,9 @@ export async function updateAgencyContact(projectId: string, agencyContact: Agen
   const result = await http.put(url, agencyContact);
   return result.data;
 }
+
+export async function archiveProject(projectId: string, isArchived: boolean): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/project/${projectId}/archive`;
+  const result = await http.put(url, { isArchived });
+  return result.data;
+}

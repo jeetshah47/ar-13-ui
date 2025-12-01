@@ -54,7 +54,7 @@ const ListView = ({ tasks }: ListViewProps) => {
     return `${hours}h`;
   };
 
-  const calculateEstimate = (_deadline: string | undefined) => {
+  const calculateEstimate = () => {
     // For now, return a placeholder. This should be calculated from task estimate if available
     return "2d 4h"; // Placeholder - should come from task data
   };

@@ -6,14 +6,16 @@ import { useAppDispatch, useAppSelector, type RootState } from "../../../store/s
 import { getTaskListAction } from "../../../store/features/task/projectAction";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import { fetchProjectInfoAction } from "../../../store/features/projects/projectDetailAction";
-import { updateAgencyContactAction } from "../../../store/features/projects/projectAction";
+import { updateAgencyContactAction, archiveProjectAction } from "../../../store/features/projects/projectAction";
 import { getSingleProjectStatisticsAction } from "../../../store/features/projects/projectStatisticsAction";
 import { fetchActivityLogsByEntity } from "../../../store/features/activityLogs/activityLogsAction";
+import { usePermissions } from "../../../store/hooks/usePermissions";
 import ProjectInfoSidebar from "../components/ProjectInfoSidebar";
 import ListView from "../components/ListView";
 import NoTaskMessage from "../components/NoTaskMessage";
 import ProjectStatsView from "../components/ProjectStatsView";
 import ProjectActivityLogsView from "../components/ProjectActivityLogsView";
+import ProjectFilesView from "../components/ProjectFilesView";
 import Modal from "../../../common/components/Modal/Modal";
 import type { AgencyContact } from "../../../store/types/Project/ProjectRequest";
 import { useFormik } from "formik";
@@ -29,6 +31,12 @@ const agencyContactValidationSchema = Yup.object({
     .trim()
     .required("Agency type is required")
     .min(1, "Agency type cannot be empty"),
+  phone_number: Yup.string()
+    .trim()
+    .optional(),
+  firm_name: Yup.string()
+    .trim()
+    .optional(),
 });
 
 const ProjectInfo = () => {
@@ -37,7 +45,9 @@ const ProjectInfo = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { isAdmin } = usePermissions();
   const [showAgencyContactModal, setShowAgencyContactModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const fetchedStatsProjectIdRef = useRef<string | null>(null);
   const fetchedActivityLogsProjectIdRef = useRef<string | null>(null);
@@ -82,6 +92,16 @@ const ProjectInfo = () => {
       dispatch(fetchProjectInfoAction(projectId));
     }
   }, [dispatch, projectId]);
+
+  // Redirect to project list if project is archived
+  useEffect(() => {
+    if (!projectLoading && projectDetails) {
+      const isArchived = (projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived;
+      if (isArchived) {
+        navigate("/app/projects");
+      }
+    }
+  }, [projectDetails, projectLoading, navigate]);
 
   // Fetch tasks for the project
   useEffect(() => {
@@ -166,6 +186,8 @@ const ProjectInfo = () => {
     initialValues: {
       contact_name: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.contact_name || "",
       contact_agency_type: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.contact_agency_type || "",
+      phone_number: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.phone_number || "",
+      firm_name: (projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact?.firm_name || "",
     },
     validationSchema: agencyContactValidationSchema,
     enableReinitialize: true,
@@ -175,6 +197,8 @@ const ProjectInfo = () => {
       const agencyContact = {
         contact_name: values.contact_name,
         contact_agency_type: values.contact_agency_type,
+        phone_number: values.phone_number,
+        firm_name: values.firm_name,
       };
 
       dispatch(
@@ -209,6 +233,35 @@ const ProjectInfo = () => {
   const handleCloseAgencyContactModal = () => {
     setShowAgencyContactModal(false);
     formik.resetForm();
+  };
+
+  const handleOpenArchiveModal = () => {
+    setShowArchiveModal(true);
+  };
+
+  const handleCloseArchiveModal = () => {
+    setShowArchiveModal(false);
+  };
+
+  const handleConfirmArchive = () => {
+    if (!projectId || !projectDetails) return;
+    
+    const isArchived = !(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived;
+    
+    dispatch(
+      archiveProjectAction(projectId, isArchived, () => {
+        setShowArchiveModal(false);
+        // If archiving (not unarchiving), navigate to project list
+        if (isArchived) {
+          navigate("/app/projects");
+        } else {
+          // If unarchiving, refresh project details
+          if (projectId) {
+            dispatch(fetchProjectInfoAction(projectId));
+          }
+        }
+      })
+    );
   };
 
   // Loading state
@@ -297,8 +350,11 @@ const ProjectInfo = () => {
             agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
             created={projectDetails.created}
             updated={projectDetails.updated}
+            isArchived={(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived}
             onEditClick={handleEditClick}
             onAddAgencyContact={handleOpenAgencyContactModal}
+            onArchiveClick={handleOpenArchiveModal}
+            showArchiveButton={isAdmin()}
           />
         )}
 
@@ -331,8 +387,11 @@ const ProjectInfo = () => {
                 agencyContact={(projectDetails as typeof projectDetails & { agencyContact?: AgencyContact })?.agencyContact}
                 created={projectDetails.created}
                 updated={projectDetails.updated}
+                isArchived={(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived}
                 onEditClick={handleEditClick}
                 onAddAgencyContact={handleOpenAgencyContactModal}
+                onArchiveClick={handleOpenArchiveModal}
+                showArchiveButton={isAdmin()}
               />
             </Box>
           )}
@@ -351,6 +410,7 @@ const ProjectInfo = () => {
               <Tab label="Tasks" />
               <Tab label="Stats" />
               <Tab label="Activity Logs" />
+              <Tab label="Files" />
             </Tabs>
 
             {/* Tasks Tab */}
@@ -412,6 +472,21 @@ const ProjectInfo = () => {
                 )}
               </Box>
             )}
+
+            {/* Files Tab */}
+            {activeTab === 3 && (
+              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+                {projectDetails.code ? (
+                  <ProjectFilesView projectCode={projectDetails.code} />
+                ) : (
+                  <Box sx={{ padding: "20px", textAlign: "center" }}>
+                    <Typography color="secondary">
+                      No project code available. Project code is required to access files.
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
@@ -454,8 +529,30 @@ const ProjectInfo = () => {
               onBlur={formik.handleBlur}
               error={formik.touched.contact_agency_type && Boolean(formik.errors.contact_agency_type)}
               helperText={formik.touched.contact_agency_type && formik.errors.contact_agency_type}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
               required
+            />
+            <TextField
+              fullWidth
+              label="Phone Number"
+              name="phone_number"
+              value={formik.values.phone_number}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.phone_number && Boolean(formik.errors.phone_number)}
+              helperText={formik.touched.phone_number && formik.errors.phone_number}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Firm Name"
+              name="firm_name"
+              value={formik.values.firm_name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.firm_name && Boolean(formik.errors.firm_name)}
+              helperText={formik.touched.firm_name && formik.errors.firm_name}
+              sx={{ mb: 3 }}
             />
             <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
               <Button
@@ -483,6 +580,76 @@ const ProjectInfo = () => {
               </Button>
             </Box>
           </form>
+        </Box>
+      </Modal>
+
+      {/* Archive Confirmation Modal */}
+      <Modal show={showArchiveModal} onClose={handleCloseArchiveModal}>
+        <Box
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "24px",
+            padding: { xs: "20px", sm: "24px", md: "28px" },
+            width: { xs: "90%", sm: "500px", md: "500px" },
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2 }}>
+            {(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived
+              ? "Unarchive Project"
+              : "Archive Project"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+            {(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived
+              ? "Are you sure you want to unarchive this project? It will become visible in project lists again."
+              : "Are you sure you want to archive this project? Archived projects will be hidden from project lists and are typically used for projects that are no longer active or have passed their deadline."}
+          </Typography>
+          {projectDetails && (
+            <Box
+              sx={{
+                backgroundColor: "#F4F9FD",
+                borderRadius: "12px",
+                padding: "12px",
+                mb: 3,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Project:
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {projectDetails.title}
+              </Typography>
+            </Box>
+          )}
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              onClick={handleCloseArchiveModal}
+              sx={{
+                borderRadius: "14px",
+                textTransform: "none",
+                px: 3,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color={(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived ? "success" : "warning"}
+              onClick={handleConfirmArchive}
+              sx={{
+                borderRadius: "14px",
+                textTransform: "none",
+                px: 3,
+              }}
+            >
+              {(projectDetails as typeof projectDetails & { isArchived?: boolean })?.isArchived
+                ? "Unarchive"
+                : "Archive"}
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </Box>

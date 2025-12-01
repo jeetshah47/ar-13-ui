@@ -267,6 +267,79 @@ export async function updateTaskStatus(
 }
 
 /**
+ * Start time tracking for a task
+ */
+export async function startTimeTracking(
+  projectId: string,
+  taskId: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/start-tracking/${projectId}/${taskId}`;
+  const result = await http.post(url);
+  return result.data;
+}
+
+/**
+ * Stop time tracking for a task
+ */
+export async function stopTimeTracking(
+  projectId: string,
+  taskId: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/stop-tracking/${projectId}/${taskId}`;
+  const result = await http.post(url);
+  return result.data;
+}
+
+/**
+ * Update user activity for time tracking
+ */
+export async function updateActivity(
+  projectId: string,
+  taskId: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/update-activity/${projectId}/${taskId}`;
+  const result = await http.post(url);
+  return result.data;
+}
+
+/**
+ * Get current tracking status for a task
+ */
+export async function getTrackingStatus(
+  projectId: string,
+  taskId: string
+): Promise<{
+  isTracking: boolean;
+  session: {
+    id: string;
+    startTime: string;
+    lastActive: string;
+    totalMinutes: number;
+  } | null;
+}> {
+  const url = `${API_BASE_URL}/tasks/tracking-status/${projectId}/${taskId}`;
+  const result = await http.get(url);
+  return result.data;
+}
+
+/**
+ * Transfer task to another user (admin only)
+ * @param projectId - The project ID
+ * @param taskId - The task ID
+ * @param userId - The user ID to transfer the task to
+ * @returns Promise with success message
+ */
+export async function transferTask(
+  projectId: string,
+  taskId: string,
+  userId: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE_URL}/tasks/transfer/${projectId}/${taskId}`;
+  const result = await http.put(url, { userId });
+  return result.data;
+}
+
+/**
  * Get master data of task statuses
  * @returns Promise with task statuses and total count
  * @requires Permission: tasks:read

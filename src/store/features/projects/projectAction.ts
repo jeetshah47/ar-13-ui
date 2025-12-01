@@ -10,10 +10,13 @@ import {
   updateProjectRequest,
   updateProjectSuccess,
   updateProjectFailed,
+  archiveProjectRequest,
+  archiveProjectSuccess,
+  archiveProjectFailed,
 } from "./projectSlice";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
-import { addProject, getAllProjects, updateProject, updateAgencyContact } from "../../apis/projectApis";
+import { addProject, getAllProjects, updateProject, updateAgencyContact, archiveProject } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { ProjectRequest, AgencyContact } from "../../types/Project/ProjectRequest";
 import type { ProjectResponse } from "../../types/Project/ProjectResponse";
@@ -124,6 +127,27 @@ export const updateAgencyContactAction =
         toast.error("Failed to update agency contact");
       } else {
         toast.error("Failed to update agency contact");
+      }
+    }
+  };
+
+export const archiveProjectAction =
+  (projectId: string, isArchived: boolean, cb?: () => void) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(archiveProjectRequest());
+    try {
+      await archiveProject(projectId, isArchived);
+      dispatch(archiveProjectSuccess({ projectId, isArchived }));
+      toast.success(isArchived ? "Project archived successfully" : "Project unarchived successfully");
+      if (cb) cb();
+    } catch (error) {
+      const axiosError = error as AxiosError<ProjectErrorResponse>;
+      if (axiosError?.response?.data) {
+        dispatch(archiveProjectFailed(axiosError.response.data));
+        toast.error("Failed to archive project");
+      } else {
+        dispatch(archiveProjectFailed({ error: "Unknown Error" }));
+        toast.error("Failed to archive project");
       }
     }
   };

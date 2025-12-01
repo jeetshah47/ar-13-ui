@@ -1,7 +1,7 @@
 import React from "react";
 import { SvgIcon } from "@mui/material";
 
-interface FolderIconProps extends React.ComponentProps<typeof SvgIcon> {}
+type FolderIconProps = React.ComponentProps<typeof SvgIcon>;
 
 const FolderIcon = (props: FolderIconProps) => {
   return (

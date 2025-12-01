@@ -1,7 +1,6 @@
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useImageWithAuth } from "../../../utils/useImageWithAuth";
 import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
-import { SERVER_BASE_URL } from "../../../config/api";
 
 interface FileAttachmentThumbnailProps {
   attachment: FileAttachment;

@@ -29,6 +29,8 @@ type TaskInfoProps = {
     name: string;
     avatar?: string;
   };
+  assignedUserId?: string;
+  isAssignedUserOnline?: boolean;
   priority?: string;
   deadline?: string;
   timeLogged?: string;
@@ -42,6 +44,8 @@ type TaskInfoProps = {
 const TaskInfo = ({
   reporter,
   assigned,
+  assignedUserId,
+  isAssignedUserOnline = false,
   priority,
   deadline,
   timeLogged,
@@ -69,11 +73,13 @@ const TaskInfo = ({
       sx={{
         width: { xs: "100%", sm: "100%", md: "240px", lg: "265px" },
         background: "#FFFFFF",
-        borderRadius: "24px",
+        borderRadius: { xs: "20px", sm: "20px", md: "24px", lg: "24px" },
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
         height: { xs: "auto", sm: "auto", md: "100%", lg: "100%" },
-        padding: { xs: "20px", sm: "20px", md: "20px", lg: "24px" },
+        padding: { xs: "16px", sm: "18px", md: "20px", lg: "24px" },
         flexShrink: 0,
+        maxWidth: "100%",
+        boxSizing: "border-box",
         "@media (min-width: 1200px) and (max-width: 1600px)": {
           width: "240px",
           padding: "20px",
@@ -145,14 +151,39 @@ const TaskInfo = ({
             Assigned
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <Avatar
-              sx={{
-                width: "24px",
-                height: "24px",
-                border: "2px solid #FFFFFF",
-              }}
-              src={assigned.avatar || "/api/placeholder/24/24"}
-            />
+            <Box sx={{ position: "relative", display: "inline-block" }}>
+              <Avatar
+                sx={{
+                  width: "32px",
+                  height: "32px",
+                  border: "2px solid #FFFFFF",
+                  backgroundColor: "#3F8CFF",
+                  color: "#FFFFFF",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+                src={assigned.avatar}
+              >
+                {assigned.name?.charAt(0).toUpperCase() || "U"}
+              </Avatar>
+              {/* Online/Offline Status Dot */}
+              {assignedUserId && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: "0",
+                    right: "0",
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    backgroundColor: isAssignedUserOnline ? "#10B981" : "#9CA3AF", // Green for online, gray for offline
+                    border: "2px solid #FFFFFF",
+                    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.1)",
+                    transition: "background-color 0.3s ease",
+                  }}
+                />
+              )}
+            </Box>
             <Typography
               sx={{
                 fontWeight: 400,

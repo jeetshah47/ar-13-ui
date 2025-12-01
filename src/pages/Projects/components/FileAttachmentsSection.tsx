@@ -3,7 +3,7 @@ import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react"
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
 import { SERVER_BASE_URL } from "../../../config/api";
-import { useImageWithAuth } from "../../../utils/useImageWithAuth";
+import { FileAttachmentThumbnail } from "./FileAttachmentThumbnail";
 
 interface FileAttachmentsSectionProps {
   fileAttachments: FileAttachment[];
@@ -164,13 +164,9 @@ const FileAttachmentsSection = ({
               ? attachment.previewUrl 
               : (attachment.fileUrl ? `${SERVER_BASE_URL}${attachment.fileUrl}` : undefined);
 
-            // Use hook to load image with JWT auth
-            const { blobUrl, loading: imageLoading } = useImageWithAuth(isImage ? imageUrl : undefined);
-
             return (
               <Box
                 key={attachment.fileName}
-                onClick={() => isImage && imageUrl && onImagePreview(attachment)}
                 sx={{
                   width: { xs: "calc(50% - 6px)", sm: "156px" },
                   maxWidth: { xs: "calc(50% - 6px)", sm: "156px" },
@@ -179,57 +175,20 @@ const FileAttachmentsSection = ({
                   position: "relative",
                   borderRadius: { xs: "12px", sm: "14px" },
                   backgroundColor: "#F5F8FC",
-                  cursor: isImage && imageUrl ? "pointer" : "default",
                   transition: "all 0.2s ease",
                   boxSizing: "border-box",
                   flexShrink: 0,
                   overflow: "hidden",
-                  ...(isImage &&
-                    imageUrl && {
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)",
-                      },
-                    }),
                 }}
               >
-                {isImage && imageUrl && (
-                  <>
-                    {imageLoading ? (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "#F5F8FC",
-                        }}
-                      >
-                        <Typography fontSize="12px" color="text.secondary">
-                          Loading...
-                        </Typography>
-                      </Box>
-                    ) : blobUrl ? (
-                      <Box
-                        component="img"
-                        src={blobUrl}
-                        alt={attachment.originalName}
-                        sx={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : null}
-                  </>
-                )}
+                {isImage && imageUrl ? (
+                  <FileAttachmentThumbnail
+                    attachment={attachment}
+                    isImage={isImage}
+                    imageUrl={imageUrl}
+                    onImagePreview={onImagePreview}
+                  />
+                ) : null}
                 <Box
                   sx={{
                     backgroundColor: "#2155A316",

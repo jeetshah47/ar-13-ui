@@ -14,10 +14,11 @@ import CalenderIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?re
 import VacationsIcon from "../../../assets/icons/sidebar/vacations/inactive.svg?react";
 import EmployeesIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
 import InfoPortalIcon from "../../../assets/icons/sidebar/infoportal/active.svg?react";
-import GearIcon from "../../../assets/icons/general/gear.svg?react";
 import { useLocation, useNavigate } from "react-router";
 import { RequireAdmin } from "../RBAC/RequirePermission";
 import { usePermissions } from "../../../store/hooks/usePermissions";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import DescriptionIcon from "@mui/icons-material/Description";
 
 interface ItemProps {
   active?: boolean;
@@ -207,24 +208,6 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
               </Typography>
             </Item>
           )}
-          {/* Backup sidebar - Only visible to users with backup:read permission */}
-          {checkPermission("backup:read") && (
-            <Item
-              onClick={() => handleNavigation("/app/backup")}
-              active={checkActiveStatus("backup")}
-              elevation={0}
-            >
-              <SvgIcon
-                component={GearIcon}
-                color={checkActiveStatus("backup") ? "primary" : "secondary"}
-              />
-              <Typography
-                color={checkActiveStatus("backup") ? "primary" : "secondary"}
-              >
-                Backup
-              </Typography>
-            </Item>
-          )}
           {/* Drawing List sidebar - Only visible to users with drawingList:read permission */}
           {checkPermission("drawingList:read") && (
             <Item
@@ -233,7 +216,7 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
               elevation={0}
             >
               <SvgIcon
-                component={GearIcon}
+                component={DescriptionIcon}
                 color={checkActiveStatus("drawing-list") ? "primary" : "secondary"}
               />
               <Typography
@@ -243,6 +226,24 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
               </Typography>
             </Item>
           )}
+          {/* Metrics sidebar - Only visible to Admin users */}
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/metrics")}
+              active={checkActiveStatus("metrics")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={BarChartIcon}
+                color={checkActiveStatus("metrics") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("metrics") ? "primary" : "secondary"}
+              >
+                Metrics
+              </Typography>
+            </Item>
+          </RequireAdmin>
         </Stack>
       </Box>
     </Box>

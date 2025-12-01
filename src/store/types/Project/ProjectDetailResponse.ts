@@ -9,6 +9,8 @@ export interface ProjectDetailResponse {
     agencyContact?: {
       contact_name?: string;
       contact_agency_type?: string;
+      phone_number?: string;
+      firm_name?: string;
     };
     created?: string;
     updated?: string;
@@ -33,6 +35,8 @@ export interface ProjectDetailResponse {
     agencyContact?: {
       contact_name?: string;
       contact_agency_type?: string;
+      phone_number?: string;
+      firm_name?: string;
     };
     created?: string;
     updated?: string;

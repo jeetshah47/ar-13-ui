@@ -89,6 +89,31 @@ const projectListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    archiveProjectRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    archiveProjectSuccess(state, action: PayloadAction<{ projectId: string; isArchived: boolean }>) {
+      state.api.loading = false;
+      state.api.error = "";
+      const index = state.api.data.projects.findIndex(
+        (p) => p.id === action.payload.projectId
+      );
+      if (index !== -1) {
+        state.api.data.projects[index].isArchived = action.payload.isArchived;
+      }
+      // Update filtered projects if the archived project is in the filtered list
+      const filteredIndex = state.api.data.filteredProjects.findIndex(
+        (p) => p.id === action.payload.projectId
+      );
+      if (filteredIndex !== -1) {
+        state.api.data.filteredProjects[filteredIndex].isArchived = action.payload.isArchived;
+      }
+    },
+    archiveProjectFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -104,6 +129,9 @@ export const {
   updateProjectRequest,
   updateProjectSuccess,
   updateProjectFailed,
+  archiveProjectRequest,
+  archiveProjectSuccess,
+  archiveProjectFailed,
 } = projectListSlice.actions;
 
 export const projectListReducer = projectListSlice.reducer;

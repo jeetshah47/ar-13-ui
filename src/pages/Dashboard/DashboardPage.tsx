@@ -135,8 +135,9 @@ const DashboardPage = () => {
           >
             <Button
               onClick={handleOnClickSupportButton}
-              variant="outlined"
+              variant="contained"
               sx={{ 
+                display: "none",
                 textTransform: "none",
                 width: { xs: "100%", sm: "auto" },
                 fontSize: { xs: "12px", sm: "14px" },

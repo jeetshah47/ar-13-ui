@@ -1,4 +1,4 @@
-import { Avatar, Box, SvgIcon, Typography } from "@mui/material";
+import { Avatar, Box, SvgIcon, Typography, CircularProgress } from "@mui/material";
 import CalenderIcon from "../../../assets/icons/general/calendar.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import { useAppSelector } from "../../../store/store";
@@ -14,19 +14,30 @@ type AnyProject = {
   priority?: string;
 };
 
+type ProjectSectionProps = {
+  projects?: AnyProject[] | Record<string, AnyProject> | null;
+  loading?: boolean;
+};
+
 const formatCreated = (created: AnyProject["created"]) => {
   if (!created) return "";
   if (typeof created === "string") return new Date(created).toDateString();
   return "";
 };
 
-const ProjectSection = () => {
-  const { profile } = useAppSelector((s) => s.userReducer);
-
-  const projectsRaw = profile?.projects as unknown;
+const ProjectSection = ({ projects: projectsProp, loading: loadingProp }: ProjectSectionProps = {}) => {
+  const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
+  
+  // Use provided projects prop, otherwise fall back to profile projects
+  const projectsRaw = projectsProp !== undefined 
+    ? projectsProp 
+    : (profile?.projects as unknown);
+  
+  const loading = loadingProp !== undefined ? loadingProp : profileLoading;
+  
   const projects: AnyProject[] = Array.isArray(projectsRaw)
     ? (projectsRaw as AnyProject[])
-    : projectsRaw && typeof projectsRaw === "object"
+    : projectsRaw && typeof projectsRaw === "object" && !Array.isArray(projectsRaw)
     ? (Object.values(projectsRaw as Record<string, AnyProject>) as AnyProject[])
     : [];
 
@@ -97,10 +108,20 @@ const ProjectSection = () => {
       </Box>
     </Box>
   );
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", padding: "40px" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {projects.length === 0 ? (
-        <Typography color="secondary">No projects found</Typography>
+        <Box sx={{ padding: "20px", textAlign: "center" }}>
+          <Typography color="text.secondary">No projects found</Typography>
+        </Box>
       ) : (
         projects.map((p, idx) => <ProjectCard key={(p.id || p.code || idx).toString()} {...p} />)
       )}

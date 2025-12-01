@@ -67,8 +67,8 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
           width: { xs: "32px", sm: "36px" },
           height: { xs: "32px", sm: "36px" },
           borderRadius: "8px",
-          backgroundColor: theme.palette.primary.light,
-          color: theme.palette.primary.main,
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
           flexShrink: 0,
         })}
       >
@@ -133,8 +133,7 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
             alignItems: "center",
             padding: { xs: "4px 10px", sm: "6px 12px" },
             borderRadius: "8px",
-            backgroundColor: theme.palette.primary.light,
-            border: `1px solid ${theme.palette.primary.main}20`,
+            backgroundColor: theme.palette.primary.main,
             flexShrink: 0,
           })}
         >
@@ -143,7 +142,7 @@ const CalendarEventsWidget = ({ events, selectedMonth, onMonthChange }: Calendar
             sx={{ 
               fontSize: { xs: "11px", sm: "12px" }, 
               fontWeight: 600,
-              color: "primary.main", 
+              color: "primary.contrastText", 
               whiteSpace: "nowrap",
             }}
           >

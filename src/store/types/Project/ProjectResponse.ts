@@ -11,10 +11,13 @@ export interface ProjectResponse {
   agencyContact?: {
     contact_name?: string;
     contact_agency_type?: string;
+    phone_number?: string;
+    firm_name?: string;
   };
   created: string | Created; // Support both ISO string and Firebase timestamp format
   updated?: string;
   deadLine?: string; // Keep for backward compatibility
+  isArchived?: boolean;
 }
 
 interface Created {

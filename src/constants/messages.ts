@@ -36,6 +36,7 @@ export const MSG_TASK_RETRIEVED = "Task retrieved successfully";
 export const MSG_TASKS_RETRIEVED = "Tasks retrieved successfully";
 export const MSG_TASK_ASSIGNED = "Task assigned successfully";
 export const MSG_TASK_CLAIMED = "Task claimed successfully";
+export const MSG_TASK_TRANSFERRED = "Task transferred successfully";
 export const MSG_TASK_STATUS_UPDATED = "Task status updated successfully";
 export const MSG_TASK_DURATION_UPDATED = "Task duration updated successfully";
 export const MSG_TASK_DESCRIPTION_UPDATED = "Task description updated successfully";

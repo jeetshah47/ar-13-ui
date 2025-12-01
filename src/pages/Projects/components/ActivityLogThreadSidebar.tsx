@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Avatar,
   Box,
@@ -17,10 +17,16 @@ import AddLinkIcon from "../../../assets/icons/general/addlink/dark.svg?react";
 import { SvgIcon } from "@mui/material";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { fetchActivityLogReplies, postActivityLogReply } from "../../../store/features/activityLogReplies/activityLogRepliesAction";
-import { addReplyToCache } from "../../../store/features/activityLogReplies/activityLogRepliesSlice";
+import { 
+  createReplySuccess,
+  getRepliesSuccess,
+  createReplyFailed,
+  getRepliesFailed,
+} from "../../../store/features/activityLogReplies/activityLogRepliesSlice";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
 import { parseFirebaseTimestamp } from "../utils/taskUtils";
 import { useNotifications } from "../../../contexts/NotificationContext";
+import { useUserPresence } from "../../../hooks/useUserPresence";
 
 interface ActivityLogThreadSidebarProps {
   open: boolean;
@@ -41,6 +47,9 @@ const ActivityLogThreadSidebar = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [typingUsers, setTypingUsers] = useState<Map<string, { userId: string; userName: string }>>(new Map());
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingSentRef = useRef<number>(0);
 
   const repliesState = useAppSelector(
     (state: RootState) => state.activityLogRepliesReducer
@@ -48,43 +57,113 @@ const ActivityLogThreadSidebar = ({
 
   const userState = useAppSelector((state: RootState) => state.userReducer);
   const { users } = userState;
-  const { onEvent, offEvent } = useNotifications();
+  const currentUser = useAppSelector((state: RootState) => state.userReducer.currentUser);
+  const { onEvent, offEvent, sendMessage } = useNotifications();
+  const { isUserOnline } = useUserPresence();
 
   const replies = repliesState.repliesByActivityLog[activityLog.id] || [];
   const loading = repliesState.loading[activityLog.id] || false;
   const creating = repliesState.creating[activityLog.id] || false;
   const error = repliesState.error[activityLog.id];
 
-  // Fetch replies when sidebar opens
+  // Fetch replies when sidebar opens via WebSocket
   useEffect(() => {
-    if (open && activityLog.id) {
-      dispatch(fetchActivityLogReplies(activityLog.id));
+    if (open && activityLog.id && sendMessage) {
+      dispatch(fetchActivityLogReplies(activityLog.id, sendMessage));
     }
-  }, [open, activityLog.id, dispatch]);
+  }, [open, activityLog.id, dispatch, sendMessage]);
 
-  // Listen for SSE events for new replies
+  // Listen for WebSocket events for replies
   useEffect(() => {
-    const handleReplyAdded = (data: { activityLogId?: string; replyId?: string }) => {
-      console.log("[ActivityLogThreadSidebar] SSE event received:", data);
-      if (data.activityLogId && data.activityLogId === activityLog.id) {
-        // Re-fetch replies for this activity log
-        console.log("[ActivityLogThreadSidebar] Re-fetching replies for activityLogId:", data.activityLogId);
-        dispatch(fetchActivityLogReplies(data.activityLogId));
+    // Handle new reply created
+    const handleReplyCreated = (data: { 
+      activityLogId?: string; 
+      reply?: any;
+    }) => {
+      console.log("[ActivityLogThreadSidebar] WebSocket reply created event:", data);
+      if (data.activityLogId && data.activityLogId === activityLog.id && data.reply) {
+        // Add the new reply to the state (slice will handle duplicate prevention)
+        dispatch(createReplySuccess({ activityLogId: data.activityLogId, reply: data.reply }));
       }
     };
 
-    onEvent("activity-log:reply-added", handleReplyAdded);
+    // Handle replies response (initial load or refresh)
+    const handleRepliesResponse = (data: { 
+      activityLogId?: string; 
+      replies?: any[];
+    }) => {
+      console.log("[ActivityLogThreadSidebar] WebSocket replies response:", data);
+      if (data.activityLogId && data.activityLogId === activityLog.id && data.replies) {
+        dispatch(getRepliesSuccess({ activityLogId: data.activityLogId, replies: data.replies }));
+      }
+    };
+
+    // Handle errors
+    const handleError = (data: { error?: string; messageId?: string }) => {
+      if (data.messageId === "activity-log:reply:create" || data.messageId === "activity-log:replies:request") {
+        console.error("[ActivityLogThreadSidebar] WebSocket error:", data.error);
+        dispatch(createReplyFailed({ activityLogId: activityLog.id, error: data.error || "Unknown error" }));
+        dispatch(getRepliesFailed({ activityLogId: activityLog.id, error: data.error || "Unknown error" }));
+      }
+    };
+
+    // Handle typing indicators
+    const handleTypingStart = (data: { 
+      activityLogId?: string; 
+      userId?: string;
+      userName?: string;
+    }) => {
+      if (data.activityLogId === activityLog.id && data.userId && data.userId !== currentUser?.id) {
+        setTypingUsers((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(data.userId!, { userId: data.userId!, userName: data.userName || "Someone" });
+          return newMap;
+        });
+        
+        // Auto-remove typing indicator after 5 seconds if stop event doesn't arrive
+        setTimeout(() => {
+          setTypingUsers((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(data.userId!);
+            return newMap;
+          });
+        }, 5000);
+      }
+    };
+
+    const handleTypingStop = (data: { 
+      activityLogId?: string; 
+      userId?: string;
+    }) => {
+      if (data.activityLogId === activityLog.id && data.userId) {
+        setTypingUsers((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(data.userId!);
+          return newMap;
+        });
+      }
+    };
+
+    onEvent("activity-log:reply:created", handleReplyCreated);
+    onEvent("activity-log:replies:response", handleRepliesResponse);
+    onEvent("activity-log:typing:start", handleTypingStart);
+    onEvent("activity-log:typing:stop", handleTypingStop);
+    onEvent("error", handleError);
 
     // Cleanup
     return () => {
-      offEvent("activity-log:reply-added", handleReplyAdded);
+      offEvent("activity-log:reply:created", handleReplyCreated);
+      offEvent("activity-log:replies:response", handleRepliesResponse);
+      offEvent("activity-log:typing:start", handleTypingStart);
+      offEvent("activity-log:typing:stop", handleTypingStop);
+      offEvent("error", handleError);
     };
-  }, [activityLog.id, dispatch, onEvent, offEvent]);
+  }, [activityLog.id, dispatch, onEvent, offEvent, currentUser?.id]);
 
-  // Scroll to bottom when replies change
+  // Scroll to bottom when replies change or typing indicator appears
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [replies]);
+  }, [replies, typingUsers.size]);
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -108,15 +187,67 @@ const ActivityLogThreadSidebar = ({
     };
   }, [showEmojiPicker]);
 
+  // Send typing indicator when user types
+  const sendTypingIndicator = useCallback((isTyping: boolean) => {
+    if (!sendMessage || !activityLog.id) return;
+    
+    const now = Date.now();
+    // Throttle typing events to avoid spam (send at most once per 2 seconds)
+    if (isTyping && now - lastTypingSentRef.current < 2000) {
+      return;
+    }
+    
+    lastTypingSentRef.current = now;
+    
+    sendMessage({
+      type: isTyping ? "activity-log:typing:start" : "activity-log:typing:stop",
+      data: { activityLogId: activityLog.id },
+    });
+  }, [sendMessage, activityLog.id]);
+
   const handleReplyChange = (value: string) => {
     setReplyText(value);
+    
+    // Send typing start when user starts typing
+    if (value.length > 0 && typingTimeoutRef.current === null) {
+      sendTypingIndicator(true);
+    }
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Send typing stop after 3 seconds of no typing
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingIndicator(false);
+      typingTimeoutRef.current = null;
+    }, 3000);
   };
 
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      // Send typing stop when component unmounts
+      sendTypingIndicator(false);
+    };
+  }, [sendTypingIndicator]);
+
   const handleSubmitReply = async () => {
-    if (!replyText.trim() || creating) return;
+    if (!replyText.trim() || creating || !sendMessage) return;
+
+    // Stop typing indicator
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingIndicator(false);
 
     try {
-      await dispatch(postActivityLogReply(activityLog.id, replyText.trim()));
+      dispatch(postActivityLogReply(activityLog.id, replyText.trim(), sendMessage));
       setReplyText("");
       setSelectedFiles([]);
     } catch (err) {
@@ -182,12 +313,24 @@ const ActivityLogThreadSidebar = ({
             justifyContent: "space-between",
             padding: "20px 24px",
             borderBottom: "1px solid #E4E6E8",
+            backgroundColor: "#FFFFFF",
+            boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.05)",
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "18px" }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "18px", color: "#0A1629" }}>
             Thread
           </Typography>
-          <IconButton onClick={onClose} size="small">
+          <IconButton 
+            onClick={onClose} 
+            size="small"
+            sx={{
+              color: "#7D8592",
+              "&:hover": {
+                backgroundColor: "#F4F9FD",
+                color: "#0A1629",
+              },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
@@ -200,15 +343,43 @@ const ActivityLogThreadSidebar = ({
             backgroundColor: "#F9FAFB",
           }}
         >
-          <Box sx={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
-            <Avatar sx={{ width: "40px", height: "40px" }}>
-              {activityLog.userName?.charAt(0).toUpperCase() || "U"}
-            </Avatar>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
+            <Box sx={{ position: "relative", display: "inline-block", flexShrink: 0 }}>
+              <Avatar 
+                sx={{ 
+                  width: "40px", 
+                  height: "40px",
+                  backgroundColor: "#3F8CFF",
+                  color: "#FFFFFF",
+                  fontWeight: 600,
+                  fontSize: "16px",
+                }}
+              >
+                {activityLog.userName?.charAt(0).toUpperCase() || "U"}
+              </Avatar>
+              {/* Online/Offline Status Dot */}
+              {activityLog.userId && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: "0",
+                    right: "0",
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: isUserOnline(activityLog.userId) ? "#10B981" : "#9CA3AF",
+                    border: "2px solid #FFFFFF",
+                    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.1)",
+                    transition: "background-color 0.3s ease",
+                  }}
+                />
+              )}
+            </Box>
             <Box sx={{ flex: 1 }}>
-              <Typography fontWeight={600} fontSize="14px">
+              <Typography fontWeight={600} fontSize="14px" color="#0A1629">
                 {activityLog.userName || "Unknown User"}
               </Typography>
-              <Typography color="secondary.main" fontSize="12px">
+              <Typography color="#7D8592" fontSize="12px" sx={{ mt: 0.5 }}>
                 {formattedDate} | {formattedTime}
               </Typography>
             </Box>
@@ -217,12 +388,15 @@ const ActivityLogThreadSidebar = ({
             sx={{
               background: "#FFFFFF",
               borderRadius: "12px",
-              padding: "12px 16px",
+              padding: "14px 16px",
               border: "1px solid #E4E6E8",
               marginLeft: "52px",
+              boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.04)",
             }}
           >
-            <Typography fontSize="14px">{activityLog.description}</Typography>
+            <Typography fontSize="14px" color="#0A1629" sx={{ lineHeight: 1.5 }}>
+              {activityLog.description}
+            </Typography>
           </Box>
         </Box>
 
@@ -276,19 +450,53 @@ const ActivityLogThreadSidebar = ({
 
               const replyUser = reply.createdByUser || 
                 users.find((u) => u.id === reply.createdBy);
+              const replyUserId = reply.createdBy || reply.createdByUser?.id;
 
               return (
                 <Box
                   key={reply.id}
                   sx={{
                     display: "flex",
+                    alignItems: "flex-start",
                     gap: "12px",
+                    transition: "opacity 0.2s",
+                    "&:hover": {
+                      opacity: 0.9,
+                    },
                   }}
                 >
-                  <Avatar sx={{ width: "32px", height: "32px" }}>
-                    {replyUser?.name?.charAt(0).toUpperCase() || "U"}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
+                  <Box sx={{ position: "relative", display: "inline-block", flexShrink: 0 }}>
+                    <Avatar 
+                      sx={{ 
+                        width: "36px", 
+                        height: "36px",
+                        backgroundColor: "#3F8CFF",
+                        color: "#FFFFFF",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                      }}
+                    >
+                      {replyUser?.name?.charAt(0).toUpperCase() || "U"}
+                    </Avatar>
+                    {/* Online/Offline Status Dot */}
+                    {replyUserId && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: "0",
+                          right: "0",
+                          width: "10px",
+                          height: "10px",
+                          borderRadius: "50%",
+                          backgroundColor: isUserOnline(replyUserId) ? "#10B981" : "#9CA3AF",
+                          border: "2px solid #FFFFFF",
+                          boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.1)",
+                          transition: "background-color 0.3s ease",
+                        }}
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -297,10 +505,10 @@ const ActivityLogThreadSidebar = ({
                         mb: 0.5,
                       }}
                     >
-                      <Typography fontWeight={600} fontSize="14px">
+                      <Typography fontWeight={600} fontSize="14px" color="#0A1629">
                         {replyUser?.name || "Unknown User"}
                       </Typography>
-                      <Typography color="secondary.main" fontSize="12px">
+                      <Typography color="#7D8592" fontSize="12px">
                         {replyFormattedDate} | {replyFormattedTime}
                       </Typography>
                     </Box>
@@ -308,11 +516,20 @@ const ActivityLogThreadSidebar = ({
                       sx={{
                         background: "#F4F9FD",
                         borderRadius: "12px",
-                        padding: "10px 14px",
+                        padding: "12px 16px",
                         border: "1px solid #E4E6E8",
+                        boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.04)",
                       }}
                     >
-                      <Typography fontSize="14px" sx={{ whiteSpace: "pre-wrap" }}>
+                      <Typography 
+                        fontSize="14px" 
+                        color="#0A1629"
+                        sx={{ 
+                          whiteSpace: "pre-wrap",
+                          lineHeight: 1.5,
+                          wordBreak: "break-word",
+                        }}
+                      >
                         {reply.message}
                       </Typography>
                     </Box>
@@ -321,6 +538,77 @@ const ActivityLogThreadSidebar = ({
               );
             })
           )}
+          
+          {/* Typing Indicator */}
+          {typingUsers.size > 0 && (
+            <Box
+              sx={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                padding: "8px 0",
+                opacity: 0.7,
+              }}
+            >
+              <Box
+                sx={{
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "4px",
+                    "& > div": {
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      backgroundColor: "#7D8592",
+                      animation: "typing 1.4s infinite ease-in-out",
+                      "&:nth-of-type(1)": {
+                        animationDelay: "0s",
+                      },
+                      "&:nth-of-type(2)": {
+                        animationDelay: "0.2s",
+                      },
+                      "&:nth-of-type(3)": {
+                        animationDelay: "0.4s",
+                      },
+                    },
+                    "@keyframes typing": {
+                      "0%, 60%, 100%": {
+                        transform: "translateY(0)",
+                        opacity: 0.7,
+                      },
+                      "30%": {
+                        transform: "translateY(-10px)",
+                        opacity: 1,
+                      },
+                    },
+                  }}
+                >
+                  <div />
+                  <div />
+                  <div />
+                </Box>
+              </Box>
+              <Typography
+                fontSize="13px"
+                color="secondary.main"
+                sx={{ fontStyle: "italic" }}
+              >
+                {Array.from(typingUsers.values())
+                  .map((u) => u.userName)
+                  .join(", ")}{" "}
+                {typingUsers.size === 1 ? "is" : "are"} typing...
+              </Typography>
+            </Box>
+          )}
+          
           <div ref={messagesEndRef} />
         </Box>
 
@@ -347,12 +635,17 @@ const ActivityLogThreadSidebar = ({
               width: "100%",
               minHeight: "56px",
               backgroundColor: "#FFFFFF",
-              borderRadius: "14px",
-              border: "1px solid #D8E0F0",
-              boxShadow: "0px 1px 2px 0px rgba(184, 200, 224, 0.22)",
+              borderRadius: "16px",
+              border: "1px solid #E4E6E8",
+              boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.06)",
               display: "flex",
               alignItems: "center",
               padding: "0 12px",
+              transition: "border-color 0.2s, box-shadow 0.2s",
+              "&:focus-within": {
+                borderColor: "#3F8CFF",
+                boxShadow: "0px 2px 12px rgba(63, 140, 255, 0.15)",
+              },
             }}
           >
             {/* Hidden file input */}

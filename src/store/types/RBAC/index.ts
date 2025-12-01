@@ -56,7 +56,11 @@ export type Permission =
   | 'projectDetails:delete'
   // Backup Permissions
   | 'backup:read'
-  | 'backup:write';
+  | 'backup:write'
+  // Drawing List Permissions
+  | 'drawingList:read'
+  | 'drawingList:write'
+  | 'drawingList:delete';
 
 export interface RolePermissions {
   [key: string]: Permission[];

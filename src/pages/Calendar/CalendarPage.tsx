@@ -1,4 +1,4 @@
-import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, useMediaQuery, useTheme, IconButton } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
@@ -13,6 +13,7 @@ import { fetchCalendarEvents } from "../../store/features/calendar/calendarActio
 import { getUsersAction } from "../../store/features/user/userAction";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
+import SearchIcon from "@mui/icons-material/Search";
 
 const CalendarPage = () => {
   const theme = useTheme();
@@ -48,22 +49,6 @@ const CalendarPage = () => {
     setShowDateModal(true);
   };
 
-  const AddButton = (
-    <RequirePermission permission="calendar:write">
-      <Button 
-        variant="contained" 
-        startIcon={<SvgIcon component={PlusIcon} />}
-        onClick={handleAddEvent}
-        size={isMobile ? "small" : "medium"}
-        sx={{
-          fontSize: { xs: "12px", sm: "14px" },
-          padding: { xs: "6px 12px", sm: "8px 16px" }
-        }}
-      >
-        {isMobile ? "Add" : "Add Events"}
-      </Button>
-    </RequirePermission>
-  );
 
   // Helper to format a Date as YYYY-MM-DD without calling toISOString on invalid dates
   const toYMD = (d: Date): string => {
@@ -75,7 +60,9 @@ const CalendarPage = () => {
 
   // Helper function to get events for a specific date
   const getEventsForDate = (date: Date | null): CalendarResponse[] => {
-    if (!date) return [];
+    if (!date) {
+      return [];
+    }
 
     const dateString = toYMD(date);
     const currentMonth = dateState.getMonth();
@@ -86,7 +73,7 @@ const CalendarPage = () => {
     // Only show events for dates in the current month being viewed (not on grayed out previous/next month days)
     const isInCurrentMonth = dateMonth === currentMonth && dateYear === currentYear;
 
-    return events.filter((event) => {
+    const filteredEvents = events.filter((event) => {
       if (!event.start) return false;
       const parsed = new Date(event.start);
       if (isNaN(parsed.getTime())) return false;
@@ -112,6 +99,8 @@ const CalendarPage = () => {
       // For non-repeating events, use exact date match
       return eventDateString === dateString;
     });
+
+    return filteredEvents;
   };
 
 
@@ -121,27 +110,34 @@ const CalendarPage = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    // Convert Sunday (0) to 7, then adjust to Monday (1) as first day
+    let startingDayOfWeek = firstDay.getDay();
+    startingDayOfWeek = startingDayOfWeek === 0 ? 7 : startingDayOfWeek; // Sunday becomes 7
+    startingDayOfWeek = startingDayOfWeek - 1; // Convert to Monday=0, Sunday=6
 
     const lastMonth = month - 1;
     const lastMonthTotalDays = new Date(year, lastMonth + 1, 0).getDate();
-    const diffFromDays = lastMonthTotalDays - startingDayOfWeek + 1;
+    const diffFromDays = lastMonthTotalDays - startingDayOfWeek;
 
     const nextMonth = month + 1;
-    const lastDayMonth = lastDay.getDay();
+    let lastDayMonth = lastDay.getDay();
+    lastDayMonth = lastDayMonth === 0 ? 7 : lastDayMonth; // Sunday becomes 7
+    lastDayMonth = lastDayMonth - 1; // Convert to Monday=0, Sunday=6
     const additiondays = 6 - lastDayMonth;
-    // Calculate additional days for next month
 
     const days: (Date | null)[] = [];
 
-    for (let i = diffFromDays; i <= lastMonthTotalDays; i++) {
-      days.push(new Date(year, lastMonth, i));
+    // Add previous month days
+    for (let i = diffFromDays; i < lastMonthTotalDays; i++) {
+      days.push(new Date(year, lastMonth, i + 1));
     }
 
+    // Add current month days
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
 
+    // Add next month days
     for (let i = 1; i <= additiondays; i++) {
       days.push(new Date(year, nextMonth, i));
     }
@@ -150,15 +146,19 @@ const CalendarPage = () => {
   };
 
   const handleOnClikPrev = () => {
-    dateState.setMonth(dateState.getMonth() - 1);
-    const changedate = new Date(dateState);
-    setDateState(changedate);
+    setDateState((prevDate) => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
   };
 
   const handleOnClikNext = () => {
-    dateState.setMonth(dateState.getMonth() + 1);
-    const changedate = new Date(dateState);
-    setDateState(changedate);
+    setDateState((prevDate) => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
   };
 
   const currentMonthandYear = () =>
@@ -166,8 +166,6 @@ const CalendarPage = () => {
       dateState.toDateString().split(" ")[3]
     }`;
 
-  const getWeekDayString = (date: Date | null) =>
-    date?.toDateString().split(" ")[0] ?? "";
 
   const handleOnCellClick = (date: Date | null) => {
     // Open blank form for the selected date + 1 day
@@ -185,7 +183,6 @@ const CalendarPage = () => {
   };
 
   const handleOnEventClick = (event: CalendarResponse) => {
-    // Show event details modal first
     setSelectedEvent(event);
     setSelectedCellDate(new Date(event.start));
     setSelectedEventId(event.id);
@@ -233,9 +230,40 @@ const CalendarPage = () => {
     return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
+  // Get week number for the first day of the month
+  const getWeekNumber = (date: Date): number => {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const startDate = new Date(firstDay.getFullYear(), 0, 1);
+    const days = Math.floor((firstDay.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + startDate.getDay() + 1) / 7);
+  };
+
+  // Format date range for month
+  const getMonthDateRange = (): string => {
+    const year = dateState.getFullYear();
+    const month = dateState.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[firstDay.getMonth()]} ${firstDay.getDate()}, ${year} – ${months[lastDay.getMonth()]} ${lastDay.getDate()}, ${year}`;
+  };
+
+  // Get month abbreviation
+  const getMonthAbbr = (date: Date): string => {
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    return months[date.getMonth()];
+  };
+
+  // Handle today button
+  const handleToday = () => {
+    setDateState(new Date());
+  };
+
+
   return (
     <Box sx={{ height: "100%" }}>
-      <PageHeader title="Calendar" endElement={AddButton} />
+      <PageHeader title="Calendar" />
       
       <Box
         sx={{
@@ -246,18 +274,21 @@ const CalendarPage = () => {
           paddingX: { xs: "0px", sm: "0px", md: "0px", lg: "0px" },
         }}
       >
-        <Box
-          sx={(theme) => ({
-            width: "100%",
-            background: theme.palette.background.paper,
-            borderRadius: { xs: "16px", sm: "24px" },
-            boxShadow: theme.shadows[1],
-            height: "100%",
-            position: "relative",
-            padding: { xs: "0px", sm: "0px" },
-            overflow: { xs: "visible", sm: "hidden" },
-          })}
-        >
+            <Box
+              sx={(theme) => ({
+                width: "100%",
+                background: theme.palette.background.paper,
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: "12px",
+                boxShadow: "none",
+                height: "100%",
+                position: "relative",
+                padding: { xs: "0px", sm: "0px" },
+                overflow: { xs: "visible", sm: "hidden" },
+                display: "flex",
+                flexDirection: "column",
+              })}
+            >
           {/* Loading Overlay */}
           {loading && (
             <Box
@@ -274,93 +305,371 @@ const CalendarPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 zIndex: 1000,
-                borderRadius: { xs: "16px", sm: "24px" },
+                borderRadius: "12px",
               })}
             >
               <CircularProgress />
             </Box>
           )}
           
+          {/* Calendar Header - Matching Figma Design */}
           <Box
-            sx={{
+            sx={(theme) => ({
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              padding: "20px 24px",
               display: "flex",
-              justifyContent: "center",
+              gap: "16px",
               alignItems: "center",
-              gap: { xs: "12px", sm: "20px", md: "22px", lg: "24px" },
-              paddingY: { xs: "16px", sm: "18px", md: "19px", lg: "20px" },
-              paddingX: { xs: "20px", sm: "0px", md: "0px", lg: "0px" },
-            }}
+              flexWrap: { xs: "wrap", sm: "nowrap" },
+            })}
           >
-            <SvgIcon 
-              onClick={handleOnClikPrev} 
-              component={LeftIcon}
-              sx={{ 
-                fontSize: { xs: "24px", sm: "24px" },
-                cursor: "pointer",
-                width: { xs: "24px", sm: "24px" },
-                height: { xs: "24px", sm: "24px" },
-              }}
-            />
-            <Typography 
-              variant="h6" 
-              fontWeight={700}
-              sx={{ 
-                fontSize: { xs: "18px", sm: "20px" },
-                lineHeight: { xs: "1.44", sm: "1.5" },
-                textAlign: "center",
-                minWidth: { xs: "144px", sm: "auto" },
+            {/* Date Icon and Text Section */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                flex: { xs: "1 0 100%", sm: "1 0 0" },
               }}
             >
-              {currentMonthandYear()}
-            </Typography>
-            <SvgIcon 
-              onClick={handleOnClikNext} 
-              component={RightIcon}
-              sx={{ 
-                fontSize: { xs: "24px", sm: "24px" },
-                cursor: "pointer",
-                width: { xs: "24px", sm: "24px" },
-                height: { xs: "24px", sm: "24px" },
+              {/* Date Icon */}
+              <Box
+                sx={(theme) => ({
+                  width: "64px",
+                  height: "64px",
+                  border: `1px solid ${theme.palette.divider}`,
+                  borderRadius: "8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                })}
+              >
+                {/* Month Section */}
+                <Box
+                  sx={(theme) => ({
+                    backgroundColor: theme.palette.grey[50],
+                    padding: "4px 8px 2px 8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  })}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      lineHeight: "18px",
+                      color: theme.palette.text.secondary,
+                    }}
+                  >
+                    {getMonthAbbr(dateState)}
+                  </Typography>
+                </Box>
+                {/* Date Section */}
+                <Box
+                  sx={{
+                    padding: "1px 8px 3px 8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flex: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      lineHeight: "28px",
+                      fontFamily: "'Inter', sans-serif",
+                      color: theme.palette.primary.main,
+                    }}
+                  >
+                    {dateState.getDate()}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Text Section */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                  justifyContent: "center",
+                  flex: "1 0 0",
+                  minWidth: 0,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      lineHeight: "28px",
+                      fontFamily: "'Inter', sans-serif",
+                      color: theme.palette.text.primary,
+                    }}
+                  >
+                    {currentMonthandYear()}
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: theme.palette.background.paper,
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: "6px",
+                      padding: "2px 6px",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        lineHeight: "18px",
+                        color: theme.palette.text.primary,
+                        textAlign: "center",
+                      }}
+                    >
+                      Week {getWeekNumber(dateState)}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 400,
+                    lineHeight: "20px",
+                    color: theme.palette.text.secondary,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {getMonthDateRange()}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Actions Section */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                flexShrink: 0,
               }}
-            />
+            >
+              {/* Search Button */}
+              <IconButton
+                sx={(theme) => ({
+                  padding: "10px",
+                  borderRadius: "8px",
+                  "&:hover": {
+                    backgroundColor: theme.palette.grey[50],
+                  },
+                })}
+              >
+                <SearchIcon sx={(theme) => ({ fontSize: "20px", color: theme.palette.text.secondary })} />
+              </IconButton>
+
+              {/* Navigation Button Group */}
+              <Box
+                sx={(theme) => ({
+                  display: "flex",
+                  border: `1px solid ${theme.palette.divider}`,
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                })}
+              >
+                <IconButton
+                  onClick={handleOnClikPrev}
+                  sx={(theme) => ({
+                    padding: "8px 12px",
+                    minWidth: "40px",
+                    height: "40px",
+                    borderRight: `1px solid ${theme.palette.divider}`,
+                    borderRadius: 0,
+                    "&:hover": {
+                      backgroundColor: theme.palette.grey[50],
+                    },
+                  })}
+                >
+                  <SvgIcon 
+                    component={LeftIcon}
+                    sx={(theme) => ({ 
+                      fontSize: "20px",
+                      color: theme.palette.text.secondary,
+                    })}
+                  />
+                </IconButton>
+                <Button
+                  onClick={handleToday}
+                  sx={(theme) => ({
+                    padding: "8px 16px",
+                    minWidth: "auto",
+                    height: "40px",
+                    borderRight: `1px solid ${theme.palette.divider}`,
+                    borderRadius: 0,
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: theme.palette.grey[50],
+                    },
+                  })}
+                >
+                  Today
+                </Button>
+                <IconButton
+                  onClick={handleOnClikNext}
+                  sx={(theme) => ({
+                    padding: "8px 12px",
+                    minWidth: "40px",
+                    height: "40px",
+                    borderRadius: 0,
+                    "&:hover": {
+                      backgroundColor: theme.palette.grey[50],
+                    },
+                  })}
+                >
+                  <SvgIcon 
+                    component={RightIcon}
+                    sx={(theme) => ({ 
+                      fontSize: "20px",
+                      color: theme.palette.text.secondary,
+                    })}
+                  />
+                </IconButton>
+              </Box>
+
+              {/* Add Event Button */}
+              <RequirePermission permission="calendar:write">
+                <Button
+                  variant="contained"
+                  startIcon={<SvgIcon component={PlusIcon} sx={{ fontSize: "20px", color: theme.palette.primary.contrastText }} />}
+                  onClick={handleAddEvent}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    border: "2px solid rgba(255, 255, 255, 0.12)",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    fontFamily: "'Inter', sans-serif",
+                    color: theme.palette.primary.contrastText,
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: theme.palette.primary.light,
+                    },
+                  }}
+                >
+                  Add event
+                </Button>
+              </RequirePermission>
+            </Box>
           </Box>
           
+          {/* Calendar Grid */}
           <Box
-            sx={{
-              paddingX: { xs: "20px", sm: "0px" },
-              paddingBottom: { xs: "20px", sm: "0px" },
+            sx={{ 
+              flex: "1 0 0",
+              display: "flex",
+              flexDirection: "column",
+              // overflow: "hidden",
             }}
           >
-            <Grid 
-              container 
-              columns={7}
+            {/* Day Headers */}
+            {!isMobile && (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(7, 1fr)",
+                  borderBottom: `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                {["Mon", "Tues", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                  <Box
+                    key={day}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "8px",
+                      color: theme.palette.text.secondary,
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      lineHeight: "18px",
+                      fontFamily: "'Inter', sans-serif",
+                      borderRight: `1px solid ${theme.palette.divider}`,
+                      "&:last-child": {
+                        borderRight: "none",
+                      },
+                    }}
+                  >
+                    {day}
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {/* Month Grid */}
+            <Box
               sx={{
-                gap: { xs: "0px", sm: "0px" },
-                width: "100%",
-                "& > .MuiGrid-item": {
-                  padding: { xs: "1px", sm: "0px" },
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                },
+                flex: "1 0 0",
+                // overflow: "auto",
               }}
             >
-              {getDaysInMonth(dateState).map((date, index) => (
-                <Grid 
-                  size={{ xs: 1, sm: 1 }} 
-                  key={index}
-                >
-                  <Cell
-                    date={date}
-                    onClickCell={handleOnCellClick}
-                    weekDay={index < 7 ? getWeekDayString(date) : ""}
-                    events={getEventsForDate(date)}
-                    onClickEvent={handleOnEventClick}
-                    currentMonth={dateState}
-                  />
-                </Grid>
-              ))}
-            </Grid>
+              <Grid 
+                container 
+                columns={7}
+                sx={{
+                  width: "100%",
+                  "& > .MuiGrid-item": {
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    "&:nth-of-type(7n)": {
+                      borderRight: "none",
+                    },
+                  },
+                }}
+              >
+                {getDaysInMonth(dateState).map((date, index) => {
+                  const dateEvents = getEventsForDate(date);
+                  
+                  return (
+                    <Grid 
+                      size={{ xs: 1, sm: 1 }} 
+                      key={index}
+                      sx={{
+                        minHeight: { xs: "46px", sm: "128px" },
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Cell
+                        date={date}
+                        onClickCell={handleOnCellClick}
+                        events={dateEvents}
+                        onClickEvent={handleOnEventClick}
+                        currentMonth={dateState}
+                      />
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
           </Box>
 
           {/* Mobile Events List - Show all events of the month below calendar */}
@@ -410,8 +719,8 @@ const CalendarPage = () => {
                         sx={(theme) => ({
                           width: "100%",
                           height: "56px",
-                          backgroundColor: "#F4F9FD",
-                          border: "2px solid #FFFFFF",
+                          backgroundColor: theme.palette.grey[50],
+                          border: `2px solid ${theme.palette.background.paper}`,
                           borderRadius: "14px",
                           display: "flex",
                           alignItems: "center",
@@ -430,18 +739,18 @@ const CalendarPage = () => {
                             width: "4px",
                             height: "40px",
                             backgroundColor: (() => {
-                              if (!event.category) return "#DE92EB";
+                              if (!event.category) return theme.palette.info.main;
                               switch (event.category.toLowerCase()) {
                                 case "work":
-                                  return "#3F8CFF";
+                                  return theme.palette.primary.main;
                                 case "personal":
-                                  return "#DE92EB";
+                                  return theme.palette.info.main;
                                 case "meeting":
-                                  return "#3F8CFF";
+                                  return theme.palette.primary.main;
                                 case "appointment":
-                                  return "#6D5DD3";
+                                  return theme.palette.primary.dark;
                                 default:
-                                  return "#DE92EB";
+                                  return theme.palette.info.main;
                               }
                             })(),
                             borderRadius: "2px",

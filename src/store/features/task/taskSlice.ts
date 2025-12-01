@@ -148,6 +148,18 @@ const taskListSlice = createSlice({
       state.api.loading = false;
       state.api.error = action.payload.error;
     },
+    transferTaskRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    transferTaskSuccess(state) {
+      state.api.loading = false;
+      state.api.error = "";
+    },
+    transferTaskFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
     setFilteredTasks(state, action: PayloadAction<TaskResponse[]>) {
       state.api.data.filteredTasks = action.payload;
     },
@@ -198,6 +210,9 @@ export const {
   claimTaskRequest,
   claimTaskSuccess,
   claimTaskFailed,
+  transferTaskRequest,
+  transferTaskSuccess,
+  transferTaskFailed,
   setFilteredTasks,
   getTaskStatusesRequest,
   getTaskStatusesSuccess,

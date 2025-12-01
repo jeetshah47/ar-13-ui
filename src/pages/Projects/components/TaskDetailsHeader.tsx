@@ -1,16 +1,22 @@
-import { Box, Button, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, useMediaQuery, useTheme, Select, MenuItem, FormControl } from "@mui/material";
+import { SwapHoriz } from "@mui/icons-material";
 import EditIcon from "../../../assets/icons/general/gear.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
-import Chips from "../../../common/components/Chips/Chips";
 import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
 import type { ProjectResponse } from "../../../store/types/Project/ProjectResponse";
 import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
+import { usePermissions } from "../../../store/hooks/usePermissions";
+import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
+import { mapStatusToUnified } from "../../../pages/Projects/constants/taskStatus.constants";
 
 interface TaskDetailsHeaderProps {
   onEditClick: () => void;
+  onTransferClick: () => void;
 }
 
-const TaskDetailsHeader = ({ onEditClick }: TaskDetailsHeaderProps) => {
+const TaskDetailsHeader = ({ onEditClick, onTransferClick }: TaskDetailsHeaderProps) => {
+  const { isAdmin } = usePermissions();
+  
   // theme and useMediaQuery are used in TaskDetailsContent component below
   return (
       <Box
@@ -51,6 +57,26 @@ const TaskDetailsHeader = ({ onEditClick }: TaskDetailsHeaderProps) => {
             <SvgIcon sx={{ fontSize: { xs: "20px", sm: "24px" } }} component={EditIcon} />
           </Box>
         </RequirePermission>
+        {isAdmin() && (
+          <Box
+            onClick={onTransferClick}
+            sx={{
+              backgroundColor: "#fff",
+              display: "flex",
+              padding: { xs: "8px", sm: "10px" },
+              borderRadius: "14px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "#f5f5f5",
+                transform: "scale(1.05)",
+              },
+            }}
+            title="Transfer Task"
+          >
+            <SwapHoriz sx={{ fontSize: { xs: "20px", sm: "24px" }, color: "text.primary" }} />
+          </Box>
+        )}
         <Box
           sx={{
             backgroundColor: "#fff",
@@ -73,6 +99,7 @@ interface TaskDetailsContentProps {
   onStatusChange: (status: string) => void;
   onClaimTaskClick: () => void;
   project?: ProjectResponse;
+  taskStatuses?: TaskStatus[];
   children: React.ReactNode;
 }
 
@@ -83,12 +110,38 @@ export const TaskDetailsContent = ({
   onStatusChange,
   onClaimTaskClick,
   project,
+  taskStatuses = [],
   children,
 }: TaskDetailsContentProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { canClaimTask } = useResourceAccess();
   const showClaimButton = project ? canClaimTask(project) : false;
+
+  // Normalize currentStatus to unified format for matching
+  const normalizedCurrentStatus = currentStatus ? mapStatusToUnified(currentStatus) : null;
+
+  // Find the current status object by matching unified status values
+  // Try to match by normalizing both the currentStatus and taskStatus values
+  const currentStatusObj = taskStatuses.find((status) => {
+    if (!status.value) return false;
+    const normalizedStatusValue = mapStatusToUnified(status.value);
+    return normalizedStatusValue === normalizedCurrentStatus;
+  });
+
+  // Filter active statuses and sort by order if available, otherwise keep original order
+  const sortedStatuses = [...taskStatuses]
+    .filter((status) => status.isActive !== false) // Include statuses where isActive is true or undefined
+    .sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      return 0;
+    });
+
+  // Get the selected value for the dropdown
+  // Use the actual status value from taskStatuses if found, otherwise use currentStatus
+  const selectedValue = currentStatusObj?.value || currentStatus || "";
 
   return (
     <Box
@@ -150,8 +203,44 @@ export const TaskDetailsContent = ({
           flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
           width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
         }}>
-          <Box sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}>
-            <Chips selected={currentStatus} onChange={onStatusChange} />
+          <Box sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" }, minWidth: { xs: "100%", sm: "100%", md: "200px", lg: "200px" } }}>
+            <FormControl fullWidth={isMobile} sx={{ minWidth: { xs: "100%", sm: "100%", md: "200px", lg: "200px" } }}>
+              <Select
+                value={selectedValue}
+                onChange={(e) => onStatusChange(e.target.value)}
+                displayEmpty
+                sx={{
+                  borderRadius: "14px",
+                  backgroundColor: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#E0E0E0",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#3F8CFF",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#3F8CFF",
+                  },
+                  "& .MuiSelect-select": {
+                    padding: { xs: "10px 16px", sm: "12px 20px" },
+                    fontSize: { xs: "14px", sm: "16px" },
+                    fontWeight: 500,
+                  },
+                }}
+              >
+                {sortedStatuses.length > 0 ? (
+                  sortedStatuses.map((status) => (
+                    <MenuItem key={status.id || status.value} value={status.value}>
+                      {status.displayName || status.value}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem value={currentStatus} disabled>
+                    {currentStatusObj?.displayName || currentStatus || "No status"}
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Box>
           {showClaimButton && (
             <Button

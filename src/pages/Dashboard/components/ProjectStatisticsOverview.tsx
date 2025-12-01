@@ -1,6 +1,7 @@
 import { Box, Typography, Grid, CircularProgress, Alert } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import { useAppSelector, type RootState } from "../../../store/store";
+import { formatTime } from "../../../utils/timeFormatting";
 
 const ProjectStatisticsOverview = () => {
   const statisticsState = useAppSelector(
@@ -61,14 +62,6 @@ const ProjectStatisticsOverview = () => {
       ? (aggregatedStats.completedTasks / aggregatedStats.totalTasks) * 100
       : 0;
 
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
 
   const statsCards = [
     {

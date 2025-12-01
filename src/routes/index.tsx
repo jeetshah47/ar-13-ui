@@ -12,6 +12,7 @@ import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
 import DrawingListPage from "../pages/DrawingList/DrawingListPage";
+import MetricsPage from "../pages/Metrics/MetricsPage";
 import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
 
 const authRoutes = [
@@ -102,6 +103,17 @@ const authRoutes = [
         redirectTo="/app/dashboard"
       >
         <DrawingListPage />
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/metrics",
+    component: (
+      <PermissionRoute 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
+        <MetricsPage />
       </PermissionRoute>
     ),
   },

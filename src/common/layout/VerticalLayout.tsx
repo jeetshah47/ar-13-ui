@@ -24,40 +24,15 @@ const VerticalLayout = () => {
         sx={{
           display: "flex",
           width: "100%",
-          position: "relative",
         }}
       >
-        {/* Mobile Menu Button */}
-        {isMobile && (
-          <IconButton
-            onClick={handleDrawerToggle}
-            sx={{
-              position: "fixed",
-              top: "16px",
-              left: "16px",
-              zIndex: (theme) => theme.zIndex.drawer + 1,
-              backgroundColor: "background.paper",
-              boxShadow: 2,
-              "&:hover": {
-                backgroundColor: "action.hover",
-              },
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
-
         {/* Desktop Sidebar */}
         {!isMobile && (
           <Box
             sx={{
-              position: "fixed",
-              height: "100vh",
-              width: { md: `${sidebarWidth - 20}px`, lg: `${sidebarWidth}px` },
-              top: 0,
-              left: 0,
-              padding: { xs: "12px", sm: "16px", md: "16px", lg: "20px" },
-              zIndex: (theme) => theme.zIndex.drawer,
+              width: `${sidebarWidth}px`,
+              flexShrink: 0,
+              padding: "20px",
             }}
           >
             <MainSiderBar onNavigate={() => {}} />
@@ -70,7 +45,7 @@ const VerticalLayout = () => {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
           sx={{
             display: { xs: "block", md: "none" },
@@ -89,18 +64,32 @@ const VerticalLayout = () => {
           <MainSiderBar onNavigate={handleDrawerToggle} />
         </Drawer>
 
+        {/* Menu Toggle Button - Mobile only */}
+        {isMobile && (
+          <IconButton
+            onClick={handleDrawerToggle}
+            sx={{
+              position: "fixed",
+              top: "16px",
+              left: "16px",
+              zIndex: (theme) => theme.zIndex.drawer + 1,
+              backgroundColor: "background.paper",
+              boxShadow: 2,
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+
         {/* Main Content Area */}
         <Box
           data-scroll-container
           sx={{
-            marginLeft: { xs: 0, sm: 0, md: `${sidebarWidth - 20}px`, lg: `${sidebarWidth}px` },
+            flexGrow: 1,
             overflow: "auto",
-            width: { xs: "100%", sm: "100%", md: `calc(100% - ${sidebarWidth - 20}px)`, lg: `calc(100% - ${sidebarWidth}px)` },
             height: "100vh",
-            padding: { xs: "12px", sm: "16px", md: "16px", lg: "20px" },
+            padding: { xs: "12px", sm: "16px", md: "20px" },
             boxSizing: "border-box",
-            scrollBehavior: "smooth",
-            WebkitOverflowScrolling: "touch",
           }}
         >
           <Suspense fallback={<Skeleton variant="rectangular" />}>

@@ -14,6 +14,7 @@ import {
   MSG_TASK_CREATED,
   MSG_TASK_UPDATED,
   MSG_TASK_CLAIMED,
+  MSG_TASK_TRANSFERRED,
   MSG_TIME_SPENT_ADDED,
   MSG_CANNOT_CLAIM_TASK,
   MSG_USER_NOT_AUTHENTICATED,
@@ -30,6 +31,7 @@ import {
   getFileAttachments,
   addFileAttachment,
   claimTask,
+  transferTask,
   getTaskStatuses,
 } from "../../apis/taskApis";
 import type { ITask } from "../../types/Task/Task";
@@ -61,6 +63,9 @@ import {
   claimTaskRequest,
   claimTaskSuccess,
   claimTaskFailed,
+  transferTaskRequest,
+  transferTaskSuccess,
+  transferTaskFailed,
   getTaskStatusesRequest,
   getTaskStatusesSuccess,
   getTaskStatusesFailed,
@@ -298,6 +303,39 @@ export const claimTaskAction =
         dispatch(claimTaskFailed({ error: "Unknown Error" }));
         toast.error("Failed to claim task");
       }
+    }
+  };
+
+export const transferTaskAction = 
+  (projectId: string, taskId: string, userId: string) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(transferTaskRequest());
+    try {
+      const response = await transferTask(projectId, taskId, userId);
+      dispatch(transferTaskSuccess());
+      toast.success(response.message || MSG_TASK_TRANSFERRED);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse | { message?: string }>;
+      if (axiosError?.response?.data) {
+        const errorData = axiosError.response.data;
+        const errorMessage = (errorData as ProjectErrorResponse).error || (errorData as { message?: string }).message;
+        dispatch(transferTaskFailed(errorData as ProjectErrorResponse));
+        
+        // Handle specific error cases
+        if (axiosError.response.status === 401) {
+          toast.error(MSG_USER_NOT_AUTHENTICATED);
+        } else if (axiosError.response.status === 403) {
+          toast.error("Admin access required to transfer tasks");
+        } else if (axiosError.response.status === 404) {
+          toast.error(MSG_TASK_NOT_FOUND);
+        } else {
+          toast.error(errorMessage || "Failed to transfer task");
+        }
+      } else {
+        dispatch(transferTaskFailed({ error: "Unknown Error" }));
+        toast.error("Failed to transfer task");
+      }
+      throw error; // Re-throw to allow component to handle
     }
   };
 

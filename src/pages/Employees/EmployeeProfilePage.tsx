@@ -228,7 +228,12 @@ const EmployeeProfilePage = () => {
               />
             </Box>
           </Box>
-          {currentTab === "Projects" && <ProjectSection />}
+          {currentTab === "Projects" && (
+            <ProjectSection 
+              projects={profile?.projects} 
+              loading={profileLoading} 
+            />
+          )}
           {currentTab === "Team" && <TeamSection />}
           {currentTab === "Statistics" && userId && <StatsSection userId={userId} />}
           {currentTab === "Permissions" && userId && <EmployeePermissionsSection userId={userId} />}

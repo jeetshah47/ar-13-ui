@@ -27,8 +27,6 @@ interface CombinedViewProps {
   categories: DrawingCategory[];
   types: DrawingType[];
   loading: boolean;
-  onEditCategory: (category: DrawingCategory) => void;
-  onDeleteCategory: (category: DrawingCategory) => void;
   onEditType: (type: DrawingType) => void;
   onDeleteType: (type: DrawingType) => void;
 }
@@ -37,8 +35,6 @@ const CombinedView = ({
   categories,
   types,
   loading,
-  onEditCategory,
-  onDeleteCategory,
   onEditType,
   onDeleteType,
 }: CombinedViewProps) => {

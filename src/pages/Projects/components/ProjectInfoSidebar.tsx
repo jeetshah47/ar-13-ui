@@ -1,4 +1,4 @@
-import { Avatar, AvatarGroup, Box, SvgIcon, Typography, Tooltip } from "@mui/material";
+import { Avatar, AvatarGroup, Box, SvgIcon, Typography, Tooltip, Button } from "@mui/material";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
@@ -28,11 +28,16 @@ interface ProjectInfoSidebarProps {
   agencyContact?: {
     contact_name?: string;
     contact_agency_type?: string;
+    phone_number?: string;
+    firm_name?: string;
   };
   created?: string | { _seconds: number; _nanoseconds: number };
   updated?: string;
+  isArchived?: boolean;
   onEditClick?: () => void;
   onAddAgencyContact?: () => void;
+  onArchiveClick?: () => void;
+  showArchiveButton?: boolean;
 }
 
 const ProjectInfoSidebar = ({
@@ -49,8 +54,11 @@ const ProjectInfoSidebar = ({
   agencyContact,
   created,
   updated,
+  isArchived,
   onEditClick,
   onAddAgencyContact,
+  onArchiveClick,
+  showArchiveButton,
 }: ProjectInfoSidebarProps) => {
   // Format date from string or Firebase timestamp
   const formatDate = (date?: string | { _seconds: number; _nanoseconds: number }): string => {
@@ -84,11 +92,16 @@ const ProjectInfoSidebar = ({
       sx={{
         width: { xs: "100%", sm: "100%", md: "240px", lg: "265px" },
         background: "#FFFFFF",
-        borderRadius: "24px",
+        borderRadius: { xs: "20px", sm: "20px", md: "24px", lg: "24px" },
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
         height: { xs: "auto", sm: "auto", md: "100%", lg: "100%" },
-        padding: { xs: "16px", sm: "16px", md: "16px", lg: "18px" },
+        padding: { xs: "16px", sm: "18px", md: "16px", lg: "18px" },
         flexShrink: 0,
+        maxWidth: "100%",
+        boxSizing: "border-box",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
         "@media (min-width: 1200px) and (max-width: 1600px)": {
           width: "240px",
           padding: "16px",
@@ -134,7 +147,16 @@ const ProjectInfoSidebar = ({
           </Box>
         </Box>
       </Box>
-      <Box sx={{ paddingTop: "24px" }}>
+      <Box 
+        sx={{ 
+          paddingTop: "24px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
         {projectCode && (
           <Box sx={{ paddingBottom: "16px" }}>
             <Typography color="secondary.main" fontSize="14px">
@@ -212,6 +234,16 @@ const ProjectInfoSidebar = ({
               {agencyContact.contact_agency_type && (
                 <Typography color="secondary.main" fontSize="14px">
                   {agencyContact.contact_agency_type}
+                </Typography>
+              )}
+              {agencyContact.firm_name && (
+                <Typography color="secondary.main" fontSize="14px" sx={{ mt: 0.5 }}>
+                  Firm: {agencyContact.firm_name}
+                </Typography>
+              )}
+              {agencyContact.phone_number && (
+                <Typography color="secondary.main" fontSize="14px" sx={{ mt: 0.5 }}>
+                  Phone: {agencyContact.phone_number}
                 </Typography>
               )}
             </Box>
@@ -311,6 +343,30 @@ const ProjectInfoSidebar = ({
             <SvgIcon component={FilesIcon} />
           </Box>
         </Box>
+        {showArchiveButton && onArchiveClick && (
+          <Box 
+            sx={{ 
+              paddingTop: "16px",
+              marginTop: "auto",
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              fullWidth
+              variant="contained"
+              color={isArchived ? "success" : "warning"}
+              onClick={onArchiveClick}
+              sx={{
+                borderRadius: "14px",
+                textTransform: "none",
+                py: 1.5,
+                fontWeight: 500,
+              }}
+            >
+              {isArchived ? "Unarchive Project" : "Archive Project"}
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );

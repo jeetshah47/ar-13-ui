@@ -4,14 +4,13 @@ import type { CalendarResponse } from "../../../store/types/Calendar/CalendarRes
 
 type CellProps = {
   date: Date | null;
-  weekDay: string;
   onClickCell: (date: Date | null) => void;
   events: CalendarResponse[];
   onClickEvent?: (event: CalendarResponse) => void;
   currentMonth?: Date;
 };
 
-const Cell = ({ date, weekDay, onClickCell, events, onClickEvent, currentMonth }: CellProps) => {
+const Cell = ({ date, onClickCell, events, onClickEvent, currentMonth }: CellProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   
@@ -31,80 +30,133 @@ const Cell = ({ date, weekDay, onClickCell, events, onClickEvent, currentMonth }
     );
   })();
   
+  // Limit events shown (matching Figma design shows max 3-4 events)
+  const maxVisibleEvents = 3;
+  const visibleEvents = events.slice(0, maxVisibleEvents);
+  const remainingCount = events.length - maxVisibleEvents;
+  
   return (
     <Box
       onClick={() => onClickCell(date)}
-      sx={(theme) => ({
+      sx={{
         display: "flex",
-        width: { xs: "46px", sm: "100%" },
-        height: { xs: "46px", sm: "128px" },
-        minWidth: { xs: "46px", sm: "auto" },
+        width: "100%",
         minHeight: { xs: "46px", sm: "128px" },
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: { xs: "center", sm: "flex-start" },
         justifyContent: { xs: "center", sm: "flex-start" },
         padding: { xs: "0px", sm: "8px" },
         cursor: "pointer",
         position: "relative",
-        backgroundColor: "transparent",
+        backgroundColor: isInactive ? theme.palette.grey[50] : theme.palette.background.paper,
         borderRadius: { xs: "7px", sm: "0px" },
-        border: { xs: "none", sm: `1px solid ${theme.palette.divider}` },
-        ":hover": {
+        border: { 
+          xs: "none", 
+          sm: `1px solid ${theme.palette.divider}` 
+        },
+        borderRight: { sm: `1px solid ${theme.palette.divider}` },
+        borderBottom: { sm: `1px solid ${theme.palette.divider}` },
+        overflow: "hidden",
+        "&:hover": {
           backgroundColor: isInactive 
             ? undefined 
             : theme.palette.grey[50]
         }
-      })}
+      }}
     >
-      {weekDay && (
+      {/* Date number - Always show, even if no events */}
+      {date ? (
         <Box
-          sx={(theme) => ({
-            backgroundColor: theme.palette.grey[50],
+          sx={{
+            position: "relative",
+            width: "24px",
+            height: "24px",
+            borderRadius: "9999px",
+            backgroundColor: isToday ? theme.palette.primary.main : (isInactive ? "transparent" : "transparent"),
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            padding: { xs: "3px 9px", sm: "4px 8px" },
-            color: theme.palette.text.secondary,
-            borderRadius: { xs: "7px", sm: "8px" },
-            fontSize: { xs: "14px", sm: "12px" },
-            fontWeight: { xs: 600, sm: 400 },
-            lineHeight: { xs: "1.57", sm: "1.5" },
-            width: { xs: "46px", sm: "auto" },
-            height: { xs: "28px", sm: "auto" },
+            justifyContent: "flex-start",
+            marginTop: { xs: "0px", sm: "4px" },
             marginBottom: { xs: "0px", sm: "4px" },
-          })}
+            flexShrink: 0,
+            paddingLeft: "4px",
+          }}
         >
-          {weekDay}
+          <Typography 
+            sx={{
+              fontSize: "12px",
+              lineHeight: "18px",
+              fontFamily: "'Inter', sans-serif",
+              color: isInactive 
+                ? theme.palette.text.disabled
+                : isToday
+                ? theme.palette.primary.contrastText
+                : theme.palette.text.primary,
+              fontWeight: 600,
+              textAlign: "left",
+            }}
+          >
+            {date.getDate()}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ minHeight: "24px", marginTop: { xs: "0px", sm: "4px" } }} />
+      )}
+      
+      {/* Events container - desktop shows event cards */}
+      {!isMobile && date && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+                width: "100%",
+                marginTop: "4px",
+                opacity: isInactive ? 0.6 : 1,
+                overflow: "hidden",
+                flex: "1 1 auto",
+              }}
+            >
+          {visibleEvents.length > 0 && visibleEvents.map((event) => (
+            <Event key={event.id} event={event} onClick={onClickEvent} />
+          ))}
+          {remainingCount > 0 && (
+            <Box
+              sx={{
+                padding: "0px 8px",
+                marginTop: "4px",
+                opacity: isInactive ? 0.6 : 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  lineHeight: "18px",
+                  fontFamily: "'Inter', sans-serif",
+                  color: theme.palette.text.secondary,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {remainingCount} more...
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
-      <Typography 
-        sx={{
-          fontSize: { xs: "14px", sm: "14px" },
-          lineHeight: { xs: "1.57", sm: "1.5" },
-          color: isInactive 
-            ? (theme.palette.mode === "dark" ? "rgba(55, 67, 135, 0.3)" : "rgba(55, 67, 135, 0.3)")
-            : isToday
-            ? theme.palette.primary.main
-            : (theme.palette.mode === "dark" ? "#202860" : "#202860"),
-          fontWeight: isToday ? 700 : 400,
-          textAlign: "center",
-          marginTop: { xs: "0px", sm: "4px" },
-        }}
-      >
-        {date?.getDate()}
-      </Typography>
       
-      {/* Events container - mobile shows dots, desktop shows event cards */}
-      {isMobile ? (
-        // Mobile: Show event indicator dots
+      {/* Mobile: Show event indicator dots */}
+      {isMobile && date && events.length > 0 && (
         <Box
           sx={{
             position: "absolute",
-            bottom: { xs: "4px", sm: "4px" },
+            bottom: "4px",
             left: "50%",
             transform: "translateX(-50%)",
             display: "flex",
-            gap: { xs: "2px", sm: "4px" },
+            gap: "2px",
             alignItems: "center",
             justifyContent: "center",
             flexWrap: "wrap",
@@ -113,18 +165,18 @@ const Cell = ({ date, weekDay, onClickCell, events, onClickEvent, currentMonth }
         >
           {events.slice(0, 3).map((event) => {
             const getCategoryColor = (category: string | undefined) => {
-              if (!category) return "#DE92EB";
+              if (!category) return theme.palette.info.main;
               switch (category.toLowerCase()) {
                 case "work":
-                  return "#3F8CFF";
+                  return theme.palette.primary.main;
                 case "personal":
-                  return "#DE92EB";
+                  return theme.palette.info.main;
                 case "meeting":
-                  return "#3F8CFF";
+                  return theme.palette.primary.main;
                 case "appointment":
-                  return "#6D5DD3";
+                  return theme.palette.primary.dark;
                 default:
-                  return "#DE92EB";
+                  return theme.palette.info.main;
               }
             };
             return (
@@ -144,40 +196,6 @@ const Cell = ({ date, weekDay, onClickCell, events, onClickEvent, currentMonth }
               />
             );
           })}
-        </Box>
-      ) : (
-        // Desktop: Show event cards
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: { xs: "2px", sm: "4px" },
-            left: { xs: "2px", sm: "4px" },
-            right: { xs: "2px", sm: "4px" },
-            maxHeight: { xs: "30px", sm: "60px" },
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            gap: { xs: "0.5px", sm: "1px" }
-          }}
-        >
-          {events.slice(0, 3).map((event) => (
-            <Event key={event.id} event={event} onClick={onClickEvent} />
-          ))}
-          {events.length > 3 && (
-            <Box
-              sx={(theme) => ({
-                fontSize: { xs: "8px", sm: "10px" },
-                color: theme.palette.text.secondary,
-                textAlign: "center",
-                padding: { xs: "1px", sm: "2px" },
-                backgroundColor: theme.palette.primary.light,
-                borderRadius: { xs: "2px", sm: "4px" },
-                marginTop: { xs: "0.5px", sm: "1px" }
-              })}
-            >
-              +{events.length - 3} more
-            </Box>
-          )}
         </Box>
       )}
     </Box>
