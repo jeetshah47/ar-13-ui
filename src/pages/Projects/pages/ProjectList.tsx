@@ -1,12 +1,10 @@
-import { Box, Button, SvgIcon, Typography, type Theme, useMediaQuery, useTheme, FormControl, Select, MenuItem, OutlinedInput, InputLabel, Drawer, IconButton } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, type Theme, useMediaQuery, useTheme, FormControl, Select, MenuItem, OutlinedInput, InputLabel } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { SelectChangeEvent } from "@mui/material";
 import Modal from "../../../common/components/Modal/Modal";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 
 import ListView from "../components/ListView";
 import { useEffect, useState, useRef } from "react";
@@ -68,7 +66,7 @@ const ProjectList = () => {
   const dispatch = useAppDispatch();
   const lastFetchedProjectRef = useRef<string | null>(null);
   const projectsFetchedRef = useRef<boolean>(false);
-  const { checkPermission, userRole, isAdmin } = usePermissions();
+  const { checkPermission, isAdmin } = usePermissions();
 
   const navigate = useNavigate();
 
@@ -119,7 +117,7 @@ const ProjectList = () => {
 
   // Function to apply filters to tasks
   const applyFilters = (filters: FilterState) => {
-    const tasks = taskListState.api.data.tasks;
+    const tasks = taskListState.data.tasks;
     
     // Check if any filters are actually applied
     const hasStatusFilter = filters.selectedStatuses.length > 0 && filters.selectedStatuses.length < (taskStatuses?.length || 0);
@@ -132,7 +130,7 @@ const ProjectList = () => {
       return;
     }
     
-    const filtered = tasks.filter((task) => {
+    const filtered = tasks.filter((task: TaskResponse) => {
       // Filter by status - compare task.status with selected status values
       if (hasStatusFilter && !filters.selectedStatuses.includes(task.status)) {
         return false;
@@ -262,7 +260,7 @@ const ProjectList = () => {
 
   const ProjectSidebar = (
     <Box
-      sx={(theme) => ({
+      sx={{
         width: { xs: "100%", sm: "100%", md: "265px", lg: "265px" },
         background: "#FFFFFF",
         borderRadius: "24px",
@@ -274,7 +272,7 @@ const ProjectList = () => {
         overflow: "hidden",
         cursor: "pointer",
         alignSelf: "stretch",
-      })}
+      }}
     >
       <Box sx={{ 
         padding: { xs: "16px", sm: "20px 22px" }, 

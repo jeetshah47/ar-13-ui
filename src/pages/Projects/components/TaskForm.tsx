@@ -136,7 +136,14 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
         : "",
       priority: isEditMode && task ? task.priority || "" : "high",
       description: isEditMode && task ? task.description || "" : "",
-      assignTo: isEditMode && task ? (typeof task.assignTo === 'object' && task.assignTo !== null ? task.assignTo.id : task.assignTo) || null : null,
+      assignTo: isEditMode && task ? (() => {
+        if (!task.assignTo) return null;
+        if (typeof task.assignTo === 'string') return task.assignTo;
+        if (typeof task.assignTo === 'object' && task.assignTo !== null && 'id' in task.assignTo) {
+          return (task.assignTo as { id: string }).id;
+        }
+        return null;
+      })() : null,
     },
     validationSchema: taskValidationSchema,
     validateOnChange: true,

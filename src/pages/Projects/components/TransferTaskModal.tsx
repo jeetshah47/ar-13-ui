@@ -4,7 +4,7 @@ import Modal from "../../../common/components/Modal/Modal";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
-import type { User } from "../../../store/types/User/User";
+import type { UserResponse } from "../../../store/types/User/UserResponse";
 
 interface TransferTaskModalProps {
   show: boolean;
@@ -23,7 +23,7 @@ const TransferTaskModal = ({
 }: TransferTaskModalProps) => {
   const dispatch = useAppDispatch();
   const { users, loading: usersLoading } = useAppSelector((state: RootState) => state.userReducer);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
 
   // Fetch users if not already loaded
   useEffect(() => {

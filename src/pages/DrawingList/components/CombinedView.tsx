@@ -23,10 +23,12 @@ import type { DrawingCategory } from "../../../store/types/DrawingList/DrawingCa
 import type { DrawingType } from "../../../store/types/DrawingList/DrawingType";
 import { RequirePermission } from "../../../common/components/RBAC";
 
-interface CombinedViewProps {
+export interface CombinedViewProps {
   categories: DrawingCategory[];
   types: DrawingType[];
   loading: boolean;
+  onEditCategory?: (category: DrawingCategory) => void;
+  onDeleteCategory?: (category: DrawingCategory) => void;
   onEditType: (type: DrawingType) => void;
   onDeleteType: (type: DrawingType) => void;
 }
@@ -35,6 +37,8 @@ const CombinedView = ({
   categories,
   types,
   loading,
+  onEditCategory: _onEditCategory,
+  onDeleteCategory: _onDeleteCategory,
   onEditType,
   onDeleteType,
 }: CombinedViewProps) => {

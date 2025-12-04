@@ -1,13 +1,14 @@
-import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router';
-import { configureStore, PreloadedState } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
+// PreloadedState is not exported from @reduxjs/toolkit, using RootState directly
 import { ThemeProvider } from '@emotion/react';
 import { createAppTheme } from '../theme';
 import { ThemeProvider as CustomThemeProvider } from '../contexts/ThemeContext';
 import { NetworkErrorProvider } from '../contexts/NetworkErrorContext';
-import { RootState, store } from '../store/store';
+import type { RootState } from '../store/store';
 
 // Import all reducers
 import { authReducer } from '../store/features/auth/authSlice';
@@ -29,7 +30,7 @@ import { backupReducer } from '../store/features/backup/backupSlice';
 import { drawingListReducer } from '../store/features/drawingList/drawingListSlice';
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  preloadedState?: PreloadedState<RootState>;
+  preloadedState?: Partial<RootState>;
   store?: ReturnType<typeof configureStore>;
 }
 
@@ -56,7 +57,7 @@ export function renderWithProviders(
         googleAccountReducer,
         backupReducer,
         drawingListReducer,
-      },
+      } as any,
       preloadedState,
     }),
     ...renderOptions

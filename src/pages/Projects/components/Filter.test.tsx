@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderWithProviders, screen, userEvent } from '../../../test/utils';
-import Filter, { FilterState } from './Filter';
+import Filter from './Filter';
+import type { FilterState } from './Filter';
 import type { TaskResponse } from '../../../store/types/Task/TaskResponse';
 import type { TaskStatus } from '../../../store/types/Task/TaskTypes';
 
@@ -38,9 +39,9 @@ describe('Filter', () => {
   ];
 
   const mockTaskStatuses: TaskStatus[] = [
-    { value: 'pending', displayName: 'Pending' },
-    { value: 'in_progress', displayName: 'In Progress' },
-    { value: 'completed', displayName: 'Completed' },
+    { id: '1', value: 'pending', displayName: 'Pending', description: '', category: 'active', isActive: true, isCompleted: false, order: 1, createdAt: '', updatedAt: '' },
+    { id: '2', value: 'in_progress', displayName: 'In Progress', description: '', category: 'active', isActive: true, isCompleted: false, order: 2, createdAt: '', updatedAt: '' },
+    { id: '3', value: 'completed', displayName: 'Completed', description: '', category: 'completed', isActive: true, isCompleted: true, order: 3, createdAt: '', updatedAt: '' },
   ];
 
   const mockOnClose = vi.fn();
@@ -204,7 +205,7 @@ describe('Filter', () => {
     );
 
     const newStatuses: TaskStatus[] = [
-      { value: 'new_status', displayName: 'New Status' },
+      { id: '4', value: 'new_status', displayName: 'New Status', description: '', category: 'active', isActive: true, isCompleted: false, order: 4, createdAt: '', updatedAt: '' },
     ];
 
     rerender(

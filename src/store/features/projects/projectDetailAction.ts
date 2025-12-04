@@ -138,12 +138,20 @@ export const fetchProjectInfoAction =
         if (projectFromStore) {
           dispatch(
             fetchProjectInfoSuccess({
-              projectDetails: {
-                ...projectFromStore,
-                assignes: undefined,
-                priority: undefined,
-                deadline: projectFromStore.deadLine,
-              },
+            projectDetails: {
+              ...projectFromStore,
+              assignes: undefined,
+              priority: undefined,
+              deadline: projectFromStore.deadLine,
+              created: (() => {
+                if (!projectFromStore.created) return undefined;
+                if (typeof projectFromStore.created === 'string') return projectFromStore.created;
+                if (typeof projectFromStore.created === 'object' && '_seconds' in projectFromStore.created) {
+                  return new Date(projectFromStore.created._seconds * 1000).toISOString();
+                }
+                return undefined;
+              })() as string | undefined,
+            } as any,
             })
           );
         } else {
@@ -172,7 +180,15 @@ export const fetchProjectInfoAction =
               assignes: undefined,
               priority: undefined,
               deadline: projectFromStore.deadLine,
-            },
+              created: (() => {
+                if (!projectFromStore.created) return undefined;
+                if (typeof projectFromStore.created === 'string') return projectFromStore.created;
+                if (typeof projectFromStore.created === 'object' && '_seconds' in projectFromStore.created) {
+                  return new Date(projectFromStore.created._seconds * 1000).toISOString();
+                }
+                return undefined;
+              })() as string | undefined,
+            } as any,
           })
         );
       } else {

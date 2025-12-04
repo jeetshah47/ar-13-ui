@@ -2,7 +2,6 @@ import type { AppDispatch, RootState } from "../../store";
 import {
   addProjectFailed,
   addProjectRequest,
-  addProjectSuccess,
   getProjectListFailed,
   getProjectListRequest,
   getProjectListSuccess,
@@ -20,6 +19,7 @@ import { addProject, getAllProjects, updateProject, updateAgencyContact, archive
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { ProjectRequest, AgencyContact } from "../../types/Project/ProjectRequest";
 import type { ProjectResponse } from "../../types/Project/ProjectResponse";
+import type { UserRole } from "../../types/RBAC";
 import { filterProjectsByRole } from "../../utils/projectFiltering";
 
 export const getProjectListAction = () => async (dispatch: AppDispatch, getState: () => RootState) => {
@@ -34,7 +34,7 @@ export const getProjectListAction = () => async (dispatch: AppDispatch, getState
     const userId = state.authReducer.api.uid;
     
     // Always set filteredProjects (filtering function returns all projects if no filtering needed)
-    const filteredProjects = filterProjectsByRole(data.projects, userRole || "user", userId || "");
+    const filteredProjects = filterProjectsByRole(data.projects, userRole || ("user" as UserRole), userId || "");
     dispatch(setFilteredProjects(filteredProjects));
   } catch (error) {
     const axiosError = error as AxiosError<ProjectErrorResponse>;
@@ -116,7 +116,7 @@ export const updateProjectAction =
 
 export const updateAgencyContactAction =
   (projectId: string, agencyContact: AgencyContact, cb?: () => void) =>
-  async (dispatch: AppDispatch) => {
+  async (_dispatch: AppDispatch) => {
     try {
       await updateAgencyContact(projectId, agencyContact);
       toast.success("Agency contact updated successfully");

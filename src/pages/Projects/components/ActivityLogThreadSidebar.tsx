@@ -57,7 +57,7 @@ const ActivityLogThreadSidebar = ({
 
   const userState = useAppSelector((state: RootState) => state.userReducer);
   const { users } = userState;
-  const currentUser = useAppSelector((state: RootState) => state.userReducer.currentUser);
+  const currentUserId = useAppSelector((state: RootState) => state.authReducer.api.uid);
   const { onEvent, offEvent, sendMessage } = useNotifications();
   const { isUserOnline } = useUserPresence();
 
@@ -113,7 +113,7 @@ const ActivityLogThreadSidebar = ({
       userId?: string;
       userName?: string;
     }) => {
-      if (data.activityLogId === activityLog.id && data.userId && data.userId !== currentUser?.id) {
+      if (data.activityLogId === activityLog.id && data.userId && data.userId !== currentUserId) {
         setTypingUsers((prev) => {
           const newMap = new Map(prev);
           newMap.set(data.userId!, { userId: data.userId!, userName: data.userName || "Someone" });
@@ -158,7 +158,7 @@ const ActivityLogThreadSidebar = ({
       offEvent("activity-log:typing:stop", handleTypingStop);
       offEvent("error", handleError);
     };
-  }, [activityLog.id, dispatch, onEvent, offEvent, currentUser?.id]);
+  }, [activityLog.id, dispatch, onEvent, offEvent, currentUserId]);
 
   // Scroll to bottom when replies change or typing indicator appears
   useEffect(() => {

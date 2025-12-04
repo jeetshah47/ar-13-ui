@@ -1,4 +1,4 @@
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 
 type EventProps = {
@@ -8,7 +8,6 @@ type EventProps = {
 
 const Event = ({ event, onClick }: EventProps) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Get event color scheme based on category (using project theme colors)
   const getEventColors = (category: string | undefined) => {

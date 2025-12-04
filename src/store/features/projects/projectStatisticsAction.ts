@@ -11,6 +11,7 @@ import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { getAllProjectsStatistics, getProjectStatistics } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
+import type { ProjectStatistics } from "../../types/Project/ProjectStatisticsResponse";
 
 export const getProjectStatisticsAction =
   () => async (dispatch: AppDispatch) => {
@@ -37,7 +38,13 @@ export const getSingleProjectStatisticsAction =
     dispatch(getSingleProjectStatisticsRequest());
     try {
       const data = await getProjectStatistics(projectId);
-      dispatch(getSingleProjectStatisticsSuccess(data.statistics));
+      // Ensure completedTasksByAssignee is included (default to empty object if missing)
+      // The API response may not include this field, so we add it with a default value
+      const statistics: ProjectStatistics = {
+        ...data.statistics,
+        completedTasksByAssignee: (data.statistics as any).completedTasksByAssignee || {},
+      };
+      dispatch(getSingleProjectStatisticsSuccess(statistics));
     } catch (error) {
       const axiosError = error as AxiosError<ProjectErrorResponse>;
       if (axiosError?.response?.data) {

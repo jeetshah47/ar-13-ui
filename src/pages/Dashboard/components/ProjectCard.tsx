@@ -9,7 +9,16 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
   // Format date from timestamp
-  const formatDate = (timestamp: { _seconds: number; _nanoseconds: number }) => {
+  const formatDate = (timestamp: string | { _seconds: number; _nanoseconds: number } | undefined) => {
+    if (!timestamp) return 'N/A';
+    if (typeof timestamp === 'string') {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    }
     const date = new Date(timestamp._seconds * 1000);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 

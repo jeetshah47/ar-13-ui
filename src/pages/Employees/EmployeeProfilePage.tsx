@@ -230,7 +230,7 @@ const EmployeeProfilePage = () => {
           </Box>
           {currentTab === "Projects" && (
             <ProjectSection 
-              projects={profile?.projects} 
+              projects={profile?.projects as any} 
               loading={profileLoading} 
             />
           )}

@@ -162,7 +162,7 @@ const drawingListSlice = createSlice({
     },
     
     // Get types by category
-    getTypesByCategorySuccess(state, action: PayloadAction<TypeListResponse>) {
+    getTypesByCategorySuccess(state, _action: PayloadAction<TypeListResponse>) {
       // This can be used to filter types in the UI
       state.typesError = "";
     },

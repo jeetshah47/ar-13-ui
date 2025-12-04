@@ -105,7 +105,7 @@ const FileBrowserModal: React.FC<FileBrowserModalProps> = ({
   // Build breadcrumb paths
   const breadcrumbs = [
     { name: "Root", path: "" },
-    ...pathHistory.map((path, index) => ({
+    ...pathHistory.map((path) => ({
       name: path.split("/").filter(Boolean).pop() || "Root",
       path,
     })),

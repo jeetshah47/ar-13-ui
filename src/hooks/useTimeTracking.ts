@@ -54,6 +54,27 @@ export function useTimeTracking(options: UseTimeTrackingOptions): UseTimeTrackin
   const sessionStartTimeRef = useRef<number | null>(null);
   const lastActiveTimeRef = useRef<number | null>(null);
 
+  // Define checkTrackingStatus early to avoid hoisting issues
+  const checkTrackingStatus = useCallback(async () => {
+    try {
+      const status = await getTrackingStatus(projectId, taskId);
+      setIsTracking(status.isTracking);
+      setSession(status.session);
+
+      if (status.isTracking && status.session) {
+        sessionStartTimeRef.current = new Date(status.session.startTime).getTime();
+        lastActiveTimeRef.current = new Date(status.session.lastActive).getTime();
+      } else {
+        sessionStartTimeRef.current = null;
+        lastActiveTimeRef.current = null;
+      }
+      setError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to check tracking status";
+      setError(errorMessage);
+    }
+  }, [projectId, taskId]);
+
   // Initialize activity monitor
   useEffect(() => {
     const monitor = new ActivityMonitor(idleTimeout, 30, {
@@ -182,26 +203,6 @@ export function useTimeTracking(options: UseTimeTrackingOptions): UseTimeTrackin
       }
     };
   }, [isTracking, projectId, taskId, activityUpdateInterval]);
-
-  const checkTrackingStatus = useCallback(async () => {
-    try {
-      const status = await getTrackingStatus(projectId, taskId);
-      setIsTracking(status.isTracking);
-      setSession(status.session);
-
-      if (status.isTracking && status.session) {
-        sessionStartTimeRef.current = new Date(status.session.startTime).getTime();
-        lastActiveTimeRef.current = new Date(status.session.lastActive).getTime();
-      } else {
-        sessionStartTimeRef.current = null;
-        lastActiveTimeRef.current = null;
-      }
-      setError(null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to check tracking status";
-      setError(errorMessage);
-    }
-  }, [projectId, taskId]);
 
   const startTracking = useCallback(async () => {
     try {

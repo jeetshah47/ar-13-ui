@@ -9,7 +9,6 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Button,
   Select,
   MenuItem,
   FormControl,
@@ -18,7 +17,6 @@ import {
   Alert,
   Card,
   CardContent,
-  Grid,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -27,7 +25,6 @@ import PageHeader from "../../common/components/PageHeader/PageHeader";
 import CustomCard from "../../common/components/Card/CustomCard";
 import CardHeader from "../../common/components/Card/CardHeader";
 import {
-  getAllMetrics,
   getMetricsByService,
   getTopServices,
   resetMetrics,
@@ -113,28 +110,10 @@ const MetricsPage = () => {
     }
   };
 
-  const getSortLabel = (sort: string) => {
-    switch (sort) {
-      case "requests":
-        return "Request Count";
-      case "duration":
-        return "Total Duration";
-      case "bytes_in":
-        return "Bytes In";
-      case "bytes_out":
-        return "Bytes Out";
-      case "total_bytes":
-        return "Total Network Usage";
-      default:
-        return sort;
-    }
-  };
-
   return (
     <Box>
       <PageHeader
         title="System Metrics"
-        subtitle="Monitor resource usage by service and endpoint"
       />
 
       {error && (
@@ -145,8 +124,8 @@ const MetricsPage = () => {
 
       {/* Summary Cards */}
       {summary && (
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' } }}>
             <Card>
               <CardContent>
                 <Typography variant="body2" color="text.secondary">
@@ -157,8 +136,8 @@ const MetricsPage = () => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          </Box>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' } }}>
             <Card>
               <CardContent>
                 <Typography variant="body2" color="text.secondary">
@@ -169,8 +148,8 @@ const MetricsPage = () => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          </Box>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' } }}>
             <Card>
               <CardContent>
                 <Typography variant="body2" color="text.secondary">
@@ -181,8 +160,8 @@ const MetricsPage = () => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          </Box>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' } }}>
             <Card>
               <CardContent>
                 <Typography variant="body2" color="text.secondary">
@@ -193,15 +172,15 @@ const MetricsPage = () => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       )}
 
       {/* Controls */}
       <CustomCard>
         <CardHeader
           title="Service Metrics"
-          action={
+          endElement={
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <FormControl size="small" sx={{ minWidth: 150 }}>
                 <InputLabel>View Mode</InputLabel>

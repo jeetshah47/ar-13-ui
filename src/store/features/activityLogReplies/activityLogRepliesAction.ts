@@ -1,11 +1,7 @@
 import type { AppDispatch } from "../../store";
 import {
   getRepliesRequest,
-  getRepliesSuccess,
-  getRepliesFailed,
   createReplyRequest,
-  createReplySuccess,
-  createReplyFailed,
 } from "./activityLogRepliesSlice";
 
 /**

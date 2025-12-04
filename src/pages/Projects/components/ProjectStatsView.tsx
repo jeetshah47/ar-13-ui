@@ -7,7 +7,7 @@ import {
   LinearProgress,
   useTheme,
 } from "@mui/material";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { ProjectStatistics } from "../../../store/types/Project/ProjectStatisticsResponse";
 import CustomCard from "../../../common/components/Card/CustomCard";
 

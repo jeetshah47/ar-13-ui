@@ -198,8 +198,8 @@ const EmployeePermissionsSection = ({ userId }: EmployeePermissionsSectionProps)
   const [showEditModal, setShowEditModal] = useState(false);
 
   // Extract permissions and role from Redux state
-  const userPermissions: Permission[] = permissions?.permissions || [];
-  const userRole: UserRole | null = (permissions?.role as UserRole) || null;
+  const userPermissions: Permission[] = (permissions?.permissions ? permissions.permissions as Permission[] : []);
+  const userRole: UserRole | null = (permissions?.role ? permissions.role as UserRole : null);
   const loading = permissionsLoading;
   const error = permissionsError || null;
 
@@ -215,7 +215,7 @@ const EmployeePermissionsSection = ({ userId }: EmployeePermissionsSectionProps)
     }
   }, [userId, dispatch]);
 
-  const handleUpdatePermissions = async (permissions: Permission[], role?: UserRole) => {
+  const handleUpdatePermissions = async (_permissions: Permission[], role?: UserRole) => {
     if (!role) {
       toast.error("Role is required to update permissions");
       return;
