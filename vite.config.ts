@@ -7,7 +7,7 @@ import { resolve } from 'path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), svgr()],
-  base: './', // Required for Electron to load assets correctly
+  base: process.env.VERCEL ? '/' : './', // Use '/' for Vercel, './' for Electron
   build: {
     outDir: 'dist',
     emptyOutDir: true,
