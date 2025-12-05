@@ -7,7 +7,8 @@ import { resolve } from 'path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), svgr()],
-  base: process.env.VERCEL ? '/' : './', // Use '/' for Vercel, './' for Electron
+  // Use '/' for Vercel/web deployments, './' for Electron
+  base: (process.env.VERCEL || process.env.BUILD_TARGET === 'web') ? '/' : './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
