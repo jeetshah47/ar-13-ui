@@ -1,4 +1,4 @@
-import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, useMediaQuery, useTheme, IconButton } from "@mui/material";
+import { Box, Button, Grid, SvgIcon, Typography, CircularProgress, useMediaQuery, useTheme, IconButton, type Theme } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import Cell from "./components/Cell";
@@ -503,7 +503,7 @@ const CalendarPage = () => {
                 >
                   <SvgIcon 
                     component={LeftIcon}
-                    sx={(theme) => ({ 
+                    sx={(theme: Theme) => ({ 
                       fontSize: "20px",
                       color: theme.palette.text.secondary,
                     })}
@@ -511,7 +511,7 @@ const CalendarPage = () => {
                 </IconButton>
                 <Button
                   onClick={handleToday}
-                  sx={(theme) => ({
+                  sx={(theme: Theme) => ({
                     padding: "8px 16px",
                     minWidth: "auto",
                     height: "40px",
@@ -530,7 +530,7 @@ const CalendarPage = () => {
                 </Button>
                 <IconButton
                   onClick={handleOnClikNext}
-                  sx={(theme) => ({
+                  sx={(theme: Theme) => ({
                     padding: "8px 12px",
                     minWidth: "40px",
                     height: "40px",
@@ -542,7 +542,7 @@ const CalendarPage = () => {
                 >
                   <SvgIcon 
                     component={RightIcon}
-                    sx={(theme) => ({ 
+                    sx={(theme: Theme) => ({ 
                       fontSize: "20px",
                       color: theme.palette.text.secondary,
                     })}
@@ -636,8 +636,8 @@ const CalendarPage = () => {
                     padding: 0,
                     display: "flex",
                     flexDirection: "column",
-                    borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderRight: (theme: Theme) => `1px solid ${theme.palette.divider}`,
+                    borderBottom: (theme: Theme) => `1px solid ${theme.palette.divider}`,
                     "&:nth-of-type(7n)": {
                       borderRight: "none",
                     },
@@ -716,7 +716,7 @@ const CalendarPage = () => {
                       <Box
                         key={event.id}
                         onClick={() => handleOnEventClick(event)}
-                        sx={(theme) => ({
+                        sx={(theme: Theme) => ({
                           width: "100%",
                           height: "56px",
                           backgroundColor: theme.palette.grey[50],

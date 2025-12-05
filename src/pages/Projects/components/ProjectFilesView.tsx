@@ -22,7 +22,9 @@ import {
 } from "@mui/icons-material";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
 import { browseNAS, getFileDownloadUrl } from "../../../store/apis/storageApi";
+import { openFileWithDefaultApp } from "../../../services/nas/nasService";
 import FileExplorer from "../../InfoPortal/components/FileExplorer";
+import toast from "react-hot-toast";
 
 interface ProjectFilesViewProps {
   projectCode: string;
@@ -205,12 +207,32 @@ const ProjectFilesView = ({ projectCode }: ProjectFilesViewProps) => {
     if (item.isFolder) {
       handleNavigate(item.path);
     } else {
-      // Download file on double-click
+      // Open file with default app (for Electron) or download (for web)
       try {
-        const downloadUrl = await getFileDownloadUrl(item.path);
-        window.open(downloadUrl, "_blank");
-      } catch (err) {
-        console.error("Failed to get download URL:", err);
+        // Check if running in Electron
+        if (window.electronAPI) {
+          // Use NAS mount to open file directly
+          const result = await openFileWithDefaultApp(item.path, item.size);
+          if (result.success) {
+            toast.success(`Opening file: ${item.name}`);
+          } else {
+            toast.error(result.error || "Failed to open file");
+            // Fallback to download if mount fails
+            try {
+              const downloadUrl = await getFileDownloadUrl(item.path);
+              window.open(downloadUrl, "_blank");
+            } catch (downloadErr) {
+              console.error("Failed to get download URL:", downloadErr);
+            }
+          }
+        } else {
+          // Web browser: download file
+          const downloadUrl = await getFileDownloadUrl(item.path);
+          window.open(downloadUrl, "_blank");
+        }
+      } catch (err: any) {
+        console.error("Failed to open file:", err);
+        toast.error(err.message || "Failed to open file");
       }
     }
   };

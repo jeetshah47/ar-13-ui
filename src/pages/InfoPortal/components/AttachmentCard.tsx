@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, type Theme } from "@mui/material";
 import AttachmentIcon from "../../../assets/icons/general/attach/dark.svg?react";
 import { SvgIcon } from "@mui/material";
 import type { AttachmentResponse } from "../../../store/types/InfoPortal/AttachmentResponse";
@@ -108,7 +108,7 @@ const AttachmentCard = ({ attachment }: AttachmentCardProps) => {
       >
         <SvgIcon
           component={AttachmentIcon}
-          sx={(theme) => ({
+          sx={(theme: Theme) => ({
             width: "24px",
             height: "24px",
             color: theme.palette.text.primary,

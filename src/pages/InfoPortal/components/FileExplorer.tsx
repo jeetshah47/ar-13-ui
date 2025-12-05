@@ -12,20 +12,20 @@ import {
 } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import FolderIcon from "./FolderIcon";
-// import ContextMenu from "./ContextMenu";
+import ContextMenu from "./ContextMenu";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
 
 interface FileExplorerProps {
   items: FileBrowserItem[];
   onItemClick: (item: FileBrowserItem) => void;
   onItemDoubleClick?: (item: FileBrowserItem) => void;
-  // onNewItem?: () => void;
-  // onRename?: (items: FileBrowserItem[]) => void;
-  // onMove?: (items: FileBrowserItem[]) => void;
-  // onCompress?: (items: FileBrowserItem[]) => void;
-  // onShare?: (items: FileBrowserItem[]) => void;
-  // onProperties?: (items: FileBrowserItem[]) => void;
-  // onDelete?: (items: FileBrowserItem[]) => void;
+  onNewItem?: () => void;
+  onRename?: (items: FileBrowserItem[]) => void;
+  onMove?: (items: FileBrowserItem[]) => void;
+  onCompress?: (items: FileBrowserItem[]) => void;
+  onShare?: (items: FileBrowserItem[]) => void;
+  onProperties?: (items: FileBrowserItem[]) => void;
+  onDelete?: (items: FileBrowserItem[]) => void;
 }
 
 type SortField = "name" | "modified" | "size" | "type";
@@ -35,20 +35,20 @@ const FileExplorer = ({
   items,
   onItemClick,
   onItemDoubleClick,
-  // onNewItem,
-  // onRename,
-  // onMove,
-  // onCompress,
-  // onShare,
-  // onProperties,
-  // onDelete,
+  onNewItem,
+  onRename,
+  onMove,
+  onCompress,
+  onShare,
+  onProperties,
+  onDelete,
 }: FileExplorerProps) => {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  // const [contextMenu, setContextMenu] = useState<{
-  //   mouseX: number;
-  //   mouseY: number;
-  // } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
   const [selectedItems, setSelectedItems] = useState<FileBrowserItem[]>([]);
 
   // Separate folders and files, then sort
@@ -132,41 +132,37 @@ const FileExplorer = ({
     return ext ? `${ext} File` : "File";
   };
 
-  // const handleContextMenu = (
-  //   event: React.MouseEvent,
-  //   item: FileBrowserItem
-  // ) => {
-  //   event.preventDefault();
-  //   event.stopPropagation();
+  const handleContextMenu = (
+    event: React.MouseEvent,
+    item: FileBrowserItem
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-  //   // Check if item is already selected
-  //   const isSelected = selectedItems.some(
-  //     (selected) => selected.path === item.path
-  //   );
+    // Check if item is already selected
+    const isSelected = selectedItems.some(
+      (selected) => selected.path === item.path
+    );
 
-  //   if (!isSelected) {
-  //     // If Ctrl/Cmd is not pressed, select only this item
-  //     if (!event.ctrlKey && !event.metaKey) {
-  //       setSelectedItems([item]);
-  //     } else {
-  //       // Add to selection
-  //       setSelectedItems([...selectedItems, item]);
-  //     }
-  //   }
+    if (!isSelected) {
+      // If Ctrl/Cmd is not pressed, select only this item
+      if (!event.ctrlKey && !event.metaKey) {
+        setSelectedItems([item]);
+      } else {
+        // Add to selection
+        setSelectedItems([...selectedItems, item]);
+      }
+    }
 
-  //   setContextMenu(
-  //     contextMenu === null
-  //       ? {
-  //           mouseX: event.clientX + 2,
-  //           mouseY: event.clientY - 6,
-  //         }
-  //       : null
-  //   );
-  // };
+    setContextMenu({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+    });
+  };
 
-  // const handleCloseContextMenu = () => {
-  //   setContextMenu(null);
-  // };
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
 
   const handleRowClick = (event: React.MouseEvent, item: FileBrowserItem) => {
     if (event.ctrlKey || event.metaKey) {
@@ -188,31 +184,31 @@ const FileExplorer = ({
     }
   };
 
-  // const handleContextMenuAction = (action: string) => {
-  //   if (selectedItems.length === 0) return;
+  const handleContextMenuAction = (action: string) => {
+    if (selectedItems.length === 0) return;
 
-  //   switch (action) {
-  //     case "rename":
-  //       onRename?.(selectedItems);
-  //       break;
-  //     case "move":
-  //       onMove?.(selectedItems);
-  //       break;
-  //     case "compress":
-  //       onCompress?.(selectedItems);
-  //       break;
-  //     case "share":
-  //       onShare?.(selectedItems);
-  //       break;
-  //     case "properties":
-  //       onProperties?.(selectedItems);
-  //       break;
-  //     case "delete":
-  //       onDelete?.(selectedItems);
-  //       break;
-  //   }
-  //   setSelectedItems([]);
-  // };
+    switch (action) {
+      case "rename":
+        onRename?.(selectedItems);
+        break;
+      case "move":
+        onMove?.(selectedItems);
+        break;
+      case "compress":
+        onCompress?.(selectedItems);
+        break;
+      case "share":
+        onShare?.(selectedItems);
+        break;
+      case "properties":
+        onProperties?.(selectedItems);
+        break;
+      case "delete":
+        onDelete?.(selectedItems);
+        break;
+    }
+    setContextMenu(null);
+  };
 
   const handleTableClick = (e: React.MouseEvent) => {
     // Deselect if clicking on table background (not on a row)
@@ -224,19 +220,19 @@ const FileExplorer = ({
     }
   };
 
-  // const handleTableContextMenu = (e: React.MouseEvent) => {
-  //   // Show context menu on empty space with no selection
-  //   if (selectedItems.length === 0) {
-  //     e.preventDefault();
-  //     setContextMenu({
-  //       mouseX: e.clientX + 2,
-  //       mouseY: e.clientY - 6,
-  //     });
-  //   }
-  // };
+  const handleTableContextMenu = (e: React.MouseEvent) => {
+    // Show context menu on empty space with no selection
+    if (selectedItems.length === 0) {
+      e.preventDefault();
+      setContextMenu({
+        mouseX: e.clientX + 2,
+        mouseY: e.clientY - 6,
+      });
+    }
+  };
 
   return (
-    <Box onClick={handleTableClick}>
+    <Box onClick={handleTableClick} onContextMenu={handleTableContextMenu}>
       <CustomCard sx={{ padding: 0, overflow: "hidden" }}>
         <TableContainer>
           <Table sx={{ minWidth: 650 }} size="small">
@@ -343,6 +339,7 @@ const FileExplorer = ({
                        key={item.path}
                        onClick={(e) => handleRowClick(e, item)}
                        onDoubleClick={() => onItemDoubleClick?.(item)}
+                       onContextMenu={(e) => handleContextMenu(e, item)}
                        sx={{
                         cursor: "pointer",
                         backgroundColor: isSelected
@@ -440,7 +437,7 @@ const FileExplorer = ({
             </TableBody>
           </Table>
         </TableContainer>
-        {/* <ContextMenu
+        <ContextMenu
           open={contextMenu !== null}
           anchorPosition={
             contextMenu !== null
@@ -456,7 +453,7 @@ const FileExplorer = ({
           onShare={() => handleContextMenuAction("share")}
           onProperties={() => handleContextMenuAction("properties")}
           onDelete={() => handleContextMenuAction("delete")}
-        /> */}
+        />
       </CustomCard>
     </Box>
   );

@@ -1,4 +1,4 @@
-import { Box, IconButton, SvgIcon, Typography, Button, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, SvgIcon, Typography, Button, useMediaQuery, useTheme, type Theme } from "@mui/material";
 import { ViewButtonOptions } from "../constants/project.contants";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-1.svg?react";
@@ -89,7 +89,7 @@ const TaskHeader = ({
             >
               <SvgIcon
                 component={option.icon}
-                sx={(theme) => ({
+                sx={(theme: Theme) => ({
                   color:
                     currentViewOption === option.key 
                       ? theme.palette.primary.main 
@@ -101,7 +101,7 @@ const TaskHeader = ({
           ))}
           <Box
             onClick={onClickFilterShow}
-            sx={(theme) => ({
+            sx={(theme: Theme) => ({
               background: theme.palette.background.paper,
               boxShadow: theme.shadows[1],
               borderRadius: "14px",

@@ -137,40 +137,40 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
     handleNavigate(path);
   };
 
-  // const handleNewItem = () => {
-  //   // TODO: Implement new item creation
-  //   console.log("New item");
-  // };
+  const handleNewItem = () => {
+    // TODO: Implement new item creation
+    console.log("New item");
+  };
 
-  // const handleRename = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement rename
-  //   console.log("Rename", items);
-  // };
+  const handleRename = (items: FileBrowserItem[]) => {
+    // TODO: Implement rename
+    console.log("Rename", items);
+  };
 
-  // const handleMove = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement move
-  //   console.log("Move", items);
-  // };
+  const handleMove = (items: FileBrowserItem[]) => {
+    // TODO: Implement move
+    console.log("Move", items);
+  };
 
-  // const handleCompress = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement compress
-  //   console.log("Compress", items);
-  // };
+  const handleCompress = (items: FileBrowserItem[]) => {
+    // TODO: Implement compress
+    console.log("Compress", items);
+  };
 
-  // const handleShare = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement share
-  //   console.log("Share", items);
-  // };
+  const handleShare = (items: FileBrowserItem[]) => {
+    // TODO: Implement share
+    console.log("Share", items);
+  };
 
-  // const handleProperties = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement properties
-  //   console.log("Properties", items);
-  // };
+  const handleProperties = (items: FileBrowserItem[]) => {
+    // TODO: Implement properties
+    console.log("Properties", items);
+  };
 
-  // const handleDelete = (items: FileBrowserItem[]) => {
-  //   // TODO: Implement delete
-  //   console.log("Delete", items);
-  // };
+  const handleDelete = (items: FileBrowserItem[]) => {
+    // TODO: Implement delete
+    console.log("Delete", items);
+  };
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
@@ -454,6 +454,13 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
                   items={filteredItems}
                   onItemClick={handleItemClick}
                   onItemDoubleClick={handleItemDoubleClick}
+                  onNewItem={handleNewItem}
+                  onRename={handleRename}
+                  onMove={handleMove}
+                  onCompress={handleCompress}
+                  onShare={handleShare}
+                  onProperties={handleProperties}
+                  onDelete={handleDelete}
                 />
               </Box>
               {/* Status Bar */}

@@ -4,6 +4,9 @@
 const config = {
   appId: 'com.ar13.ui',
   productName: 'AR 13',
+  // Disable code signing for development builds
+  // Set to your certificate details for production builds
+  sign: null,
   directories: {
     output: 'release',
     buildResources: 'build',
@@ -24,6 +27,9 @@ const config = {
       },
     ],
     icon: 'build/icon.ico',
+    sign: null, // Disable code signing for development builds
+    // Skip code signing completely
+    signingHashAlgorithms: [],
   },
   mac: {
     target: [
