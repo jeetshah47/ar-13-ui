@@ -59,6 +59,65 @@ const ListView = ({ tasks }: ListViewProps) => {
     return "2d 4h"; // Placeholder - should come from task data
   };
 
+  // Progress component with CircularProgress and percentage
+  const ProgressChart = ({ progress }: { progress: number }) => {
+    const progressValue = Math.min(Math.max(progress ?? 0, 0), 100);
+    const size = isMobile ? 32 : 40;
+    
+    // Determine color based on progress
+    const getProgressColor = () => {
+      if (progressValue >= 80) return theme.palette.success.main;
+      if (progressValue >= 50) return theme.palette.warning.main;
+      return theme.palette.primary.main;
+    };
+
+    return (
+      <Box
+        sx={{
+          position: "relative",
+          width: size,
+          height: size,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress
+          variant="determinate"
+          value={progressValue}
+          size={size}
+          thickness={4}
+          sx={{
+            color: getProgressColor(),
+            "& .MuiCircularProgress-circle": {
+              strokeLinecap: "round",
+            },
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: "9px", sm: "10px" },
+              fontWeight: 700,
+              color: theme.palette.text.primary,
+              lineHeight: 1,
+            }}
+          >
+            {progressValue}%
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
+
   const TaskCard = (task: TaskResponse) => {
     // Use drawing type name if available, otherwise fall back to subject
     const taskTitle = task.drawingInfo?.typeName || task.subject;
@@ -88,22 +147,11 @@ const ListView = ({ tasks }: ListViewProps) => {
           <Box
             sx={{
               position: "absolute",
-              top: "31px",
+              top: "20px",
               right: "20px",
             }}
           >
-            <CircularProgress 
-              variant="determinate" 
-              value={task.progress ?? 0} 
-              size={24}
-              thickness={2}
-              sx={{ 
-                color: "#3F8CFF",
-                "& .MuiCircularProgress-circle": {
-                  strokeLinecap: "round",
-                }
-              }}
-            />
+            <ProgressChart progress={task.progress ?? 0} />
           </Box>
 
           {/* Task Name */}
@@ -478,19 +526,8 @@ const ListView = ({ tasks }: ListViewProps) => {
             Progress
           </Typography>
         </Box>
-        <Box sx={{ gridArea: "progress-value" }}>
-          <CircularProgress 
-            variant="determinate" 
-            value={task.progress ?? 0} 
-            size={24}
-            thickness={2}
-            sx={{ 
-              color: "var(--color-primary, #3F8CFF)",
-              "& .MuiCircularProgress-circle": {
-                strokeLinecap: "round",
-              }
-            }}
-          />
+        <Box sx={{ gridArea: "progress-value", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <ProgressChart progress={task.progress ?? 0} />
         </Box>
       </Box>
     );

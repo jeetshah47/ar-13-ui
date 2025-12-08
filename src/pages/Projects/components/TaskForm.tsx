@@ -319,6 +319,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
               error={Boolean(formik.touched.code && formik.errors.code)}
               helperText={formik.touched.code && formik.errors.code}
               required
+              disabled={isEditMode}
             />
           </Box>
           <Box sx={{ width: "100%", paddingTop: "16px" }}>

@@ -8,13 +8,19 @@ const LandingPage = () => {
   const location = useLocation();
 
   return (
-    <Box sx={{ height: "100%", width: "100%"}}>
-      <Header />
+    <Box sx={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ flexShrink: 0 }}>
+        <Header />
+      </Box>
       <Box 
         sx={{ 
           padding: { xs: "12px", sm: "16px", md: "20px", lg: "28px" }, 
-          minHeight: "100%",
-          paddingTop: { xs: "60px", sm: "16px", md: "20px", lg: "28px" } // Extra top padding on mobile for menu button
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+          paddingTop: { xs: "60px", sm: "16px", md: "20px", lg: "28px" }, // Extra top padding on mobile for menu button
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <AnimatedPage>

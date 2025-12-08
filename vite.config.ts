@@ -8,7 +8,8 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [react(), svgr()],
   // Use '/' for Vercel/web deployments, './' for Electron
-  base: (process.env.VERCEL || process.env.BUILD_TARGET === 'web') ? '/' : './',
+  // Vercel automatically sets VERCEL=1 and VERCEL_URL during CI/CD builds
+  base: (process.env.VERCEL === '1' || process.env.VERCEL_URL || process.env.BUILD_TARGET === 'web') ? '/' : './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,

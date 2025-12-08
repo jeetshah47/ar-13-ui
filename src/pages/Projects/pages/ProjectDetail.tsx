@@ -825,6 +825,8 @@ const ProjectDetail = () => {
             onClaimTaskClick={handleOpenClaimTask}
             project={projectDetails as ProjectResponse}
             taskStatuses={taskStatuses}
+            projectId={projectId}
+            taskId={taskId}
           >
             {/* File Attachments Section */}
             <FileAttachmentsSection

@@ -35,7 +35,7 @@ const getInitials = (name: string | null | undefined): string => {
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("Projects");
   const [showModal, setShowModal] = useState(false);
-  const [showSetting, ] = useState(false);
+  const [showSetting, setShowSetting] = useState(false);
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -43,8 +43,12 @@ const ProfilePage = () => {
   const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
   const { checkPermission } = usePermissions();
   
+  // Check for force password change
+  const forceChangePassword = profile?.forceChangePassword || 
+    localStorage.getItem("forceChangePassword") === "true";
+  
   // Filter tab list based on permissions
-  const baseTabList = ["Projects", "Team", "My Vacations", "Permissions"];
+  const baseTabList = ["Projects", "Team", "My Vacations", "Permissions", "Settings"];
   const tabList = baseTabList.filter(tab => {
     if (tab === "My Vacations") {
       return checkPermission("vacation:read");
@@ -52,12 +56,20 @@ const ProfilePage = () => {
     return true;
   });
   
+  // If force password change is required, automatically show settings
+  useEffect(() => {
+    if (forceChangePassword && !showSetting) {
+      setShowSetting(true);
+      setCurrentTab("");
+    }
+  }, [forceChangePassword, showSetting]);
+  
   // If current tab is not available, switch to first available tab
   useEffect(() => {
-    if (!tabList.includes(currentTab) && tabList.length > 0) {
+    if (!tabList.includes(currentTab) && tabList.length > 0 && !showSetting) {
       setCurrentTab(tabList[0]);
     }
-  }, [tabList, currentTab]);
+  }, [tabList, currentTab, showSetting]);
   
   // Get auth state user data as fallback
   const authUserName = useAppSelector((state: RootState) => state.authReducer.user.name);
@@ -83,10 +95,22 @@ const ProfilePage = () => {
     setShowModal(true);
   };
 
-  // const handleShowSetting = () => {
-  //   setShowSetting(true);
-  //   setCurrentTab("");
-  // };
+  const handleShowSetting = () => {
+    setShowSetting(true);
+    setCurrentTab("");
+  };
+  
+  const handleBackFromSettings = () => {
+    setShowSetting(false);
+    // Clear forceChangePassword flag from localStorage if it was set
+    if (forceChangePassword && !profile?.forceChangePassword) {
+      localStorage.removeItem("forceChangePassword");
+    }
+    // Set to first available tab
+    if (tabList.length > 0) {
+      setCurrentTab(tabList[0]);
+    }
+  };
 
   return (
     <Box sx={{ height: "100%" }}>
@@ -240,7 +264,13 @@ const ProfilePage = () => {
                   <Tab
                     tabList={tabList}
                     currentTab={currentTab}
-                    onChangeTab={(tab) => setCurrentTab(tab)}
+                    onChangeTab={(tab) => {
+                      if (tab === "Settings") {
+                        handleShowSetting();
+                      } else {
+                        setCurrentTab(tab);
+                      }
+                    }}
                   />
                 </Box>
 
@@ -259,11 +289,11 @@ const ProfilePage = () => {
               </>
             )}
           </Box>
-          {currentTab === "Projects" && <ProjectSection />}
-          {currentTab === "Team" && <TeamSection />}
-          {currentTab === "My Vacations" && checkPermission("vacation:read") && <VacationSection />}
-          {currentTab === "Permissions" && <PermissionsSection />}
-          {showSetting && <ProfileSetting />}
+          {!showSetting && currentTab === "Projects" && <ProjectSection />}
+          {!showSetting && currentTab === "Team" && <TeamSection />}
+          {!showSetting && currentTab === "My Vacations" && checkPermission("vacation:read") && <VacationSection />}
+          {!showSetting && currentTab === "Permissions" && <PermissionsSection />}
+          {showSetting && <ProfileSetting onBack={handleBackFromSettings} />}
         </Box>
       </Box>
       <Modal onClose={handleOnCloseModal} show={showModal}>

@@ -9,6 +9,7 @@ export interface UserProfileResponse {
   createdAt: string; // ISO date string from API
   updatedAt?: string; // ISO date string from API
   password?: string; // Optional, may not be in API response
+  forceChangePassword?: boolean; // True if user must change password on next login
   projects?: Record<string, unknown>; // Optional, may not be in API response
   tasks?: Record<string, unknown>; // Optional, may not be in API response
   created?: string; // Legacy field, kept for backward compatibility

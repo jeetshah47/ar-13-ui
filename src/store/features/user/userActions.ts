@@ -14,6 +14,13 @@ export const getUserProfileAction = (userId: string) => async (dispatch: AppDisp
       leaveRequests: response.leaveRequests || response.user.leaveRequests,
     };
     dispatch(getUserProfileSuccess(userWithLeaveRequests));
+    
+    // Update forceChangePassword in localStorage based on profile
+    if (userWithLeaveRequests.forceChangePassword !== undefined) {
+      localStorage.setItem("forceChangePassword", String(userWithLeaveRequests.forceChangePassword));
+    } else {
+      localStorage.removeItem("forceChangePassword");
+    }
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
     const message = axiosError.response?.data?.message || "Failed to load user profile";

@@ -4,7 +4,6 @@ import CustomCard from "../../common/components/Card/CustomCard";
 import CardHeader from "../../common/components/Card/CardHeader";
 // import EmployeeCard from "./components/EmployeeCard";
 import EventCard from "./components/EventCard";
-import ProjectCard from "./components/ProjectCard";
 import ActivityCard from "./components/ActivityCard";
 import CalendarEventsWidget from "./components/CalendarEventsWidget";
 import { useEffect, useState, Suspense, lazy } from "react";
@@ -20,7 +19,6 @@ import ProjectStatisticsOverview from "./components/ProjectStatisticsOverview";
 import ProjectStatisticsWidget from "./components/ProjectStatisticsWidget";
 import Modal from "../../common/components/Modal/Modal";
 // import type { DashboardEmployeeResponse } from "../../store/types/Dashboard/DashboardResponse";
-import type { ProjectResponse } from "../../store/types/Project/ProjectResponse";
 import type { CalendarResponse } from "../../store/types/Calendar/CalendarResponse";
 
 // Lazy load heavy components
@@ -74,8 +72,6 @@ const DashboardPage = () => {
 
   // Extract data from dashboard state
   // const employees: DashboardEmployeeResponse[] = dashboardData.data.datas.employees || [];
-  const projects: ProjectResponse[] = dashboardData.data.datas.projects || [];
-  const isLoading = dashboardData.loading;
   const error = dashboardData.error;
 
   // Extract calendar events
@@ -302,38 +298,6 @@ const DashboardPage = () => {
                 </Typography>
               )}
             </Box>
-          </Box>
-          
-          {/* Original Projects List */}
-          <Box sx={{ paddingBottom: { xs: "16px", sm: "20px", md: "28px" } }}>
-            <CardHeader title="Projects" link="/#" />
-            {isLoading ? (
-              // Show skeleton while loading projects
-              <>
-                {[1, 2, 3].map((i) => (
-                  <Skeleton 
-                    key={i} 
-                    variant="rectangular" 
-                    height={isXs ? 100 : isSm ? 110 : 120} 
-                    sx={{ 
-                      borderRadius: { xs: "12px", sm: "20px", md: "24px" }, 
-                      marginBottom: { xs: "8px", sm: "10px", md: "12px" } 
-                    }} 
-                  />
-                ))}
-              </>
-            ) : projects.length > 0 ? (
-              projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))
-            ) : (
-              <Typography 
-                color="secondary"
-                sx={{ fontSize: { xs: "12px", sm: "14px" } }}
-              >
-                No projects found
-              </Typography>
-            )}
           </Box>
         </Box>
 

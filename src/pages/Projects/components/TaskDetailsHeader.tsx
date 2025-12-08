@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Box, Button, SvgIcon, Typography, useMediaQuery, useTheme, Select, MenuItem, FormControl } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
 import EditIcon from "../../../assets/icons/general/gear.svg?react";
@@ -8,6 +9,8 @@ import { RequirePermission } from "../../../common/components/RBAC/RequirePermis
 import { usePermissions } from "../../../store/hooks/usePermissions";
 import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
 import { mapStatusToUnified } from "../../../pages/Projects/constants/taskStatus.constants";
+import { startTimeTracking, stopTimeTracking } from "../../../store/apis/taskApis";
+import toast from "react-hot-toast";
 
 interface TaskDetailsHeaderProps {
   onEditClick: () => void;
@@ -100,6 +103,8 @@ interface TaskDetailsContentProps {
   onClaimTaskClick: () => void;
   project?: ProjectResponse;
   taskStatuses?: TaskStatus[];
+  projectId?: string;
+  taskId?: string;
   children: React.ReactNode;
 }
 
@@ -111,15 +116,69 @@ export const TaskDetailsContent = ({
   onClaimTaskClick,
   project,
   taskStatuses = [],
+  projectId,
+  taskId,
   children,
 }: TaskDetailsContentProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { canClaimTask } = useResourceAccess();
   const showClaimButton = project ? canClaimTask(project) : false;
+  const [isStartingTask, setIsStartingTask] = React.useState(false);
+  const [isEndingTask, setIsEndingTask] = React.useState(false);
 
-  // Normalize currentStatus to unified format for matching
+  // Check if task is in progress
   const normalizedCurrentStatus = currentStatus ? mapStatusToUnified(currentStatus) : null;
+  const isTaskInProgress = normalizedCurrentStatus === "in_progress" || normalizedCurrentStatus === "inProgress";
+  const isTaskPending = normalizedCurrentStatus === "pending" || !normalizedCurrentStatus;
+
+  // Handle Start Task
+  const handleStartTask = async () => {
+    if (!projectId || !taskId) {
+      toast.error("Project ID or Task ID is missing");
+      return;
+    }
+
+    setIsStartingTask(true);
+    try {
+      // Start time tracking
+      await startTimeTracking(projectId, taskId);
+      
+      // Update status to in_progress
+      onStatusChange("in_progress");
+      
+      toast.success("Task started successfully");
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to start task";
+      toast.error(errorMessage);
+    } finally {
+      setIsStartingTask(false);
+    }
+  };
+
+  // Handle End Task
+  const handleEndTask = async () => {
+    if (!projectId || !taskId) {
+      toast.error("Project ID or Task ID is missing");
+      return;
+    }
+
+    setIsEndingTask(true);
+    try {
+      // Stop time tracking
+      await stopTimeTracking(projectId, taskId);
+      
+      // Update status to pending
+      onStatusChange("pending");
+      
+      toast.success("Task ended successfully");
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to end task";
+      toast.error(errorMessage);
+    } finally {
+      setIsEndingTask(false);
+    }
+  };
 
   // Find the current status object by matching unified status values
   // Try to match by normalizing both the currentStatus and taskStatus values
@@ -263,6 +322,62 @@ export const TaskDetailsContent = ({
               }}
             >
               Claim Task
+            </Button>
+          )}
+          {projectId && taskId && isTaskPending && (
+            <Button
+              variant="contained"
+              onClick={handleStartTask}
+              disabled={isStartingTask}
+              fullWidth={isMobile}
+              sx={{
+                backgroundColor: "#4CAF50",
+                color: "#FFFFFF",
+                borderRadius: "14px",
+                padding: { xs: "10px 16px", sm: "13px 20px" },
+                fontWeight: 700,
+                fontSize: { xs: "14px", sm: "16px" },
+                lineHeight: 1.364,
+                boxShadow: "0px 6px 12px 0px rgba(76, 175, 80, 0.26)",
+                "&:hover": {
+                  backgroundColor: "#45a049",
+                  boxShadow: "0px 6px 12px 0px rgba(76, 175, 80, 0.42)",
+                },
+                "&:disabled": {
+                  backgroundColor: "#81c784",
+                  color: "#FFFFFF",
+                },
+              }}
+            >
+              {isStartingTask ? "Starting..." : "Start Task"}
+            </Button>
+          )}
+          {projectId && taskId && isTaskInProgress && (
+            <Button
+              variant="contained"
+              onClick={handleEndTask}
+              disabled={isEndingTask}
+              fullWidth={isMobile}
+              sx={{
+                backgroundColor: "#f44336",
+                color: "#FFFFFF",
+                borderRadius: "14px",
+                padding: { xs: "10px 16px", sm: "13px 20px" },
+                fontWeight: 700,
+                fontSize: { xs: "14px", sm: "16px" },
+                lineHeight: 1.364,
+                boxShadow: "0px 6px 12px 0px rgba(244, 67, 54, 0.26)",
+                "&:hover": {
+                  backgroundColor: "#da190b",
+                  boxShadow: "0px 6px 12px 0px rgba(244, 67, 54, 0.42)",
+                },
+                "&:disabled": {
+                  backgroundColor: "#e57373",
+                  color: "#FFFFFF",
+                },
+              }}
+            >
+              {isEndingTask ? "Ending..." : "End Task"}
             </Button>
           )}
         </Box>

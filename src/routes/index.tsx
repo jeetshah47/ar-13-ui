@@ -13,6 +13,7 @@ import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
 import DrawingListPage from "../pages/DrawingList/DrawingListPage";
 import MetricsPage from "../pages/Metrics/MetricsPage";
+import AuditLogsPage from "../pages/AuditLogs/AuditLogsPage";
 import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
 
 const authRoutes = [
@@ -114,6 +115,17 @@ const authRoutes = [
         redirectTo="/app/dashboard"
       >
         <MetricsPage />
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/audit-logs",
+    component: (
+      <PermissionRoute 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
+        <AuditLogsPage />
       </PermissionRoute>
     ),
   },

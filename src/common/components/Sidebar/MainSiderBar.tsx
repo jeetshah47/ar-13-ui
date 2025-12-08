@@ -19,6 +19,7 @@ import { RequireAdmin } from "../RBAC/RequirePermission";
 import { usePermissions } from "../../../store/hooks/usePermissions";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import DescriptionIcon from "@mui/icons-material/Description";
+import HistoryIcon from "@mui/icons-material/History";
 
 interface ItemProps {
   active?: boolean;
@@ -241,6 +242,24 @@ const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
                 color={checkActiveStatus("metrics") ? "primary" : "secondary"}
               >
                 Metrics
+              </Typography>
+            </Item>
+          </RequireAdmin>
+          {/* Audit Logs sidebar - Only visible to Admin users */}
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/audit-logs")}
+              active={checkActiveStatus("audit-logs")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={HistoryIcon}
+                color={checkActiveStatus("audit-logs") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("audit-logs") ? "primary" : "secondary"}
+              >
+                Audit Logs
               </Typography>
             </Item>
           </RequireAdmin>

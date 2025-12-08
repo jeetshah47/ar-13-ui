@@ -8,7 +8,7 @@ import EmpCard from "./components/EmpCard";
 import type { EmployeeResponse } from "../../store/types/Employee/EmployeeResponse";
 import ActivitySection from "./components/ActivitySection";
 import Modal from "../../common/components/Modal/Modal";
-import EmployeeForm from "./components/EmployeeForm";
+import EmployeeRegistrationModal from "./components/EmployeeRegistrationModal";
 import { RequirePermission } from "../../common/components/RBAC";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { getAllEmployeesAction } from "../../store/features/employees/employeeActions";
@@ -30,6 +30,10 @@ const EmployeesPage = () => {
   };
   const handleOnClickAddButton = () => {
     setShowFormModal(true);
+  };
+  const handleEmployeeCreated = () => {
+    dispatch(getAllEmployeesAction());
+    setShowFormModal(false);
   };
   const AddButton = (
     <RequirePermission permission="users:write">
@@ -236,7 +240,21 @@ const EmployeesPage = () => {
       )}
       {FloatingActionButton}
       <Modal onClose={handleOnCloseModal} show={showFormModal}>
-        <EmployeeForm onClose={handleOnCloseModal} />
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <EmployeeRegistrationModal
+            onClose={handleOnCloseModal}
+            onSuccess={handleEmployeeCreated}
+          />
+        </Box>
       </Modal>
     </Box>
   );

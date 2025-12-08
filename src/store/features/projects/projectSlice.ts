@@ -14,6 +14,7 @@ const initialState: ProjectState = {
   },
   common: {
     selectedProjectId: "",
+    searchQuery: "",
   },
 };
 
@@ -47,6 +48,9 @@ const projectListSlice = createSlice({
     },
     updateSelectedProjectId(state, action: PayloadAction<string>) {
       state.common.selectedProjectId = action.payload;
+    },
+    setProjectSearchQuery(state, action: PayloadAction<string>) {
+      state.common.searchQuery = action.payload;
     },
     addProjectRequest(state) {
       state.api.loading = true;
@@ -122,6 +126,7 @@ export const {
   getProjectListSuccess,
   getProjectListFailed,
   updateSelectedProjectId,
+  setProjectSearchQuery,
   addProjectRequest,
   addProjectSuccess,
   addProjectFailed,

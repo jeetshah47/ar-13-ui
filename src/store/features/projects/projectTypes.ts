@@ -11,5 +11,6 @@ export interface ProjectState {
   };
   common: {
     selectedProjectId: string;
+    searchQuery: string;
   };
 }

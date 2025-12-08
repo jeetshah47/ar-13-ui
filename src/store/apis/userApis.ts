@@ -72,3 +72,62 @@ export async function deleteUser(userId: string): Promise<DeleteUserResponse> {
   const result = await http.delete(url);
   return result.data as DeleteUserResponse;
 }
+
+export interface CreateEmployeeRequest {
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  role: "Admin" | "Standard";
+  designation?: string;
+}
+
+export interface CreateEmployeeResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    role: string;
+    designation?: string;
+    forceChangePassword: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  tempPassword: string;
+  message: string;
+}
+
+export async function createEmployee(
+  employeeData: CreateEmployeeRequest
+): Promise<CreateEmployeeResponse> {
+  const url = `${API_BASE_URL}/users/create`;
+  const result = await http.post(url, employeeData, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.data as CreateEmployeeResponse;
+}
+
+export interface ChangePasswordRequest {
+  userId: string;
+  currentPassword?: string;
+  newPassword: string;
+  forceChange: boolean;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+}
+
+export async function changePassword(
+  passwordData: ChangePasswordRequest
+): Promise<ChangePasswordResponse> {
+  const url = `${API_BASE_URL}/users/change-password`;
+  const result = await http.put(url, passwordData, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.data as ChangePasswordResponse;
+}

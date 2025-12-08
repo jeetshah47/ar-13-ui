@@ -45,7 +45,12 @@ export const authSignInActions =
     dispatch(authSignInRequest());
     try {
       const loginResponse = await loginApi(email, password);
-      const { accessToken, refreshToken, expiresIn } = loginResponse;
+      const { accessToken, refreshToken, expiresIn, forceChangePassword } = loginResponse;
+      
+      // Store forceChangePassword flag if present
+      if (forceChangePassword !== undefined) {
+        localStorage.setItem("forceChangePassword", String(forceChangePassword));
+      }
       
       // Decode JWT to get user ID
       const decodedToken = decodeJWT(accessToken);

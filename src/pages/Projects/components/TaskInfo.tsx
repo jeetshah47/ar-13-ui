@@ -316,35 +316,6 @@ const TaskInfo = ({
         )}
       </Box>
 
-      {/* Log Time Button - Only show if user can log time for this task */}
-      {canLogTimeForTask && (
-        <Button
-          onClick={handleLogTimeClick}
-          sx={{
-            backgroundColor: "#3F8CFF",
-            color: "#FFFFFF",
-            borderRadius: "14px",
-            padding: "12px 16px",
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontWeight: 700,
-            fontSize: "16px",
-            lineHeight: "1.36",
-            textTransform: "none",
-            boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.26)",
-            "&:hover": {
-              backgroundColor: "#3F8CFF",
-              opacity: 0.9,
-            },
-          }}
-        >
-          <TimeIcon />
-          Log time
-        </Button>
-      )}
-
       {/* Created Date */}
       {task?.created && (
         <Box

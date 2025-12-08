@@ -1,6 +1,7 @@
-import { Box, Button, SvgIcon, Typography, type Theme, useMediaQuery, useTheme, FormControl, Select, MenuItem, OutlinedInput, InputLabel } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, type Theme, useMediaQuery, useTheme, FormControl, Select, MenuItem, OutlinedInput, InputLabel, TextField, InputAdornment } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import SearchIcon from "@mui/icons-material/Search";
 import type { SelectChangeEvent } from "@mui/material";
 import Modal from "../../../common/components/Modal/Modal";
 import PageHeader from "../../../common/components/PageHeader/PageHeader";
@@ -20,6 +21,7 @@ import {
   type RootState,
 } from "../../../store/store";
 import { updateSelectedProjectId } from "../../../store/features/projects/projectSlice";
+import { applyProjectSearchFilterAction } from "../../../store/features/projects/projectAction";
 import { ViewButtonOptions } from "../constants/project.contants";
 import TaskHeader from "../components/TaskHeader";
 import { getTaskListAction, getTaskStatusesAction } from "../../../store/features/task/projectAction";
@@ -50,10 +52,18 @@ const ProjectList = () => {
     (state: RootState) => state.projectListReducer
   );
 
-  // Use filteredProjects if available, otherwise fall back to projects
+  // Get search query from Redux
+  const projectSearchQuery = projectListState.common.searchQuery;
+
+  // Get projects from Redux (already filtered by role and search)
   const projects = projectListState.api.data?.filteredProjects !== undefined
     ? projectListState.api.data.filteredProjects 
     : (projectListState.api.data?.projects || []);
+
+  // Handle search query change
+  const handleSearchChange = (query: string) => {
+    dispatch(applyProjectSearchFilterAction(query));
+  };
 
   const taskListState = useAppSelector(
     (state: RootState) => state.taskListReducer.api
@@ -268,7 +278,7 @@ const ProjectList = () => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        maxHeight: "100%",
+        minHeight: 0,
         overflow: "hidden",
         cursor: "pointer",
         alignSelf: "stretch",
@@ -285,6 +295,32 @@ const ProjectList = () => {
           Current Projects
         </Typography>
         <ExpandMoreIcon sx={{ fontSize: "20px", color: "text.secondary" }} />
+      </Box>
+      <Box sx={{ 
+        padding: { xs: "12px 16px", sm: "16px 20px" }, 
+        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+      }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search projects..."
+          value={projectSearchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: "20px", color: "text.secondary" }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              backgroundColor: "background.paper",
+              fontSize: { xs: "12px", sm: "14px" },
+            },
+          }}
+        />
       </Box>
       <Box
         sx={{
@@ -314,7 +350,9 @@ const ProjectList = () => {
                 lineHeight: 1.6,
               }}
             >
-              {isAdmin()
+              {projectSearchQuery.trim()
+                ? "No projects found matching your search."
+                : isAdmin()
                 ? "No projects available. Please add a project to get started."
                 : "No projects assigned to you."}
             </Typography>
@@ -349,7 +387,7 @@ const ProjectList = () => {
                   mb: "4px",
                 }}
               >
-                PN0001245
+                {project.title || "No title"}
               </Typography>
               <Typography 
                 variant="subtitle1" 
@@ -360,7 +398,7 @@ const ProjectList = () => {
                   color: "text.primary",
                 }}
               >
-                {project.title}
+                {project.code}
               </Typography>
               {projectListState.common.selectedProjectId === project.id && (
                 <Typography

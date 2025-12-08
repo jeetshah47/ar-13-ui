@@ -6,6 +6,7 @@ import {
   getProjectListRequest,
   getProjectListSuccess,
   setFilteredProjects,
+  setProjectSearchQuery,
   updateProjectRequest,
   updateProjectSuccess,
   updateProjectFailed,
@@ -28,14 +29,10 @@ export const getProjectListAction = () => async (dispatch: AppDispatch, getState
     const data = await getAllProjects();
     dispatch(getProjectListSuccess(data));
     
-    // Apply role-based filtering
+    // Apply role-based filtering and search filter if exists
     const state = getState();
-    const userRole = state.authReducer.user.role;
-    const userId = state.authReducer.api.uid;
-    
-    // Always set filteredProjects (filtering function returns all projects if no filtering needed)
-    const filteredProjects = filterProjectsByRole(data.projects, userRole || ("user" as UserRole), userId || "");
-    dispatch(setFilteredProjects(filteredProjects));
+    const searchQuery = state.projectListReducer.common.searchQuery;
+    await dispatch(applyProjectSearchFilterAction(searchQuery));
   } catch (error) {
     const axiosError = error as AxiosError<ProjectErrorResponse>;
     if (axiosError?.response?.data) {
@@ -150,4 +147,38 @@ export const archiveProjectAction =
         toast.error("Failed to archive project");
       }
     }
+  };
+
+// Action to apply project search filter
+export const applyProjectSearchFilterAction = (searchQuery: string) => 
+  async (dispatch: AppDispatch, getState: () => RootState) => {
+    dispatch(setProjectSearchQuery(searchQuery));
+    
+    const state = getState();
+    const allProjects = state.projectListReducer.api.data.projects;
+    const userRole = state.authReducer.user.role;
+    const userId = state.authReducer.api.uid;
+    
+    // First apply role-based filtering
+    const roleFilteredProjects = filterProjectsByRole(
+      allProjects, 
+      userRole || ("user" as UserRole), 
+      userId || ""
+    );
+    
+    // Then apply search filter if query exists
+    const query = searchQuery.toLowerCase().trim();
+    let filteredProjects = roleFilteredProjects;
+    
+    if (query) {
+      filteredProjects = roleFilteredProjects.filter((project) => {
+        const title = (project.title || "").toLowerCase();
+        const code = (project.code || "").toLowerCase();
+        const description = (project.description || "").toLowerCase();
+        
+        return title.includes(query) || code.includes(query) || description.includes(query);
+      });
+    }
+    
+    dispatch(setFilteredProjects(filteredProjects));
   };

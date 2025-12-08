@@ -1,14 +1,15 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
 import fs from 'fs/promises';
 import axios from 'axios';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// In CommonJS (compiled output), __filename and __dirname are available at runtime
+// These declarations are for TypeScript - they'll be available when compiled to CommonJS
+declare const __filename: string;
+declare const __dirname: string;
 
 const execAsync = promisify(exec);
 
@@ -43,15 +44,33 @@ const getBackendBaseUrl = (): string => {
 };
 
 function createWindow() {
+  // Get the correct paths for preload and HTML
+  // Files are renamed to .cjs to work with "type": "module" in package.json
+  // Both dev and production use .cjs since we compile and rename before running
+  const preloadPath = join(__dirname, 'preload.cjs');
+  
   const mainWindow = new BrowserWindow({
     width: 1200,
+    height: 800,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: true,
     },
     autoHideMenuBar: !isDev, // Show menu bar in dev, hide in production
+    show: false, // Don't show until ready
   });
+
+  // Show window when ready to prevent white flash
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
+
+  // Open DevTools in production for debugging (remove after fixing)
+  if (!isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   // Load the app
   if (isDev) {
@@ -60,7 +79,29 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     // In production, load from the built files
-    mainWindow.loadFile(join(__dirname, '../dist/index.html'));
+    // In packaged app: resources/app/dist-electron/main.js and resources/app/dist/index.html
+    const htmlPath = join(__dirname, '../dist/index.html');
+    
+    mainWindow.loadFile(htmlPath).catch((error) => {
+      console.error('Failed to load file from:', htmlPath, error);
+      // Try alternative path using app.getAppPath()
+      const altPath = join(app.getAppPath(), 'dist', 'index.html');
+      console.log('Trying alternative path:', altPath);
+      mainWindow.loadFile(altPath).catch((altError) => {
+        console.error('Failed to load alternative path:', altPath, altError);
+        // Show error to user
+        mainWindow.webContents.executeJavaScript(`
+          document.body.innerHTML = '<div style="padding: 20px; font-family: Arial;">
+            <h1>Error Loading Application</h1>
+            <p>Failed to load application files.</p>
+            <p>Expected path: ${htmlPath}</p>
+            <p>Alternative path: ${altPath}</p>
+            <p>App path: ${app.getAppPath()}</p>
+            <p>__dirname: ${__dirname}</p>
+          </div>';
+        `);
+      });
+    });
   }
 }
 

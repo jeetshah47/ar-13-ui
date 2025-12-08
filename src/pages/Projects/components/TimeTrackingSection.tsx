@@ -324,51 +324,6 @@ const TimeTrackingSection = ({
         </Box>
       )}
 
-      {/* Log Time Button - Only show if user can log time for this task */}
-      {canLogTimeForTask && (
-        <Button
-          onClick={handleLogTimeClick}
-          sx={{
-            backgroundColor: "#3F8CFF",
-            color: "#FFFFFF",
-            borderRadius: "14px",
-            padding: { xs: "12px 16px", sm: "12px 16px" },
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            fontWeight: 700,
-            fontSize: { xs: "16px", sm: "16px" },
-            lineHeight: "1.36",
-            textTransform: "none",
-            boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.26)",
-            "&:hover": {
-              backgroundColor: "#3A81EB",
-              boxShadow: "0px 6px 12px rgba(63, 140, 255, 0.42)",
-            },
-          }}
-        >
-          <Box
-            sx={{
-              width: { xs: "20px", sm: "24px" },
-              height: { xs: "20px", sm: "24px" },
-              borderRadius: "50%",
-              backgroundColor: "#FFFFFF",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="white"/>
-              <path d="M12 6v6l4 2" stroke="#3F8CFF" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </Box>
-          Log time
-        </Button>
-      )}
-
       {/* Daily Breakdown and History */}
       {dailyBreakdown.length > 0 && (
         <Accordion
