@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
+  Checkbox,
 } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import FolderIcon from "./FolderIcon";
@@ -144,6 +145,7 @@ const FileExplorer = ({
       (selected) => selected.path === item.path
     );
 
+    // Always select the item on right-click if not already selected
     if (!isSelected) {
       // If Ctrl/Cmd is not pressed, select only this item
       if (!event.ctrlKey && !event.metaKey) {
@@ -165,6 +167,11 @@ const FileExplorer = ({
   };
 
   const handleRowClick = (event: React.MouseEvent, item: FileBrowserItem) => {
+    // Don't handle click if clicking on checkbox (checkbox has its own handler)
+    if ((event.target as HTMLElement).closest('input[type="checkbox"]')) {
+      return;
+    }
+
     if (event.ctrlKey || event.metaKey) {
       // Multi-select
       const isSelected = selectedItems.some(
@@ -183,6 +190,34 @@ const FileExplorer = ({
       onItemClick(item);
     }
   };
+
+  const handleCheckboxChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    item: FileBrowserItem
+  ) => {
+    event.stopPropagation();
+    const isSelected = selectedItems.some(
+      (selected) => selected.path === item.path
+    );
+    if (isSelected) {
+      setSelectedItems(
+        selectedItems.filter((selected) => selected.path !== item.path)
+      );
+    } else {
+      setSelectedItems([...selectedItems, item]);
+    }
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedItems([...sortedItems]);
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const isAllSelected = sortedItems.length > 0 && selectedItems.length === sortedItems.length;
+  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < sortedItems.length;
 
   const handleContextMenuAction = (action: string) => {
     if (selectedItems.length === 0) return;
@@ -251,6 +286,18 @@ const FileExplorer = ({
                 }}
               >
                 <TableCell
+                  sx={{ width: "48px", padding: "8px !important" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    indeterminate={isIndeterminate}
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    size="small"
+                    sx={{ padding: "4px" }}
+                  />
+                </TableCell>
+                <TableCell
                   sx={{ width: "40px", padding: "8px !important" }}
                 ></TableCell>
                 <TableCell>
@@ -315,7 +362,7 @@ const FileExplorer = ({
               {sortedItems.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     align="center"
                     sx={{ padding: "40px" }}
                   >
@@ -357,6 +404,18 @@ const FileExplorer = ({
                         },
                       }}
                     >
+                      <TableCell
+                        sx={{ width: "48px", padding: "4px 8px !important" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={(e) => handleCheckboxChange(e, item)}
+                          onClick={(e) => e.stopPropagation()}
+                          size="small"
+                          sx={{ padding: "4px" }}
+                        />
+                      </TableCell>
                       <TableCell
                         sx={{ width: "40px", padding: "4px 8px !important" }}
                       >

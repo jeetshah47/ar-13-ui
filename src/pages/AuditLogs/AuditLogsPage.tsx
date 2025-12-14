@@ -35,7 +35,14 @@ import {
 } from "../../store/apis/auditLogsApi";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { format } from "date-fns";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import PersonIcon from "@mui/icons-material/Person";
+import LanguageIcon from "@mui/icons-material/Language";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import WarningIcon from "@mui/icons-material/Warning";
+import InfoIcon from "@mui/icons-material/Info";
+import { format, formatDistanceToNow } from "date-fns";
 
 const AuditLogsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -73,12 +80,49 @@ const AuditLogsPage = () => {
     }));
   };
 
+  // User-friendly status messages
+  const getStatusMessage = (statusCode: number): string => {
+    const statusMessages: Record<number, string> = {
+      200: "Success",
+      201: "Created",
+      202: "Accepted",
+      204: "No Content",
+      301: "Moved Permanently",
+      302: "Found",
+      304: "Not Modified",
+      400: "Bad Request",
+      401: "Unauthorized",
+      403: "Forbidden",
+      404: "Not Found",
+      409: "Conflict",
+      422: "Validation Error",
+      429: "Too Many Requests",
+      500: "Server Error",
+      502: "Bad Gateway",
+      503: "Service Unavailable",
+      504: "Gateway Timeout",
+    };
+    return statusMessages[statusCode] || `Status ${statusCode}`;
+  };
+
   const getStatusColor = (statusCode: number) => {
     if (statusCode >= 200 && statusCode < 300) return "success";
     if (statusCode >= 300 && statusCode < 400) return "info";
     if (statusCode >= 400 && statusCode < 500) return "warning";
     if (statusCode >= 500) return "error";
     return "default";
+  };
+
+  // User-friendly method labels
+  const getMethodLabel = (method: string): string => {
+    const methodLabels: Record<string, string> = {
+      GET: "View",
+      POST: "Create",
+      PUT: "Update",
+      DELETE: "Delete",
+      PATCH: "Modify",
+    };
+    return methodLabels[method] || method;
   };
 
   const getMethodColor = (method: string) => {
@@ -95,6 +139,38 @@ const AuditLogsPage = () => {
         return "info";
       default:
         return "default";
+    }
+  };
+
+  // Format path to be more readable
+  const formatPath = (path: string): string => {
+    // Remove /api prefix if present for cleaner display
+    const cleaned = path.replace(/^\/api/, "");
+    // Extract meaningful parts
+    const parts = cleaned.split("/").filter(Boolean);
+    if (parts.length === 0) return path;
+    // Capitalize first letter of each part
+    return parts
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" / ");
+  };
+
+  // Format relative time
+  const formatRelativeTime = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+      
+      if (diffInHours < 1) {
+        return formatDistanceToNow(date, { addSuffix: true });
+      } else if (diffInHours < 24) {
+        return format(date, "HH:mm:ss") + " (" + formatDistanceToNow(date, { addSuffix: true }) + ")";
+      } else {
+        return format(date, "MMM dd, yyyy HH:mm:ss");
+      }
+    } catch {
+      return format(new Date(dateString), "MMM dd, yyyy HH:mm:ss");
     }
   };
 
@@ -137,54 +213,62 @@ const AuditLogsPage = () => {
           }
         />
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, p: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Method</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>Action Type</InputLabel>
             <Select
               value={filters.method || ""}
-              label="Method"
+              label="Action Type"
               onChange={(e) => handleFilterChange("method", e.target.value)}
             >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="GET">GET</MenuItem>
-              <MenuItem value="POST">POST</MenuItem>
-              <MenuItem value="PUT">PUT</MenuItem>
-              <MenuItem value="DELETE">DELETE</MenuItem>
-              <MenuItem value="PATCH">PATCH</MenuItem>
+              <MenuItem value="">All Actions</MenuItem>
+              <MenuItem value="GET">View</MenuItem>
+              <MenuItem value="POST">Create</MenuItem>
+              <MenuItem value="PUT">Update</MenuItem>
+              <MenuItem value="DELETE">Delete</MenuItem>
+              <MenuItem value="PATCH">Modify</MenuItem>
             </Select>
           </FormControl>
 
           <TextField
             size="small"
-            label="Path"
+            label="Resource/Endpoint"
             value={filters.path || ""}
             onChange={(e) => handleFilterChange("path", e.target.value)}
-            placeholder="/api/users"
+            placeholder="e.g., /api/users"
             sx={{ minWidth: 200 }}
           />
 
           <TextField
             size="small"
-            label="User ID"
+            label="User Email or ID"
             value={filters.userId || ""}
             onChange={(e) => handleFilterChange("userId", e.target.value)}
-            placeholder="User ID"
-            sx={{ minWidth: 150 }}
+            placeholder="Search by user"
+            sx={{ minWidth: 180 }}
           />
 
-          <TextField
-            size="small"
-            label="Status Code"
-            type="number"
-            value={filters.statusCode || ""}
-            onChange={(e) =>
-              handleFilterChange(
-                "statusCode",
-                e.target.value ? parseInt(e.target.value) : undefined
-              )
-            }
-            placeholder="200"
-            sx={{ minWidth: 120 }}
-          />
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Result Status</InputLabel>
+            <Select
+              value={filters.statusCode?.toString() || ""}
+              label="Result Status"
+              onChange={(e) =>
+                handleFilterChange(
+                  "statusCode",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              <MenuItem value="200">Success (200)</MenuItem>
+              <MenuItem value="201">Created (201)</MenuItem>
+              <MenuItem value="400">Bad Request (400)</MenuItem>
+              <MenuItem value="401">Unauthorized (401)</MenuItem>
+              <MenuItem value="403">Forbidden (403)</MenuItem>
+              <MenuItem value="404">Not Found (404)</MenuItem>
+              <MenuItem value="500">Server Error (500)</MenuItem>
+            </Select>
+          </FormControl>
 
           <TextField
             size="small"
@@ -208,7 +292,7 @@ const AuditLogsPage = () => {
 
           <TextField
             size="small"
-            label="Limit"
+            label="Results per Page"
             type="number"
             value={filters.limit || 100}
             onChange={(e) =>
@@ -217,7 +301,7 @@ const AuditLogsPage = () => {
                 e.target.value ? parseInt(e.target.value) : 100
               )
             }
-            sx={{ minWidth: 100 }}
+            sx={{ minWidth: 140 }}
           />
         </Box>
       </CustomCard>
@@ -237,19 +321,38 @@ const AuditLogsPage = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
+          <TableContainer 
+            component={Paper} 
+            variant="outlined"
+            sx={{ maxHeight: "calc(100vh - 400px)", overflow: "auto" }}
+          >
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Method</TableCell>
-                  <TableCell>Path</TableCell>
-                  <TableCell>User</TableCell>
-                  <TableCell>IP Address</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Duration</TableCell>
-                  <TableCell>Size</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <AccessTimeIcon fontSize="small" />
+                      Time
+                    </Box>
+                  </TableCell>
+                  <TableCell>Action</TableCell>
+                  <TableCell>Resource</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <PersonIcon fontSize="small" />
+                      User
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <LanguageIcon fontSize="small" />
+                      Location
+                    </Box>
+                  </TableCell>
+                  <TableCell>Result</TableCell>
+                  <TableCell>Response Time</TableCell>
+                  <TableCell>Data Size</TableCell>
+                  <TableCell>Details</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -265,54 +368,93 @@ const AuditLogsPage = () => {
                   auditLogs.map((log) => (
                     <TableRow key={log.id} hover>
                       <TableCell>
-                        {format(new Date(log.requestTime), "MMM dd, yyyy HH:mm:ss")}
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {format(new Date(log.requestTime), "MMM dd, yyyy")}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatRelativeTime(log.requestTime)}
+                          </Typography>
+                        </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={log.method}
+                          label={getMethodLabel(log.method)}
                           color={getMethodColor(log.method) as any}
                           size="small"
+                          sx={{ fontWeight: 500 }}
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            maxWidth: 300,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {log.path}
-                        </Typography>
+                        <Tooltip title={log.path}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: 300,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {formatPath(log.path)}
+                          </Typography>
+                        </Tooltip>
                       </TableCell>
                       <TableCell>
-                        {log.userEmail || log.userId || (
+                        {log.userEmail ? (
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {log.userEmail}
+                          </Typography>
+                        ) : log.userId ? (
                           <Typography variant="body2" color="text.secondary">
+                            User: {log.userId}
+                          </Typography>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
                             Anonymous
                           </Typography>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                        <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
                           {log.ipAddress}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={log.statusCode}
+                          label={`${getStatusMessage(log.statusCode)} (${log.statusCode})`}
                           color={getStatusColor(log.statusCode) as any}
                           size="small"
+                          icon={
+                            log.statusCode >= 200 && log.statusCode < 300 ? (
+                              <CheckCircleIcon fontSize="small" />
+                            ) : log.statusCode >= 400 && log.statusCode < 500 ? (
+                              <WarningIcon fontSize="small" />
+                            ) : log.statusCode >= 500 ? (
+                              <ErrorIcon fontSize="small" />
+                            ) : (
+                              <InfoIcon fontSize="small" />
+                            )
+                          }
+                          sx={{ fontWeight: 500 }}
                         />
                       </TableCell>
-                      <TableCell>{formatDuration(log.duration)}</TableCell>
-                      <TableCell>{formatBytes(log.responseSize)}</TableCell>
                       <TableCell>
-                        <Tooltip title="View Details">
+                        <Typography variant="body2">
+                          {formatDuration(log.duration)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {formatBytes(log.responseSize)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="View Full Details">
                           <IconButton
                             size="small"
                             onClick={() => handleViewDetails(log)}
+                            color="primary"
                           >
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
@@ -334,94 +476,173 @@ const AuditLogsPage = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Audit Log Details</DialogTitle>
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <InfoIcon color="primary" />
+            Activity Details
+          </Box>
+        </DialogTitle>
         <DialogContent>
           {selectedLog && (
             <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Request Information
+              <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 1 }}>
+                What Happened?
               </Typography>
-              <Box sx={{ mb: 2, p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
-                <Typography variant="body2">
-                  <strong>Method:</strong> {selectedLog.method}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Path:</strong> {selectedLog.path}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Time:</strong>{" "}
-                  {format(new Date(selectedLog.requestTime), "PPpp")}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Duration:</strong> {formatDuration(selectedLog.duration)}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Status Code:</strong> {selectedLog.statusCode}
-                </Typography>
-                {selectedLog.error && (
-                  <Typography variant="body2" color="error">
-                    <strong>Error:</strong> {selectedLog.error}
+              <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                  <Chip
+                    label={getMethodLabel(selectedLog.method)}
+                    color={getMethodColor(selectedLog.method) as any}
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    action performed on
                   </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {formatPath(selectedLog.path)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                  <Chip
+                    label={`${getStatusMessage(selectedLog.statusCode)} (${selectedLog.statusCode})`}
+                    color={getStatusColor(selectedLog.statusCode) as any}
+                    size="small"
+                    icon={
+                      selectedLog.statusCode >= 200 && selectedLog.statusCode < 300 ? (
+                        <CheckCircleIcon fontSize="small" />
+                      ) : selectedLog.statusCode >= 400 && selectedLog.statusCode < 500 ? (
+                        <WarningIcon fontSize="small" />
+                      ) : selectedLog.statusCode >= 500 ? (
+                        <ErrorIcon fontSize="small" />
+                      ) : (
+                        <InfoIcon fontSize="small" />
+                      )
+                    }
+                    sx={{ fontWeight: 500 }}
+                  />
+                </Box>
+                {selectedLog.error && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    <strong>Error occurred:</strong> {selectedLog.error}
+                  </Alert>
                 )}
               </Box>
 
-              <Typography variant="subtitle2" gutterBottom>
-                User Information
+              <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                When & How Long?
               </Typography>
-              <Box sx={{ mb: 2, p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
-                <Typography variant="body2">
-                  <strong>User ID:</strong> {selectedLog.userId || "N/A"}
+              <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  <strong>Date & Time:</strong> {format(new Date(selectedLog.requestTime), "PPpp")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {formatRelativeTime(selectedLog.requestTime)}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Email:</strong> {selectedLog.userEmail || "N/A"}
+                  <strong>Response Time:</strong> {formatDuration(selectedLog.duration)}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>IP Address:</strong> {selectedLog.ipAddress}
+                  <strong>Data Transferred:</strong> {formatBytes(selectedLog.responseSize)}
+                </Typography>
+              </Box>
+
+              <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                Who Did This?
+              </Typography>
+              <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                {selectedLog.userEmail ? (
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>User Email:</strong> {selectedLog.userEmail}
+                  </Typography>
+                ) : selectedLog.userId ? (
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>User ID:</strong> {selectedLog.userId}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: "italic" }}>
+                    Anonymous user (not logged in)
+                  </Typography>
+                )}
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  <strong>IP Address:</strong> <span style={{ fontFamily: "monospace" }}>{selectedLog.ipAddress}</span>
                 </Typography>
                 <Typography variant="body2">
-                  <strong>User Agent:</strong> {selectedLog.userAgent}
+                  <strong>Browser/Device:</strong> {selectedLog.userAgent}
                 </Typography>
               </Box>
 
               {selectedLog.queryParams && Object.keys(selectedLog.queryParams).length > 0 && (
                 <>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Query Parameters
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                    Search/Filter Parameters
                   </Typography>
-                  <Box sx={{ mb: 2, p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
-                    <pre style={{ margin: 0, fontSize: "0.875rem" }}>
+                  <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                    <Box
+                      component="pre"
+                      sx={{
+                        margin: 0,
+                        fontSize: "0.875rem",
+                        fontFamily: "monospace",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        bgcolor: "white",
+                        p: 1,
+                        borderRadius: 1,
+                      }}
+                    >
                       {JSON.stringify(selectedLog.queryParams, null, 2)}
-                    </pre>
+                    </Box>
                   </Box>
                 </>
               )}
 
               {selectedLog.requestBody && Object.keys(selectedLog.requestBody).length > 0 && (
                 <>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Request Body
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                    Data Sent
                   </Typography>
-                  <Box sx={{ mb: 2, p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
-                    <pre style={{ margin: 0, fontSize: "0.875rem" }}>
+                  <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                    <Box
+                      component="pre"
+                      sx={{
+                        margin: 0,
+                        fontSize: "0.875rem",
+                        fontFamily: "monospace",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        bgcolor: "white",
+                        p: 1,
+                        borderRadius: 1,
+                      }}
+                    >
                       {JSON.stringify(selectedLog.requestBody, null, 2)}
-                    </pre>
+                    </Box>
                   </Box>
                 </>
               )}
 
-              <Typography variant="subtitle2" gutterBottom>
-                Response Information
+              <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 1 }}>
+                Technical Details
               </Typography>
-              <Box sx={{ p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
+              <Box sx={{ mb: 2, p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  <strong>Full Endpoint:</strong> <span style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{selectedLog.path}</span>
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  <strong>HTTP Method:</strong> {selectedLog.method}
+                </Typography>
                 <Typography variant="body2">
-                  <strong>Response Size:</strong> {formatBytes(selectedLog.responseSize)}
+                  <strong>Status Code:</strong> {selectedLog.statusCode}
                 </Typography>
               </Box>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setDetailDialogOpen(false)} variant="contained">
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

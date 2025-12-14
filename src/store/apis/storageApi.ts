@@ -132,3 +132,110 @@ export async function browseNAS(path: string = "/"): Promise<BrowseResponse> {
   return result.data;
 }
 
+// FileBrowser service response types
+export interface RenameFileResponse {
+  name: string;
+  path: string;
+  isFolder: boolean;
+  size: number;
+  modified: string;
+  mimeType?: string;
+}
+
+export interface DeleteFileResponse {
+  path: string;
+  deletedAt: string;
+}
+
+export interface CreateFolderResponse {
+  path: string;
+  createdAt: string;
+}
+
+export interface MoveFileResponse {
+  message: string;
+  sourcePath: string;
+  destinationPath: string;
+}
+
+/**
+ * Rename a file or folder in NAS storage using FileBrowser service
+ * @param path - Current path of the file or folder
+ * @param newName - New name for the file or folder
+ * @returns Rename response
+ */
+export async function renameItem(
+  path: string,
+  newName: string
+): Promise<RenameFileResponse> {
+  const url = "/api/rename";
+  const result = await filebrowserHttp.put<RenameFileResponse>(
+    url,
+    { newName },
+    {
+      params: { path },
+    }
+  );
+  return result.data;
+}
+
+/**
+ * Delete a file or folder from NAS storage using FileBrowser service
+ * @param path - Path to the file or folder to delete
+ * @returns Delete response
+ */
+export async function deleteItem(path: string): Promise<DeleteFileResponse> {
+  const url = "/api/delete";
+  const result = await filebrowserHttp.delete<DeleteFileResponse>(url, {
+    params: { path },
+  });
+  return result.data;
+}
+
+/**
+ * Create a new folder in NAS storage using FileBrowser service
+ * @param parentPath - Parent directory path (e.g., "/folder"). Defaults to "/"
+ * @param folderName - Name of the folder to create
+ * @returns Create folder response
+ */
+export async function createFolder(
+  parentPath: string = "/",
+  folderName: string
+): Promise<CreateFolderResponse> {
+  const url = "/api/create-folder";
+  const result = await filebrowserHttp.post<CreateFolderResponse>(
+    url,
+    { folderName },
+    {
+      params: { path: parentPath },
+    }
+  );
+  return result.data;
+}
+
+/**
+ * Move a file or folder to a new location in NAS storage
+ * Note: The filebrowser service doesn't have a move endpoint yet.
+ * This function is kept for compatibility but will need backend implementation
+ * or a move endpoint added to the filebrowser service.
+ * @param sourcePath - Current path of the file or folder
+ * @param destinationPath - Destination path for the file or folder
+ * @returns Move response
+ */
+export async function moveItem(
+  sourcePath: string,
+  destinationPath: string
+): Promise<MoveFileResponse> {
+  // TODO: FileBrowser service doesn't have a move endpoint yet
+  // For now, use backend API as fallback
+  const url = `${API_BASE_URL}/storage/move`;
+  const result = await http.put<MoveFileResponse>(
+    url,
+    { destinationPath },
+    {
+      params: { sourcePath },
+    }
+  );
+  return result.data;
+}
+

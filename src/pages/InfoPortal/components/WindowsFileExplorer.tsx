@@ -13,6 +13,12 @@ import {
   TextField,
   InputAdornment,
   Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -25,7 +31,13 @@ import FileExplorer from "./FileExplorer";
 import Breadcrumb from "./Breadcrumb";
 import FolderIcon from "./FolderIcon";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
-import { browseNAS } from "../../../store/apis/storageApi";
+import {
+  browseNAS,
+  renameItem,
+  deleteItem,
+  createFolder,
+  moveItem,
+} from "../../../store/apis/storageApi";
 
 interface WindowsFileExplorerProps {
   initialPath?: string;
@@ -49,6 +61,27 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
   const [history, setHistory] = useState<string[]>(["/"]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [folderTree, setFolderTree] = useState<FolderTreeNode[]>([]);
+  
+  // Modal states
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [renameItemState, setRenameItemState] = useState<FileBrowserItem | null>(null);
+  const [renameValue, setRenameValue] = useState<string>("");
+  
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteItems, setDeleteItems] = useState<FileBrowserItem[]>([]);
+  
+  const [createFolderModalOpen, setCreateFolderModalOpen] = useState(false);
+  const [createFolderValue, setCreateFolderValue] = useState<string>("");
+  
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [moveItemState, setMoveItemState] = useState<FileBrowserItem | null>(null);
+  const [moveValue, setMoveValue] = useState<string>("");
+  
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  
+  const [notImplementedModalOpen, setNotImplementedModalOpen] = useState(false);
+  const [notImplementedMessage, setNotImplementedMessage] = useState<string>("");
 
   useEffect(() => {
     loadFolderContents(currentPath);
@@ -138,38 +171,135 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
   };
 
   const handleNewItem = () => {
-    // TODO: Implement new item creation
-    console.log("New item");
+    setCreateFolderValue("New Folder");
+    setCreateFolderModalOpen(true);
+  };
+
+  const handleCreateFolderConfirm = async () => {
+    if (!createFolderValue || createFolderValue.trim() === "") {
+      return;
+    }
+
+    try {
+      await createFolder(currentPath, createFolderValue.trim());
+      setCreateFolderModalOpen(false);
+      setCreateFolderValue("");
+      // Refresh the current folder
+      loadFolderContents(currentPath);
+    } catch (error: any) {
+      console.error("Failed to create folder:", error);
+      setErrorMessage(`Failed to create folder: ${error.message || "Unknown error"}`);
+      setErrorModalOpen(true);
+      setCreateFolderModalOpen(false);
+    }
   };
 
   const handleRename = (items: FileBrowserItem[]) => {
-    // TODO: Implement rename
-    console.log("Rename", items);
+    if (items.length === 0) return;
+
+    const item = items[0]; // Handle single item rename
+    setRenameItemState(item);
+    setRenameValue(item.name);
+    setRenameModalOpen(true);
+  };
+
+  const handleRenameConfirm = async () => {
+    if (!renameItemState || !renameValue || renameValue.trim() === "" || renameValue === renameItemState.name) {
+      return;
+    }
+
+    try {
+      await renameItem(renameItemState.path, renameValue.trim());
+      setRenameModalOpen(false);
+      setRenameItemState(null);
+      setRenameValue("");
+      // Refresh the current folder
+      loadFolderContents(currentPath);
+    } catch (error: any) {
+      console.error("Failed to rename item:", error);
+      setErrorMessage(`Failed to rename: ${error.message || "Unknown error"}`);
+      setErrorModalOpen(true);
+      setRenameModalOpen(false);
+    }
   };
 
   const handleMove = (items: FileBrowserItem[]) => {
-    // TODO: Implement move
-    console.log("Move", items);
+    if (items.length === 0) return;
+
+    const item = items[0]; // Handle single item move
+    setMoveItemState(item);
+    setMoveValue(currentPath);
+    setMoveModalOpen(true);
+  };
+
+  const handleMoveConfirm = async () => {
+    if (!moveItemState || !moveValue || moveValue.trim() === "") {
+      return;
+    }
+
+    try {
+      // Build full destination path
+      const destPath = moveValue.trim().endsWith("/")
+        ? moveValue.trim() + moveItemState.name
+        : moveValue.trim() + "/" + moveItemState.name;
+
+      await moveItem(moveItemState.path, destPath);
+      setMoveModalOpen(false);
+      setMoveItemState(null);
+      setMoveValue("");
+      // Refresh the current folder
+      loadFolderContents(currentPath);
+    } catch (error: any) {
+      console.error("Failed to move item:", error);
+      setErrorMessage(`Failed to move: ${error.message || "Unknown error"}`);
+      setErrorModalOpen(true);
+      setMoveModalOpen(false);
+    }
   };
 
   const handleCompress = (items: FileBrowserItem[]) => {
     // TODO: Implement compress
     console.log("Compress", items);
+    setNotImplementedMessage("Compress feature is not yet implemented");
+    setNotImplementedModalOpen(true);
   };
 
   const handleShare = (items: FileBrowserItem[]) => {
     // TODO: Implement share
     console.log("Share", items);
+    setNotImplementedMessage("Share feature is not yet implemented");
+    setNotImplementedModalOpen(true);
   };
 
   const handleProperties = (items: FileBrowserItem[]) => {
     // TODO: Implement properties
     console.log("Properties", items);
+    setNotImplementedMessage("Properties feature is not yet implemented");
+    setNotImplementedModalOpen(true);
   };
 
   const handleDelete = (items: FileBrowserItem[]) => {
-    // TODO: Implement delete
-    console.log("Delete", items);
+    if (items.length === 0) return;
+    setDeleteItems(items);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteItems.length === 0) return;
+
+    try {
+      // Delete all selected items
+      await Promise.all(deleteItems.map((item) => deleteItem(item.path)));
+      setDeleteModalOpen(false);
+      setDeleteItems([]);
+      // Refresh the current folder
+      loadFolderContents(currentPath);
+    } catch (error: any) {
+      console.error("Failed to delete items:", error);
+      setErrorMessage(`Failed to delete: ${error.message || "Unknown error"}`);
+      setErrorModalOpen(true);
+      setDeleteModalOpen(false);
+    }
   };
 
   const filteredItems = useMemo(() => {
@@ -510,6 +640,147 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
           )}
         </Box>
       </Box>
+
+      {/* Rename Modal */}
+      <Dialog open={renameModalOpen} onClose={() => setRenameModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Rename</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="New Name"
+            fullWidth
+            variant="outlined"
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleRenameConfirm();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameModalOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleRenameConfirm}
+            variant="contained"
+            disabled={!renameValue || renameValue.trim() === "" || renameValue === renameItemState?.name}
+          >
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Delete Confirmation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {deleteItems.length === 1
+              ? `Are you sure you want to delete "${deleteItems[0].name}"? This action cannot be undone.`
+              : `Are you sure you want to delete ${deleteItems.length} items? This action cannot be undone.\n\nItems: ${deleteItems.map((item) => item.name).join(", ")}`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create Folder Modal */}
+      <Dialog open={createFolderModalOpen} onClose={() => setCreateFolderModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Create New Folder</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Folder Name"
+            fullWidth
+            variant="outlined"
+            value={createFolderValue}
+            onChange={(e) => setCreateFolderValue(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleCreateFolderConfirm();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateFolderModalOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleCreateFolderConfirm}
+            variant="contained"
+            disabled={!createFolderValue || createFolderValue.trim() === ""}
+          >
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Move Modal */}
+      <Dialog open={moveModalOpen} onClose={() => setMoveModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Move Item</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Move "{moveItemState?.name}" to:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Destination Path"
+            fullWidth
+            variant="outlined"
+            value={moveValue}
+            onChange={(e) => setMoveValue(e.target.value)}
+            placeholder="/path/to/destination"
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleMoveConfirm();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMoveModalOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleMoveConfirm}
+            variant="contained"
+            disabled={!moveValue || moveValue.trim() === ""}
+          >
+            Move
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{errorMessage}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorModalOpen(false)} variant="contained">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Not Implemented Modal */}
+      <Dialog open={notImplementedModalOpen} onClose={() => setNotImplementedModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Feature Not Available</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{notImplementedMessage}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNotImplementedModalOpen(false)} variant="contained">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
