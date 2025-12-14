@@ -2,23 +2,13 @@ import React from "react";
 import {
   Avatar,
   Box,
-  Button,
   SvgIcon,
   Typography,
 } from "@mui/material";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
 import LogTimeModal from "./LogTimeModal";
-import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
-
-// Time icon matching the Figma design
-const TimeIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="10" fill="white"/>
-    <path d="M12 6v6l4 2" stroke="#3F8CFF" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
 
 type TaskInfoProps = {
   reporter?: {
@@ -38,7 +28,6 @@ type TaskInfoProps = {
   projectId?: string;
   taskId?: string;
   task?: TaskResponse;
-  onLogTime?: () => void;
 };
 
 const TaskInfo = ({
@@ -53,16 +42,8 @@ const TaskInfo = ({
   projectId,
   taskId,
   task,
-  onLogTime,
 }: TaskInfoProps) => {
   const [showLogTimeModal, setShowLogTimeModal] = React.useState(false);
-  const { canLogTime } = useResourceAccess();
-  const canLogTimeForTask = task ? canLogTime(task) : false;
-
-  const handleLogTimeClick = () => {
-    setShowLogTimeModal(true);
-    onLogTime?.();
-  };
 
   const handleCloseLogTimeModal = () => {
     setShowLogTimeModal(false);

@@ -900,9 +900,6 @@ const ProjectDetail = () => {
             projectId={projectId}
             taskId={taskId}
             task={taskDetails}
-            onLogTime={() => {
-              // TODO: Implement log time functionality
-            }}
           />
         </Box>
 
@@ -952,9 +949,6 @@ const ProjectDetail = () => {
             projectId={projectId}
             taskId={taskId}
             task={taskDetails}
-            onLogTime={() => {
-              // TODO: Implement log time functionality
-            }}
           />
         </Drawer>
       </Box>

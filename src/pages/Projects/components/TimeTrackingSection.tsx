@@ -1,7 +1,6 @@
 import { Box, Button, CircularProgress, Typography, useMediaQuery, useTheme, Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LogTimeModal from "./LogTimeModal";
-import { useResourceAccess } from "../../../store/hooks/useResourceAccess";
 import { useState, useMemo } from "react";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 import { useTimeTracking } from "../../../hooks/useTimeTracking";
@@ -25,9 +24,7 @@ const TimeTrackingSection = ({
 }: TimeTrackingSectionProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { canLogTime } = useResourceAccess();
   const [showLogTimeModal, setShowLogTimeModal] = useState(false);
-  const canLogTimeForTask = task ? canLogTime(task) : false;
 
   // Use time tracking hook if projectId and taskId are available
   const isTaskInProgress = task?.status === "in_progress";
@@ -67,10 +64,6 @@ const TimeTrackingSection = ({
 
     const formatted = formatTime(displayMinutes);
     return `${formatted} logged`;
-  };
-
-  const handleLogTimeClick = () => {
-    setShowLogTimeModal(true);
   };
 
   const handleCloseLogTimeModal = () => {

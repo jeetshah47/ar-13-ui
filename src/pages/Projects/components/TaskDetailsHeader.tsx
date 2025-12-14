@@ -129,7 +129,8 @@ export const TaskDetailsContent = ({
 
   // Check if task is in progress
   const normalizedCurrentStatus = currentStatus ? mapStatusToUnified(currentStatus) : null;
-  const isTaskInProgress = normalizedCurrentStatus === "in_progress" || normalizedCurrentStatus === "inProgress";
+  // mapStatusToUnified maps "in_progress" to "todo", so check for "todo"
+  const isTaskInProgress = normalizedCurrentStatus === "todo";
   const isTaskPending = normalizedCurrentStatus === "pending" || !normalizedCurrentStatus;
 
   // Handle Start Task

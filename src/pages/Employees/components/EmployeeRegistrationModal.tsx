@@ -11,13 +11,11 @@ import {
   InputLabel,
   Alert,
   IconButton,
-  InputAdornment,
   Paper,
 } from "@mui/material";
 import { Visibility, VisibilityOff, ContentCopy, Check } from "@mui/icons-material";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useAppDispatch } from "../../../store/store";
 import { createEmployee } from "../../../store/apis/userApis";
 import toast from "react-hot-toast";
 import type { CreateEmployeeRequest } from "../../../store/apis/userApis";
@@ -35,7 +33,6 @@ const EmployeeRegistrationModal = ({
   const [showTempPassword, setShowTempPassword] = useState(false);
   const [tempPassword, setTempPassword] = useState("");
   const [passwordCopied, setPasswordCopied] = useState(false);
-  const dispatch = useAppDispatch();
 
   const formik = useFormik({
     initialValues: {
