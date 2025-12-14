@@ -6,13 +6,14 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { WebSocketClient } from "../services/websocket/WebSocketClient";
-import { notificationService } from "../services/websocket/NotificationService";
+import { WebSocketClient } from "../services/websocket";
+import { notificationService } from "../services/sse/NotificationService";
 import type {
   Notification,
   NotificationCount,
   NotificationContextType,
 } from "../services/websocket/types";
+import { SERVER_BASE_URL } from "../config/api";
 
 // Get user ID and token from localStorage
 const getUserFromStorage = () => {
@@ -44,20 +45,20 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 interface NotificationProviderProps {
   children: React.ReactNode;
   userId?: string;
-  firebaseToken?: string;
-  websocketUrl?: string;
+  authToken?: string;
+  sseUrl?: string;
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
   userId,
-  firebaseToken,
-  websocketUrl = "http://localhost:3000",
+  authToken,
+  sseUrl = SERVER_BASE_URL,
 }) => {
   // Get user data from localStorage if not provided
   const userData = getUserFromStorage();
   const actualUserId = userId || userData.userId;
-  const actualAuthToken = firebaseToken || userData.authToken;
+  const actualAuthToken = authToken || userData.authToken;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationCount, setNotificationCount] = useState<NotificationCount>(
     { total: 0, unread: 0 }
@@ -65,8 +66,29 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [wsClient, setWsClient] = useState<WebSocketClient | null>(null);
+  const [websocketClient, setWebSocketClient] = useState<WebSocketClient | null>(null);
   const refreshNotificationsRef = useRef<() => Promise<void>>();
+  const authenticatedUserIdRef = useRef<string | null>(null);
+  const notificationIdsRef = useRef<Set<string>>(new Set());
+
+  // WebSocket methods for listening to events
+  const onEvent = useCallback((event: string, listener: (...args: unknown[]) => void) => {
+    if (websocketClient) {
+      websocketClient.onEvent(event, listener);
+    }
+  }, [websocketClient]);
+
+  const offEvent = useCallback((event: string, listener?: (...args: unknown[]) => void) => {
+    if (websocketClient) {
+      websocketClient.offEvent(event, listener);
+    }
+  }, [websocketClient]);
+
+  const sendMessage = useCallback((message: { type: string; data: unknown }) => {
+    if (websocketClient) {
+      websocketClient.send(message);
+    }
+  }, [websocketClient]);
 
   // Initialize WebSocket client
   useEffect(() => {
@@ -74,26 +96,29 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!actualAuthToken || !actualUserId) {
       return;
     }
-
+    
     const client = new WebSocketClient({
-      serverUrl: websocketUrl,
+      serverUrl: sseUrl,
       authToken: actualAuthToken,
       autoConnect: true,
     });
 
-    setWsClient(client);
+    setWebSocketClient(client);
     
-    // Actually connect the websocket
+    // Actually connect the WebSocket
     client.connect();
 
     // Setup event listeners
     const handleConnect = () => {
       setIsConnected(true);
       setError(null);
-      
-      // Join user room for personal notifications
-      if (actualUserId) {
-        client.joinUserRoom(actualUserId);
+    };
+
+    const handleAuthenticated = (data: { userId: string }) => {
+      authenticatedUserIdRef.current = data.userId;
+      // After authentication, refresh notifications to sync with server
+      if (refreshNotificationsRef.current) {
+        refreshNotificationsRef.current();
       }
     };
 
@@ -101,36 +126,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       setIsConnected(false);
     };
 
-    const handleNotification = (notification: Notification) => {
-      setNotifications((prev) => [notification, ...prev]);
-      setNotificationCount((prev) => ({
-        total: prev.total + 1,
-        unread: prev.unread + 1,
-      }));
-    };
+    // Handle notifications-available event - fetch notifications via REST API
+    const handleNotificationsAvailable = (data: { userId: string }) => {
+      // Validate userId matches current user
+      if (authenticatedUserIdRef.current && data.userId !== authenticatedUserIdRef.current) {
+        return;
+      }
 
-    const handleNotificationCount = (count: NotificationCount) => {
-      setNotificationCount(count);
-    };
-
-    const handleAuthenticated = (data: { success: boolean }) => {
-      if (data.success) {
-        setIsConnected(true);
-        setError(null);
-      } else {
-        setError("Authentication failed");
-        setIsConnected(false);
+      // Fetch notifications via REST API when notifications-available event is received
+      if (refreshNotificationsRef.current) {
+        refreshNotificationsRef.current();
       }
     };
 
     const handleConnectError = (error: Error) => {
       setError(`WebSocket connection failed: ${error.message}`);
       setIsConnected(false);
+      // Handle authentication errors specifically
+      if (error.message === 'unauthorized') {
+        setError('Authentication failed. Please check your token.');
+      }
     };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleReconnect = (_attemptNumber: number) => {
-      // attemptNumber is provided by socket.io but we don't need it
       setIsConnected(true);
       setError(null);
       // Refresh notifications after reconnection
@@ -142,9 +161,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     // Register event listeners
     client.on("connect", handleConnect);
     client.on("disconnect", handleDisconnect);
-    client.on("notification", handleNotification);
-    client.on("notification_count", handleNotificationCount);
     client.on("authenticated", handleAuthenticated);
+    client.on("notifications-available", handleNotificationsAvailable);
     client.on("connect_error", handleConnectError);
     client.on("reconnect", handleReconnect);
 
@@ -152,16 +170,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       // Clean up event listeners
       client.off("connect");
       client.off("disconnect");
-      client.off("notification");
-      client.off("notification_count");
       client.off("authenticated");
+      client.off("notifications-available");
       client.off("connect_error");
       client.off("reconnect");
-      // Disconnect the client
-      client.disconnect();
-      setWsClient(null);
+      // Disconnect the client only if it exists and is connected/connecting
+      try {
+        client.disconnect();
+      } catch {
+        // Ignore errors during cleanup (e.g., if connection was never established)
+      }
+      setWebSocketClient(null);
+      authenticatedUserIdRef.current = null;
     };
-  }, [websocketUrl, actualAuthToken, actualUserId]);
+  }, [sseUrl, actualAuthToken, actualUserId]);
 
   // Set auth token in notification service
   useEffect(() => {
@@ -169,9 +191,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       notificationService.setAuthToken(actualAuthToken);
     }
   }, [actualAuthToken]);
-
-  // Real-time updates are handled by WebSocket client
-  // No need for mock service setup
 
   const refreshNotifications = useCallback(async () => {
     if (!actualUserId) {
@@ -191,7 +210,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         }),
       ]);
 
-      setNotifications(allNotifications);
+      // Update deduplication set with all notification IDs
+      notificationIdsRef.current = new Set(allNotifications.map(n => n.id));
+
+      // Ensure dates are Date objects
+      const parsedNotifications = allNotifications.map(notification => ({
+        ...notification,
+        createdAt: notification.createdAt instanceof Date 
+          ? notification.createdAt 
+          : new Date(notification.createdAt || Date.now()),
+        created: notification.created instanceof Date
+          ? notification.created
+          : new Date(notification.created || notification.createdAt || Date.now()),
+      }));
+
+      setNotifications(parsedNotifications);
       setNotificationCount(count);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load notifications";
@@ -213,49 +246,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   }, [actualUserId, refreshNotifications]);
 
-  // Fallback to mock notifications if websocket fails to connect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isConnected && !isLoading && notifications.length === 0) {
-        // You can uncomment this to use mock data when websocket fails
-        // const mockNotifications = [
-        //   {
-        //     id: "mock-1",
-        //     title: "Test Notification",
-        //     message: "This is a mock notification for testing",
-        //     type: "TASK_ASSIGNED" as any,
-        //     userId: actualUserId,
-        //     relatedEntityId: "task-1",
-        //     relatedEntityType: "TASK" as any,
-        //     isRead: false,
-        //     createdAt: new Date(),
-        //     created: new Date(),
-        //   }
-        // ];
-        // setNotifications(mockNotifications);
-        // setNotificationCount({ total: 1, unread: 1 });
-      }
-    }, 5000); // Wait 5 seconds before showing fallback
-
-    return () => clearTimeout(timer);
-  }, [isConnected, isLoading, notifications.length, actualUserId]);
-
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
       await notificationService.markAsRead(notificationId);
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
+        prev.map((notification) => {
+          if (notification.id === notificationId && !notification.isRead) {
+            return { ...notification, isRead: true };
+          }
+          return notification;
+        })
       );
 
-      setNotificationCount((prev) => ({
-        total: prev.total,
-        unread: Math.max(0, prev.unread - 1),
-      }));
+      // Only decrement if notification was actually unread
+      setNotificationCount((prev) => {
+        const notification = notifications.find(n => n.id === notificationId);
+        if (notification && !notification.isRead) {
+          return {
+            total: prev.total,
+            unread: Math.max(0, prev.unread - 1),
+          };
+        }
+        return prev;
+      });
     } catch (err) {
       setError(
         err instanceof Error
@@ -263,7 +277,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           : "Failed to mark notification as read"
       );
     }
-  }, []);
+  }, [notifications]);
 
   const markAllAsRead = useCallback(async () => {
     if (!actualUserId) return;
@@ -321,42 +335,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     [notifications]
   );
 
-  const joinProject = useCallback(
-    (projectId: string) => {
-      if (wsClient) {
-        wsClient.joinProject(projectId); // This will use the legacy method
-      }
-    },
-    [wsClient]
-  );
-
-  const leaveProject = useCallback(
-    (projectId: string) => {
-      if (wsClient) {
-        wsClient.leaveProject(projectId); // This will use the legacy method
-      }
-    },
-    [wsClient]
-  );
-
-  const joinUserRoom = useCallback(
-    (userId: string) => {
-      if (wsClient) {
-        wsClient.joinUserRoom(userId);
-      }
-    },
-    [wsClient]
-  );
-
-  const leaveUserRoom = useCallback(
-    (userId: string) => {
-      if (wsClient) {
-        wsClient.leaveUserRoom(userId);
-      }
-    },
-    [wsClient]
-  );
-
   const contextValue: NotificationContextType = {
     notifications,
     notificationCount,
@@ -366,12 +344,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    joinProject,
-    leaveProject,
-    joinUserRoom,
-    leaveUserRoom,
-    refreshNotifications,
-  };
+  refreshNotifications,
+  onEvent,
+  offEvent,
+  sendMessage,
+};
 
   return (
     <NotificationContext.Provider value={contextValue}>

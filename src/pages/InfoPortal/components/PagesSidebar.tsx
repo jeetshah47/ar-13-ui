@@ -1,17 +1,10 @@
 import { Box, Typography, Button, SvgIcon } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import PlusIcon from "../../../assets/icons/general/plus.svg?react";
-
-interface Page {
-  id: string;
-  title: string;
-  lastModified: string;
-  isActive: boolean;
-}
+import type { PageResponse } from "../../../store/types/InfoPortal/PageResponse";
 
 interface PagesSidebarProps {
-  pages: Page[];
-  folderColor: string;
+  pages: PageResponse[];
   onAddPage: () => void;
   onPageClick?: (pageId: string) => void;
   selectedPageId?: string;
@@ -19,7 +12,6 @@ interface PagesSidebarProps {
 
 const PagesSidebar = ({
   pages,
-  folderColor,
   onAddPage,
   onPageClick,
   selectedPageId,
@@ -95,7 +87,7 @@ const PagesSidebar = ({
 
         {/* Pages List */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: "0px" }}>
-          {pages.map((page, index) => {
+          {pages.map((page) => {
             const isSelected = selectedPageId === page.id || page.isActive;
             return (
               <Box

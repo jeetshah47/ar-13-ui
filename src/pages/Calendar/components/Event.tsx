@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import type { CalendarResponse } from "../../../store/types/Calendar/CalendarResponse";
 
 type EventProps = {
@@ -7,27 +7,116 @@ type EventProps = {
 };
 
 const Event = ({ event, onClick }: EventProps) => {
+  const theme = useTheme();
 
-  const getCategoryColor = (category: string | undefined) => {
-    if (!category) return "#DE92EB";
-    
-    switch (category.toLowerCase()) {
-      case "work":
-        return "#4ECDC4";
-      case "personal":
-        return "#45B7D1";
-      case "meeting":
-        return "#96CEB4";
-      case "appointment":
-        return "#FFEAA7";
-      default:
-        return "#DE92EB";
+  // Get event color scheme based on category (using project theme colors)
+  const getEventColors = (category: string | undefined) => {
+    if (!category) {
+      // Default neutral gray (using theme)
+      return {
+        bg: theme.palette.grey[50],
+        border: theme.palette.divider,
+        text: theme.palette.text.primary,
+        time: theme.palette.text.secondary,
+      };
     }
+    
+    const cat = category.toLowerCase();
+    
+    // Primary colors for meetings/appointments (using project primary)
+    if (cat === "meeting" || cat === "appointment" || cat.includes("one-on-one") || cat.includes("coffee") || cat.includes("lunch") || cat.includes("dinner") || cat.includes("party") || cat.includes("team")) {
+      return {
+        bg: theme.palette.info.light || "rgba(63, 140, 255, 0.12)",
+        border: theme.palette.primary.light || "#3A81EB",
+        text: theme.palette.primary.dark || "#1F6DE0",
+        time: theme.palette.primary.main || "#3F8CFF",
+      };
+    }
+    
+    // Primary/Info colors for work
+    if (cat === "work" || cat === "deep work" || cat === "content" || cat === "product" || cat === "design sync" || cat === "seo") {
+      return {
+        bg: theme.palette.info.light || "rgba(63, 140, 255, 0.12)",
+        border: theme.palette.info.main || "#3F8CFF",
+        text: theme.palette.primary.dark || "#1F6DE0",
+        time: theme.palette.primary.main || "#3F8CFF",
+      };
+    }
+    
+    // Secondary colors for design/planning
+    if (cat === "design" || cat === "planning" || cat === "marketing") {
+      return {
+        bg: theme.palette.grey[50],
+        border: theme.palette.divider,
+        text: theme.palette.secondary.main,
+        time: theme.palette.text.secondary,
+      };
+    }
+    
+    // Info colors for personal/social events
+    if (cat === "personal" || cat.includes("lunch") || cat.includes("dinner") || cat.includes("team lunch") || cat.includes("team dinner")) {
+      return {
+        bg: theme.palette.info.light || "rgba(63, 140, 255, 0.12)",
+        border: theme.palette.info.main || "#3F8CFF",
+        text: theme.palette.info.main || "#3F8CFF",
+        time: theme.palette.primary.main || "#3F8CFF",
+      };
+    }
+    
+    // Warning colors for reviews/inspections
+    if (cat === "review" || cat === "inspection" || cat === "quarterly") {
+      return {
+        bg: "rgba(255, 189, 33, 0.12)",
+        border: theme.palette.warning.main || "#FFBD21",
+        text: theme.palette.warning.main || "#FFBD21",
+        time: theme.palette.warning.main || "#FFBD21",
+      };
+    }
+    
+    // Success colors for completed/success events
+    if (cat === "completed" || cat === "success" || cat.includes("marathon") || cat.includes("dinner with")) {
+      return {
+        bg: theme.palette.success.light || "#E0F9F2",
+        border: theme.palette.success.main || "#00D097",
+        text: theme.palette.success.main || "#00D097",
+        time: theme.palette.success.main || "#00D097",
+      };
+    }
+    
+    // Error colors for reminders/important
+    if (cat === "reminder" || cat === "important" || cat === "accountant") {
+      return {
+        bg: theme.palette.error.light || "rgba(246, 81, 96, 0.12)",
+        border: theme.palette.error.main || "#F65160",
+        text: theme.palette.error.main || "#F65160",
+        time: theme.palette.error.main || "#F65160",
+      };
+    }
+    
+    // Default neutral gray (using theme)
+    return {
+      bg: theme.palette.grey[50],
+      border: theme.palette.divider,
+      text: theme.palette.text.primary,
+      time: theme.palette.text.secondary,
+    };
   };
 
   const formatTime = (time: string | undefined) => {
-    if (!time) return "00:00";
-    return time.substring(0, 5); // Extract HH:MM from time string
+    if (!time) return "12:00 AM";
+    try {
+      const date = new Date(`2000-01-01T${time}`);
+      if (isNaN(date.getTime())) return time.substring(0, 5);
+      
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+      const displayMinutes = minutes.toString().padStart(2, "0");
+      return `${displayHours}:${displayMinutes} ${ampm}`;
+    } catch {
+      return time.substring(0, 5);
+    }
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -37,51 +126,69 @@ const Event = ({ event, onClick }: EventProps) => {
     }
   };
 
+  const colors = getEventColors(event.category);
+
   return (
     <Box
-      sx={(theme) => ({
-        padding: "6px",
-        backgroundColor: theme.palette.grey[50],
-        borderRadius: "14px",
+      sx={{
+        backgroundColor: colors.bg,
+        border: `1px solid ${colors.border}`,
+        borderRadius: "6px",
         display: "flex",
-        overflow: "hidden",
+        gap: "4px",
+        alignItems: "center",
+        padding: "4px 8px",
         width: "100%",
         cursor: onClick ? "pointer" : "default",
-        marginBottom: "2px",
+        marginBottom: "4px",
+        overflow: "hidden",
+        minWidth: 0,
         "&:hover": onClick ? {
-          backgroundColor: theme.palette.primary.light,
-          transform: "scale(1.02)",
-          transition: "all 0.2s ease-in-out"
+          opacity: 0.9,
+          transition: "opacity 0.2s ease-in-out"
         } : {}
-      })}
+      }}
       onClick={handleClick}
     >
       <Box 
         sx={{ 
-          borderLeft: `3px solid ${getCategoryColor(event.category)}`,
-          paddingLeft: "4px",
-          width: "100%"
+          display: "flex",
+          flex: "1 0 0",
+          gap: "2px",
+          alignItems: "center",
+          minWidth: 0,
+          overflow: "hidden",
+          width: "100%",
         }}
       >
         <Typography 
-          fontSize={"12px"} 
-          fontWeight="600"
-          sx={(theme) => ({ 
-            color: theme.palette.text.primary,
-            lineHeight: 1.2,
+          sx={{ 
+            fontSize: "12px",
+            fontWeight: 600,
+            fontFamily: "'Inter', sans-serif",
+            color: colors.text,
+            lineHeight: "18px",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            whiteSpace: "nowrap"
-          })}
+            whiteSpace: "nowrap",
+            flex: "1 0 0",
+            minWidth: 0,
+          }}
         >
           {event.title || "Untitled Event"}
         </Typography>
         <Typography 
-          fontSize={"10px"} 
-          sx={(theme) => ({ 
-            color: theme.palette.text.secondary,
-            lineHeight: 1.2
-          })}
+          sx={{ 
+            fontSize: "12px",
+            fontWeight: 400,
+            fontFamily: "'Inter', sans-serif",
+            color: colors.time,
+            lineHeight: "18px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
         >
           {formatTime(event.time)}
         </Typography>

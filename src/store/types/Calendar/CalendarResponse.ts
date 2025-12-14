@@ -14,6 +14,7 @@ export interface CalendarResponse {
   addToGoogleCalendar?: boolean;
   eventType?: "offline" | "online";
   invitedMemberIds?: string[];
+  invites?: string[];
   duration?: number;
   googleMeetLink?: string;
   googleCalendarEventId?: string;

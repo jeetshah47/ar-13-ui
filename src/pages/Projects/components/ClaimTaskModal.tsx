@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Button, IconButton, Typography, SvgIcon } from "@mui/material";
 import CloseIcon from "../../../assets/icons/general/close/blue.svg?react";
 import Modal from "../../../common/components/Modal/Modal";

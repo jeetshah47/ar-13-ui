@@ -11,6 +11,17 @@ import { filterTasksByRole } from "../../utils/projectFiltering";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import {
+  MSG_TASK_CREATED,
+  MSG_TASK_UPDATED,
+  MSG_TASK_CLAIMED,
+  MSG_TASK_TRANSFERRED,
+  MSG_TIME_SPENT_ADDED,
+  MSG_CANNOT_CLAIM_TASK,
+  MSG_USER_NOT_AUTHENTICATED,
+  MSG_TASK_NOT_FOUND,
+  MSG_FILE_ATTACHMENT_ADDED,
+} from "../../../constants/messages";
+import {
   addTask,
   addMultipleTasks,
   updateTask,
@@ -20,9 +31,10 @@ import {
   getFileAttachments,
   addFileAttachment,
   claimTask,
+  transferTask,
+  getTaskStatuses,
 } from "../../apis/taskApis";
 import type { ITask } from "../../types/Task/Task";
-import type { TaskResponse } from "../../types/Task/TaskResponse";
 import {
   addTaskRequest,
   addTaskSuccess,
@@ -51,54 +63,69 @@ import {
   claimTaskRequest,
   claimTaskSuccess,
   claimTaskFailed,
+  transferTaskRequest,
+  transferTaskSuccess,
+  transferTaskFailed,
+  getTaskStatusesRequest,
+  getTaskStatusesSuccess,
+  getTaskStatusesFailed,
 } from "./taskSlice";
 
 export const getTaskListAction =
   (projectId: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
     dispatch(getTaskListRequest());
     try {
-      getAllTaskByProjectId(projectId)
-        .then((data: { tasks: TaskResponse[] }) => {
-          dispatch(getTaskListSuccess(data));
-          
-          // Apply role-based filtering
-          const state = getState();
-          const userRole = state.authReducer.user.role;
-          const userId = state.authReducer.api.uid;
-          
-          if (userRole && userId) {
-            const filteredTasks = filterTasksByRole(data.tasks, userRole, userId);
-            dispatch(setFilteredTasks(filteredTasks));
-          }
-        })
-        .catch((error: AxiosError<ProjectErrorResponse>) => {
-          if (error?.response?.data) {
-            dispatch(getTaskListFailed(error?.response?.data));
-          }
-        });
-    } catch {
-      toast.success("Failed to get tasks");
-      dispatch(getTaskListFailed({ error: "Unkown Error" }));
+      const result = await getAllTaskByProjectId(projectId);
+      dispatch(getTaskListSuccess(result));
+      
+      // Apply role-based filtering
+      const state = getState();
+      const userRole = state.authReducer.user.role;
+      const userId = state.authReducer.api.uid;
+      
+      if (userRole && userId) {
+        const filteredTasks = filterTasksByRole(result.tasks, userRole, userId);
+        const currentFilteredTasks = state.taskListReducer.api.data.filteredTasks;
+        
+        // Only update if the filtered tasks have actually changed
+        // Compare by length and IDs to avoid unnecessary updates
+        const hasChanged = 
+          currentFilteredTasks.length !== filteredTasks.length ||
+          filteredTasks.some((task, index) => 
+            !currentFilteredTasks[index] || currentFilteredTasks[index].id !== task.id
+          );
+        
+        if (hasChanged) {
+          dispatch(setFilteredTasks(filteredTasks));
+        }
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse>;
+      if (axiosError?.response?.data) {
+        dispatch(getTaskListFailed(axiosError.response.data));
+      } else {
+        toast.error("Failed to get tasks");
+        dispatch(getTaskListFailed({ error: "Unknown Error" }));
+      }
     }
   };
 
 export const addTaskAction = (task: ITask) => async (dispatch: AppDispatch) => {
   dispatch(addTaskRequest());
   try {
-    addTask(task)
-      .then(() => {
-        dispatch(addTaskSuccess());
-        toast.success("Task added successfully");
-      })
-      .catch((error: AxiosError<ProjectErrorResponse>) => {
-        if (error?.response?.data) {
-          dispatch(addTaskFailed(error?.response?.data));
-          toast.error(`Failed to add task, ${error?.response?.data?.error}`);
-        }
-      });
-  } catch {
-    toast.success("Failed to add task");
-    dispatch(addTaskFailed({ error: "Unknown Error" }));
+    await addTask(task);
+    dispatch(addTaskSuccess());
+    toast.success(MSG_TASK_CREATED);
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(addTaskFailed(axiosError.response.data));
+      toast.error(`Failed to add task: ${axiosError.response.data.error}`);
+    } else {
+      dispatch(addTaskFailed({ error: "Unknown Error" }));
+      toast.error("Failed to add task");
+    }
+    throw error; // Re-throw to allow component to handle
   }
 };
 
@@ -123,18 +150,29 @@ export const addMultipleTasksAction = (tasks: ITask[]) => async (dispatch: AppDi
 export const updateTaskAction = (task: ITask) => async (dispatch: AppDispatch) => {
   dispatch(updateTaskRequest());
   try {
-    updateTask(task)
-      .then(() => {
-        dispatch(updateTaskSuccess());
-      })
-      .catch((error: AxiosError<ProjectErrorResponse>) => {
-        if (error?.response?.data) {
-          dispatch(updateTaskFailed(error?.response?.data));
-        }
-      });
-  } catch {
-    toast.success("Failed to update task");
-    dispatch(updateTaskFailed({ error: "Unknown Error" }));
+    // Extract projectId and taskId from task object
+    if (!task.id) {
+      throw new Error("Task ID is required for update");
+    }
+    if (!task.projectId) {
+      throw new Error("Project ID is required for update");
+    }
+
+    const { id: taskId, projectId, ...taskUpdateData } = task;
+    
+    await updateTask(projectId, taskId, taskUpdateData);
+    dispatch(updateTaskSuccess());
+    toast.success(MSG_TASK_UPDATED);
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(updateTaskFailed(axiosError.response.data));
+      toast.error(`Failed to update task: ${axiosError.response.data.error}`);
+    } else {
+      dispatch(updateTaskFailed({ error: "Unknown Error" }));
+      toast.error("Failed to update task");
+    }
+    throw error; // Re-throw to allow component to handle
   }
 };
 
@@ -163,7 +201,7 @@ export const addTimeSpentAction =
     try {
       await addTimeSpent(projectId, taskId, timeSpentData);
       dispatch(addTimeSpentSuccess());
-      toast.success("Time logged successfully");
+      toast.success(MSG_TIME_SPENT_ADDED);
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ProjectErrorResponse>;
       if (axiosError?.response?.data) {
@@ -221,7 +259,7 @@ export const addFileAttachmentAction =
     try {
       const response = await addFileAttachment(projectId, taskId, file);
       dispatch(addFileAttachmentSuccess());
-      toast.success(response.message || "File uploaded successfully");
+      toast.success(response.message || MSG_FILE_ATTACHMENT_ADDED);
       // Refresh file attachments after successful upload
       dispatch(getFileAttachmentsAction(projectId, taskId));
     } catch (error: unknown) {
@@ -243,7 +281,7 @@ export const claimTaskAction =
     try {
       const response = await claimTask(projectId, taskId);
       dispatch(claimTaskSuccess());
-      toast.success(response.message || "Task claimed successfully");
+      toast.success(response.message || MSG_TASK_CLAIMED);
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ProjectErrorResponse | { message?: string }>;
       if (axiosError?.response?.data) {
@@ -253,13 +291,13 @@ export const claimTaskAction =
         
         // Handle specific error cases
         if (axiosError.response.status === 401) {
-          toast.error("Authentication failed. Please log in again.");
+          toast.error(MSG_USER_NOT_AUTHENTICATED);
         } else if (axiosError.response.status === 403) {
-          toast.error("You are not part of this project.");
+          toast.error(MSG_CANNOT_CLAIM_TASK);
         } else if (axiosError.response.status === 404) {
-          toast.error("Task or project not found.");
+          toast.error(MSG_TASK_NOT_FOUND);
         } else {
-          toast.error(errorMessage || "Failed to claim task");
+          toast.error(errorMessage || MSG_CANNOT_CLAIM_TASK);
         }
       } else {
         dispatch(claimTaskFailed({ error: "Unknown Error" }));
@@ -267,3 +305,53 @@ export const claimTaskAction =
       }
     }
   };
+
+export const transferTaskAction = 
+  (projectId: string, taskId: string, userId: string) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(transferTaskRequest());
+    try {
+      const response = await transferTask(projectId, taskId, userId);
+      dispatch(transferTaskSuccess());
+      toast.success(response.message || MSG_TASK_TRANSFERRED);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse | { message?: string }>;
+      if (axiosError?.response?.data) {
+        const errorData = axiosError.response.data;
+        const errorMessage = (errorData as ProjectErrorResponse).error || (errorData as { message?: string }).message;
+        dispatch(transferTaskFailed(errorData as ProjectErrorResponse));
+        
+        // Handle specific error cases
+        if (axiosError.response.status === 401) {
+          toast.error(MSG_USER_NOT_AUTHENTICATED);
+        } else if (axiosError.response.status === 403) {
+          toast.error("Admin access required to transfer tasks");
+        } else if (axiosError.response.status === 404) {
+          toast.error(MSG_TASK_NOT_FOUND);
+        } else {
+          toast.error(errorMessage || "Failed to transfer task");
+        }
+      } else {
+        dispatch(transferTaskFailed({ error: "Unknown Error" }));
+        toast.error("Failed to transfer task");
+      }
+      throw error; // Re-throw to allow component to handle
+    }
+  };
+
+export const getTaskStatusesAction = () => async (dispatch: AppDispatch) => {
+  dispatch(getTaskStatusesRequest());
+  try {
+    const data = await getTaskStatuses();
+    dispatch(getTaskStatusesSuccess(data));
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ProjectErrorResponse>;
+    if (axiosError?.response?.data) {
+      dispatch(getTaskStatusesFailed(axiosError.response.data));
+      toast.error(`Failed to fetch task statuses: ${axiosError.response.data.error}`);
+    } else {
+      dispatch(getTaskStatusesFailed({ error: "Unknown Error" }));
+      toast.error("Failed to fetch task statuses");
+    }
+  }
+};

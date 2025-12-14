@@ -1,5 +1,5 @@
 import { Box, Chip } from "@mui/material";
-import { TASK_STATUS, TASK_STATUSES_ARRAY, getStatusDisplayName, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
+import { TASK_STATUSES_ARRAY, getStatusDisplayName, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
 type ChipsProps = {
   selected: string;

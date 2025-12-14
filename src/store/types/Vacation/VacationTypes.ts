@@ -50,19 +50,20 @@ export interface LeaveRequestUserDetails {
 
 // Leave request from user profile API
 export interface LeaveRequest {
+  id: string;
+  created: string; // ISO date string
   userId: string;
   requestType: RequestType;
-  startDate: FirestoreTimestamp;
-  endDate: FirestoreTimestamp;
+  startDate: string; // ISO date string
+  endDate?: string; // ISO date string, optional for work_remotely requests
   duration: number;
   durationType: DurationType;
+  status: "pending" | "approved" | "rejected" | "cancelled";
   comments: string;
-  requestedAt: FirestoreTimestamp;
-  reviewedAt?: FirestoreTimestamp | null;
+  requestedAt: string; // ISO date string
+  reviewedAt?: string | null; // ISO date string, optional
   reviewComments?: string | null;
   reviewedBy?: string | null;
-  status: "pending" | "approved" | "rejected" | "cancelled";
-  id: string;
   userDetails?: LeaveRequestUserDetails | null;
   reviewerDetails?: LeaveRequestUserDetails | null;
 }

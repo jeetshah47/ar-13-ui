@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent } from "@mui/material";
+import { Box, Button, SvgIcon, TextField, Typography, MenuItem, FormControl, InputLabel, Select, OutlinedInput, Chip, type SelectChangeEvent, Autocomplete } from "@mui/material";
 import CrossIcon from "../../../assets/icons/general/calendar-6.svg?react";
 import { IOSSwitch } from "../../../common/components/Switch/IOSswitch";
 import { useEffect, useState } from "react";
@@ -41,11 +41,22 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     addToGoogleCalendar: false,
     eventType: "offline",
     invitedMemberIds: [],
+    invites: [],
     duration: undefined,
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("daily");
+  const [externalInviteEmail, setExternalInviteEmail] = useState<string>("");
+  const [errors, setErrors] = useState<{
+    title?: string;
+    category?: string;
+    priority?: string;
+    start?: string;
+    time?: string;
+    invitedMemberIds?: string;
+    duration?: string;
+  }>({});
 
   // Fetch Google account status and users on mount
   useEffect(() => {
@@ -72,6 +83,35 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       }));
     }
   }, [uid, existingEvent]);
+
+  // Reset form and auto-fill date when date prop changes (only for new events)
+  useEffect(() => {
+    if (existingEvent) return; // Don't reset if editing existing event
+    
+    const dateString = date ? date.toISOString().split('T')[0] : "";
+    
+    setFormData({
+      title: "",
+      category: "",
+      priority: "",
+      start: dateString,
+      end: dateString,
+      time: "",
+      description: "",
+      isRepeating: false,
+      repeatFrequency: "daily",
+      repeatDays: [],
+      createdBy: uid || "",
+      addToGoogleCalendar: false,
+      eventType: "offline",
+      invitedMemberIds: [],
+      invites: [],
+      duration: undefined,
+    });
+    setSelectedDays([]);
+    setSelectedFrequency("daily");
+    setExternalInviteEmail("");
+  }, [date, existingEvent, uid]);
 
   // Prefill when existingEvent is provided
   useEffect(() => {
@@ -123,6 +163,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       addToGoogleCalendar: existingEvent.addToGoogleCalendar ?? false,
       eventType: existingEvent.eventType ?? "offline",
       invitedMemberIds: existingEvent.invitedMemberIds ?? [],
+      invites: existingEvent.invites ?? [],
       duration: existingEvent.duration ?? calculatedDuration,
     };
 
@@ -136,6 +177,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
       ...prev,
       [field]: value
     }));
+    
+    // Clear error when user starts typing/changing
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field as keyof typeof errors]: undefined }));
+    }
   };
 
   const handleDayToggle = (day: string) => {
@@ -166,22 +212,91 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     handleInputChange("invitedMemberIds", typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.category || !formData.priority || !formData.start || !formData.time) {
-      toast.error("Please fill in all required fields");
+  const handleInvitesChange = (newEmails: string[]) => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validEmails = newEmails.filter(email => emailRegex.test(email));
+    
+    if (validEmails.length !== newEmails.length) {
+      toast.error("Please enter valid email addresses");
+    }
+    
+    handleInputChange("invites", validEmails);
+  };
+
+  const handleAddExternalInvite = () => {
+    if (!externalInviteEmail.trim()) {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(externalInviteEmail.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    const currentInvites = formData.invites || [];
+    const emailToAdd = externalInviteEmail.trim().toLowerCase();
+    
+    // Check if email already exists
+    if (currentInvites.includes(emailToAdd)) {
+      toast.error("This email is already in the invite list");
+      setExternalInviteEmail("");
+      return;
+    }
+
+    // Add email to invites
+    handleInputChange("invites", [...currentInvites, emailToAdd]);
+    setExternalInviteEmail("");
+  };
+
+  const handleExternalInviteKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddExternalInvite();
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+    
+    if (!formData.title?.trim()) {
+      newErrors.title = "Event name is required";
+    }
+    
+    if (!formData.category) {
+      newErrors.category = "Event category is required";
+    }
+    
+    if (!formData.priority) {
+      newErrors.priority = "Priority is required";
+    }
+    
+    if (!formData.start) {
+      newErrors.start = "Start date is required";
+    }
+    
+    if (!formData.time) {
+      newErrors.time = "Time is required";
+    }
+    
     // Validate online event requirements
     if (formData.eventType === "online") {
       if (!formData.invitedMemberIds || formData.invitedMemberIds.length === 0) {
-        toast.error("Please select at least one member to invite for online events");
-        return;
+        newErrors.invitedMemberIds = "Please select at least one member to invite for online events";
       }
       if (!formData.duration && !formData.end) {
-        toast.error("Please provide either duration or end time for online events");
-        return;
+        newErrors.duration = "Please provide either duration or end time for online events";
       }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
     }
 
     if (!uid) {
@@ -228,6 +343,10 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
         // Only include invitedMemberIds for online events
         ...(formData.eventType === "online" && formData.invitedMemberIds && formData.invitedMemberIds.length > 0 
           ? { invitedMemberIds: formData.invitedMemberIds } 
+          : {}),
+        // Include invites if provided
+        ...(formData.invites && formData.invites.length > 0 
+          ? { invites: formData.invites } 
           : {}),
       };
 
@@ -285,10 +404,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
     <Box
       sx={(theme) => ({
         backgroundColor: theme.palette.background.paper,
-        borderRadius: "24px",
-        padding: "28px",
-        width: "500px",
-        height: "inherit",
+        borderRadius: { xs: "16px", sm: "24px" },
+        padding: { xs: "20px", sm: "28px" },
+        width: { xs: "90vw", sm: "500px" },
+        maxWidth: { xs: "400px", sm: "500px" },
+        maxHeight: "90vh",
         overflow: "auto"
       })}
     >
@@ -297,10 +417,14 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingY: "30px",
+          paddingY: { xs: "20px", sm: "30px" },
         }}
       >
-        <Typography fontWeight={"bold"} variant="h6">
+        <Typography 
+          fontWeight={"bold"} 
+          variant="h6"
+          sx={{ fontSize: { xs: "18px", sm: "20px" } }}
+        >
           {existingEvent ? "Edit Event" : "Add Event"}
         </Typography>
         <Box
@@ -329,6 +453,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             placeholder="Enter Event Name"
             value={formData.title}
             onChange={(e) => handleInputChange("title", e.target.value)}
+            error={Boolean(errors.title)}
+            helperText={errors.title}
+            required
           />
         </Box>
       </Box>
@@ -345,6 +472,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             select
             value={formData.category}
             onChange={(e) => handleInputChange("category", e.target.value)}
+            error={Boolean(errors.category)}
+            helperText={errors.category}
+            required
           >
             {categories.map((category) => (
               <MenuItem key={category} value={category}>
@@ -367,6 +497,9 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             select
             value={formData.priority}
             onChange={(e) => handleInputChange("priority", e.target.value)}
+            error={Boolean(errors.priority)}
+            helperText={errors.priority}
+            required
           >
             {priorities.map((priority) => (
               <MenuItem key={priority} value={priority}>
@@ -416,12 +549,17 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           ))}
         </Box>
       </Box>
-      <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-        <Box>
+      <Box sx={{ 
+        display: "flex", 
+        gap: { xs: "8px", sm: "16px" }, 
+        alignItems: "center",
+        flexDirection: { xs: "column", sm: "row" }
+      }}>
+        <Box sx={{ width: { xs: "100%", sm: "auto" }, flex: { xs: 1, sm: "none" } }}>
           <Box sx={{ width: "100%", paddingTop: "10px" }}>
             <Typography
               color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
+              sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
             >
               {date ? "Date" : "Start Date"}
             </Typography>
@@ -436,14 +574,17 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                   handleInputChange("end", e.target.value);
                 }
               }}
+              error={Boolean(errors.start)}
+              helperText={errors.start}
+              required
             />
           </Box>
         </Box>
-        <Box>
+        <Box sx={{ width: { xs: "100%", sm: "auto" }, flex: { xs: 1, sm: "none" } }}>
           <Box sx={{ width: "100%", paddingTop: "10px" }}>
             <Typography
               color="secondary"
-              sx={{ fontWeight: "bold", fontSize: "14px" }}
+              sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
             >
               Time
             </Typography>
@@ -453,18 +594,26 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
               type="time"
               value={formData.time}
               onChange={(e) => handleInputChange("time", e.target.value)}
+              error={Boolean(errors.time)}
+              helperText={errors.time}
+              required
             />
           </Box>
         </Box>
       </Box>
       {formData.eventType === "online" && (
         <>
-          <Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <Box sx={{ flex: 1 }}>
+          <Box sx={{ 
+            display: "flex", 
+            gap: { xs: "8px", sm: "16px" }, 
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" }
+          }}>
+            <Box sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}>
               <Box sx={{ width: "100%", paddingTop: "10px" }}>
                 <Typography
                   color="secondary"
-                  sx={{ fontWeight: "bold", fontSize: "14px" }}
+                  sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
                 >
                   Duration (minutes)
                 </Typography>
@@ -478,15 +627,17 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                     handleInputChange("duration", value);
                   }}
                   inputProps={{ min: 1 }}
+                  error={Boolean(errors.duration)}
+                  helperText={errors.duration}
                 />
               </Box>
             </Box>
             {!formData.duration && (
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}>
                 <Box sx={{ width: "100%", paddingTop: "10px" }}>
                   <Typography
                     color="secondary"
-                    sx={{ fontWeight: "bold", fontSize: "14px" }}
+                    sx={{ fontWeight: "bold", fontSize: { xs: "12px", sm: "14px" } }}
                   >
                     End Date
                   </Typography>
@@ -508,7 +659,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             >
               Invite Members
             </Typography>
-            <FormControl sx={{ width: "100%", paddingTop: "7px" }}>
+            <FormControl sx={{ width: "100%", paddingTop: "7px" }} error={Boolean(errors.invitedMemberIds)}>
               <InputLabel>Select Members</InputLabel>
               <Select
                 multiple
@@ -537,6 +688,11 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
                     </MenuItem>
                   ))}
               </Select>
+              {errors.invitedMemberIds && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                  {errors.invitedMemberIds}
+                </Typography>
+              )}
             </FormControl>
           </Box>
         </>
@@ -556,6 +712,67 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           value={formData.description}
           onChange={(e) => handleInputChange("description", e.target.value)}
         />
+      </Box>
+      <Box sx={{ width: "100%", paddingTop: "10px" }}>
+        <Typography
+          color="secondary"
+          sx={{ fontWeight: "bold", fontSize: "14px" }}
+        >
+          Invitees
+        </Typography>
+        <Autocomplete
+          multiple
+          freeSolo
+          options={users
+            .filter((user) => user.id !== uid)
+            .map((user) => user.email)}
+          value={formData.invites || []}
+          onChange={(_, newValue) => {
+            handleInvitesChange(newValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Select or type email addresses"
+              sx={{ width: "100%", paddingTop: "7px" }}
+            />
+          )}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                {...getTagProps({ index })}
+                key={option}
+                label={option}
+                size="small"
+              />
+            ))
+          }
+        />
+      </Box>
+      <Box sx={{ width: "100%", paddingTop: "10px" }}>
+        <Typography
+          color="secondary"
+          sx={{ fontWeight: "bold", fontSize: "14px" }}
+        >
+          External Invite
+        </Typography>
+        <Box sx={{ display: "flex", gap: "8px", paddingTop: "7px" }}>
+          <TextField
+            sx={{ flex: 1 }}
+            placeholder="Enter email address"
+            type="email"
+            value={externalInviteEmail}
+            onChange={(e) => setExternalInviteEmail(e.target.value)}
+            onKeyPress={handleExternalInviteKeyPress}
+          />
+          <Button
+            variant="contained"
+            onClick={handleAddExternalInvite}
+            disabled={!externalInviteEmail.trim()}
+          >
+            Add
+          </Button>
+        </Box>
       </Box>
       <Box
         sx={(theme) => ({
@@ -610,75 +827,79 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           onChange={(e) => handleInputChange("isRepeating", e.target.checked)}
         />
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          paddingTop: "12px",
-          gap: "16px",
-        }}
-      >
-        {frequencies.map((frequency) => (
+      {formData.isRepeating && (
+        <>
           <Box
-            key={frequency}
-            sx={(theme) => ({
-              paddingY: "12px",
-              flex: 1,
-              border: `1px solid ${theme.palette.grey[300]}`,
-              borderRadius: "10px",
-              backgroundColor: selectedFrequency === frequency 
-                ? theme.palette.primary.main 
-                : "transparent",
-              textAlign: "center",
-              color: selectedFrequency === frequency 
-                ? theme.palette.primary.contrastText 
-                : theme.palette.text.secondary,
-              fontWeight: selectedFrequency === frequency ? "600" : "normal",
-              cursor: "pointer",
-            })}
-            onClick={() => handleFrequencyChange(frequency)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              paddingTop: "12px",
+              gap: "16px",
+            }}
           >
-            {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+            {frequencies.map((frequency) => (
+              <Box
+                key={frequency}
+                sx={(theme) => ({
+                  paddingY: "12px",
+                  flex: 1,
+                  border: `1px solid ${theme.palette.grey[300]}`,
+                  borderRadius: "10px",
+                  backgroundColor: selectedFrequency === frequency 
+                    ? theme.palette.primary.main 
+                    : "transparent",
+                  textAlign: "center",
+                  color: selectedFrequency === frequency 
+                    ? theme.palette.primary.contrastText 
+                    : theme.palette.text.secondary,
+                  fontWeight: selectedFrequency === frequency ? "600" : "normal",
+                  cursor: "pointer",
+                })}
+                onClick={() => handleFrequencyChange(frequency)}
+              >
+                {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+              </Box>
+            ))}
           </Box>
-        ))}
-      </Box>
-      <Box>
-        <Typography color="secondary.main" fontWeight={700}>
-          On these days
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            paddingTop: "12px",
-            gap: "12px",
-          }}
-        >
-          {daysOfWeek.map((day) => (
+          <Box>
+            <Typography color="secondary.main" fontWeight={700}>
+              On these days
+            </Typography>
             <Box
-              key={day}
-              sx={(theme) => ({
-                paddingY: "12px",
-                flex: 1,
-                border: `1px solid ${theme.palette.grey[300]}`,
-                borderRadius: "10px",
-                backgroundColor: selectedDays.includes(day) 
-                  ? theme.palette.primary.main 
-                  : "transparent",
-                textAlign: "center",
-                color: selectedDays.includes(day) 
-                  ? theme.palette.primary.contrastText 
-                  : theme.palette.text.secondary,
-                fontWeight: selectedDays.includes(day) ? "600" : "normal",
-                cursor: "pointer",
-              })}
-              onClick={() => handleDayToggle(day)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                paddingTop: "12px",
+                gap: "12px",
+              }}
             >
-              {day}
+              {daysOfWeek.map((day) => (
+                <Box
+                  key={day}
+                  sx={(theme) => ({
+                    paddingY: "12px",
+                    flex: 1,
+                    border: `1px solid ${theme.palette.grey[300]}`,
+                    borderRadius: "10px",
+                    backgroundColor: selectedDays.includes(day) 
+                      ? theme.palette.primary.main 
+                      : "transparent",
+                    textAlign: "center",
+                    color: selectedDays.includes(day) 
+                      ? theme.palette.primary.contrastText 
+                      : theme.palette.text.secondary,
+                    fontWeight: selectedDays.includes(day) ? "600" : "normal",
+                    cursor: "pointer",
+                  })}
+                  onClick={() => handleDayToggle(day)}
+                >
+                  {day}
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
-      </Box>
+          </Box>
+        </>
+      )}
       <Box
         sx={{
           display: "flex",
@@ -687,6 +908,7 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
           paddingY: "12px",
           alignItems: "center",
           gap: "12px",
+          flexDirection: { xs: "column", sm: "row" }
         }}
       >
         {existingEvent && (
@@ -695,16 +917,20 @@ const EventForm = ({ date, onClose, currentMonth, existingEvent }: EventFormProp
             color="error"
             onClick={handleDeleteEvent}
             disabled={loading}
-            sx={{ minWidth: "120px" }}
+            sx={{ 
+              minWidth: { xs: "100%", sm: "120px" },
+              width: { xs: "100%", sm: "auto" }
+            }}
           >
             Remove Event
           </Button>
         )}
-        <Box sx={{ flex: 1 }} />
+        <Box sx={{ flex: { xs: 0, sm: 1 } }} />
         <Button 
           variant="contained" 
           onClick={handleSubmit}
           disabled={loading}
+          sx={{ width: { xs: "100%", sm: "auto" } }}
         >
           {loading ? "Saving..." : existingEvent ? "Update Event" : "Save Event"}
         </Button>

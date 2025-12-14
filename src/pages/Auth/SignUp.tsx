@@ -14,6 +14,7 @@ import { Visibility, VisibilityOff, ArrowForward } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate, useSearchParams } from "react-router";
 import { useFormik } from "formik";
+import * as Yup from "yup";
 import { authSignUpActions, validateSignupTokenAction } from "../../store/features/auth/authAction";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 
@@ -60,7 +61,7 @@ const theme = createTheme({
 export default function PhoneValidationUI() {
   const [showPassword, setShowPassword] = useState(false);
   const loading = useAppSelector((s) => s.authReducer.loading);
-  const { isValidating, isValid, error: validationError, reason } = useAppSelector(
+  const { isValidating, isValid, error: validationError, reason, email: tokenEmail } = useAppSelector(
     (s) => s.authReducer.tokenValidation
   );
   const [searchParams] = useSearchParams();
@@ -73,6 +74,25 @@ export default function PhoneValidationUI() {
       password: "",
       phoneNumber: "",
     },
+    validationSchema: Yup.object({
+      firstName: Yup.string()
+        .required("First name is required")
+        .min(2, "First name must be at least 2 characters"),
+      lastName: Yup.string()
+        .required("Last name is required")
+        .min(2, "Last name must be at least 2 characters"),
+      email: Yup.string()
+        .email("Invalid email address")
+        .required("Email is required"),
+      password: Yup.string()
+        .required("Password is required")
+        .min(8, "Password must be at least 8 characters long")
+        .matches(/[0-9]/, "Password must contain at least one number")
+        .matches(/[a-zA-Z]/, "Password must contain at least one letter"),
+      phoneNumber: Yup.string()
+        .matches(/^\+?[\d\s-()]+$/, "Invalid phone number format")
+        .optional(),
+    }),
     onSubmit: (values) => {
       handleSubmit(values);
     },
@@ -85,6 +105,25 @@ export default function PhoneValidationUI() {
       dispatch(validateSignupTokenAction(token));
     }
   }, [token, dispatch]);
+
+  // Pre-fill email when token is validated
+  useEffect(() => {
+    if (isValid && tokenEmail && !formik.values.email) {
+      formik.setFieldValue("email", tokenEmail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isValid, tokenEmail]);
+
+  // Handle missing token - redirect to login after showing error
+  useEffect(() => {
+    if (!token) {
+      const redirectTimer = setTimeout(() => {
+        navigate("/auth/login");
+      }, 3000); // Redirect after 3 seconds
+
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [token, navigate]);
 
   const handleSubmit = async (values: UserData) => {
     dispatch(
@@ -99,6 +138,7 @@ export default function PhoneValidationUI() {
           role: "Standard",
           phoneNumber: values.phoneNumber,
         },
+        token || undefined,
         () => navigate("/auth/login")
       )
     );
@@ -228,12 +268,36 @@ export default function PhoneValidationUI() {
             </Box>
 
             <Paper elevation={0} sx={{ p: 0 }}>
-              {isValidating && (
+              {!token && (
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 3,
+                  }}
+                >
+                  <Box sx={{ maxWidth: "400px" }}>
+                    <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }} color="error">
+                      Missing Signup Token
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      No signup token was provided. Please use a valid invitation link to sign up.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Redirecting to login page in a few seconds...
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              {token && isValidating && (
                 <Box sx={{ textAlign: "center", py: 4 }}>
                   <Typography>Validating token...</Typography>
                 </Box>
               )}
-              {!isValidating && isValid === false && reason === "Invitation already used" && (
+              {token && !isValidating && isValid === false && reason === "Invitation already used" && (
                 <Box
                   sx={{
                     textAlign: "center",
@@ -270,14 +334,14 @@ export default function PhoneValidationUI() {
                   </Box>
                 </Box>
               )}
-              {!isValidating && isValid === false && reason !== "Invitation already used" && (
+              {token && !isValidating && isValid === false && reason !== "Invitation already used" && (
                 <Box sx={{ textAlign: "center", py: 4 }}>
                   <Typography color="error">
                     {validationError || "Invalid or expired token. Please use a valid signup link."}
                   </Typography>
                 </Box>
               )}
-              {!isValidating && isValid === true && (
+              {token && !isValidating && isValid === true && (
                 <form onSubmit={formik.handleSubmit}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                   {/* Name Fields */}
@@ -291,6 +355,9 @@ export default function PhoneValidationUI() {
                         value={formik.values.firstName}
                         required
                         onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean(formik.touched.firstName && formik.errors.firstName)}
+                        helperText={formik.touched.firstName && formik.errors.firstName}
                         variant="outlined"
                       />
                     </Grid>
@@ -303,6 +370,9 @@ export default function PhoneValidationUI() {
                         required
                         value={formik.values.lastName}
                         onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean(formik.touched.lastName && formik.errors.lastName)}
+                        helperText={formik.touched.lastName && formik.errors.lastName}
                         variant="outlined"
                       />
                     </Grid>
@@ -415,8 +485,12 @@ export default function PhoneValidationUI() {
                     name="email"
                     value={formik.values.email}
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(formik.touched.email && formik.errors.email)}
+                    helperText={formik.touched.email && formik.errors.email}
                     variant="outlined"
                     required
+                    disabled={isValid && Boolean(tokenEmail)}
                   />
 
                 {/* Phone Number */}
@@ -427,6 +501,9 @@ export default function PhoneValidationUI() {
                   placeholder="e.g. +1 555 123 4567"
                   value={formik.values.phoneNumber}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.phoneNumber && formik.errors.phoneNumber)}
+                  helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                   variant="outlined"
                 />
 
@@ -437,9 +514,12 @@ export default function PhoneValidationUI() {
                     type={showPassword ? "text" : "password"}
                     value={formik.values.password}
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     name={"password"}
                     placeholder="••••••••"
                     required
+                    error={Boolean(formik.touched.password && formik.errors.password)}
+                    helperText={formik.touched.password && formik.errors.password}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
@@ -463,7 +543,7 @@ export default function PhoneValidationUI() {
                     variant="contained"
                     size="small"
                     type="submit"
-                  disabled={loading}
+                  disabled={loading || !formik.isValid}
                   endIcon={!loading ? <ArrowForward /> : undefined}
                     sx={{
                       px: 4,

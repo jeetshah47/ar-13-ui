@@ -14,15 +14,24 @@ import CalenderIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?re
 import VacationsIcon from "../../../assets/icons/sidebar/vacations/inactive.svg?react";
 import EmployeesIcon from "../../../assets/icons/sidebar/employees/inactive.svg?react";
 import InfoPortalIcon from "../../../assets/icons/sidebar/infoportal/active.svg?react";
-import GearIcon from "../../../assets/icons/general/gear.svg?react";
 import { useLocation, useNavigate } from "react-router";
 import { RequireAdmin } from "../RBAC/RequirePermission";
+import { usePermissions } from "../../../store/hooks/usePermissions";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import DescriptionIcon from "@mui/icons-material/Description";
+import HistoryIcon from "@mui/icons-material/History";
 
 interface ItemProps {
   active?: boolean;
 }
 
-const MainSiderBar = () => {
+interface MainSiderBarProps {
+  onNavigate?: () => void;
+}
+
+const MainSiderBar = ({ onNavigate }: MainSiderBarProps = {}) => {
+  const { checkPermission } = usePermissions();
+  
   const Item = styled(Paper, {
     shouldForwardProp: (prop) => prop !== "active",
   })<ItemProps>(({ theme, active }) => ({
@@ -30,19 +39,25 @@ const MainSiderBar = () => {
       ? alpha(theme.palette.primary.main, 0.12)
       : undefined,
     ...theme.typography.body2,
-    paddingLeft: theme.spacing(4),
-    paddingRight: theme.spacing(4),
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(0.75),
+    paddingBottom: theme.spacing(0.75),
     textAlign: "center",
     color: (theme.vars ?? theme).palette.text.secondary,
     flexGrow: 1,
     display: "flex",
     alignContent: "center",
-
-    gap: "12px",
-    // padding: "6px 0",
-    // paddingInline: '24px',
+    gap: "8px",
+    fontSize: "12px",
+    [theme.breakpoints.up("sm")]: {
+      paddingLeft: theme.spacing(4),
+      paddingRight: theme.spacing(4),
+      paddingTop: theme.spacing(1),
+      paddingBottom: theme.spacing(1),
+      gap: "12px",
+      fontSize: "14px",
+    },
     ":hover": {
       backgroundColor: alpha(theme.palette.primary.main, 0.12),
       color: (theme.vars ?? theme).palette.text.secondary,
@@ -55,6 +70,10 @@ const MainSiderBar = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    // Close drawer on mobile after navigation
+    if (onNavigate) {
+      onNavigate();
+    }
   };
 
   const checkActiveStatus = (path: string) => {
@@ -66,17 +85,15 @@ const MainSiderBar = () => {
       sx={{
         backgroundColor: "background.paper",
         height: "100%",
-        width: "200px",
+        width: { xs: "100%", sm: "200px" },
         display: "flex",
         flexDirection: "column",
-        // paddingBottom: "0px",
         boxShadow: (theme) => theme.shadows[1],
-        borderRadius: "24px",
-        paddingX: "12px",
+        borderRadius: { xs: "0px", sm: "24px" },
+        paddingX: { xs: "8px", sm: "12px" },
       }}
     >
-      {/* <Box sx={{ position: "absolute", width: "100%", top: 0}}> */}
-      <Box sx={{ width: "50px", paddingTop: "24px" }}>
+      <Box sx={{ width: { xs: "40px", sm: "50px" }, paddingTop: { xs: "16px", sm: "24px" } }}>
         <Box
           component="img"
           src={ARLOGO}
@@ -88,68 +105,76 @@ const MainSiderBar = () => {
           })}
         />
       </Box>
-      <Box>
-        <Stack gap={1}>
-          <Item
-            onClick={() => handleNavigation("/app/dashboard")}
-            active={checkActiveStatus("dashboard")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={DashIcon}
-              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+      <Box sx={{ flex: 1, overflowY: "auto" }}>
+        <Stack gap={{ xs: 0.5, sm: 1 }}>
+          {checkPermission("dashboard:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/dashboard")}
+              active={checkActiveStatus("dashboard")}
+              elevation={0}
             >
-              Dashboard
-            </Typography>
-          </Item>
-          <Item
-            active={checkActiveStatus("projects")}
-            onClick={() => handleNavigation("/app/projects")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={ProjectIcon}
-              color={checkActiveStatus("projects") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              <SvgIcon
+                component={DashIcon}
+                color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("dashboard") ? "primary" : "secondary"}
+              >
+                Dashboard
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("projects:read") && (
+            <Item
+              active={checkActiveStatus("projects")}
+              onClick={() => handleNavigation("/app/projects")}
+              elevation={0}
             >
-              Project
-            </Typography>
-          </Item>
-          <Item
-            active={checkActiveStatus("calendar")}
-            onClick={() => handleNavigation("/app/calendar")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={CalenderIcon}
-              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              <SvgIcon
+                component={ProjectIcon}
+                color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("projects") ? "primary" : "secondary"}
+              >
+                Project
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("calendar:read") && (
+            <Item
+              active={checkActiveStatus("calendar")}
+              onClick={() => handleNavigation("/app/calendar")}
+              elevation={0}
             >
-              Calender
-            </Typography>
-          </Item>
-          <Item
-            onClick={() => handleNavigation("/app/employees")}
-            active={checkActiveStatus("employees")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={EmployeesIcon}
-              color={checkActiveStatus("employees") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              <SvgIcon
+                component={CalenderIcon}
+                color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("calendar") ? "primary" : "secondary"}
+              >
+                Calender
+              </Typography>
+            </Item>
+          )}
+          {checkPermission("employees:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/employees")}
+              active={checkActiveStatus("employees")}
+              elevation={0}
             >
-              Employees
-            </Typography>
-          </Item>
+              <SvgIcon
+                component={EmployeesIcon}
+                color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("employees") ? "primary" : "secondary"}
+              >
+                Employees
+              </Typography>
+            </Item>
+          )}
           <RequireAdmin>
             <Item
               onClick={() => handleNavigation("/app/vacations")}
@@ -167,35 +192,74 @@ const MainSiderBar = () => {
               </Typography>
             </Item>
           </RequireAdmin>
-          <Item
-            onClick={() => handleNavigation("/app/info-portal")}
-            active={checkActiveStatus("info-portal")}
-            elevation={0}
-          >
-            <SvgIcon
-              component={InfoPortalIcon}
-              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
-            />
-            <Typography
-              color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
-            >
-              Info Portal
-            </Typography>
-          </Item>
-          <RequireAdmin>
+          {checkPermission("infoPortal:read") && (
             <Item
-              onClick={() => handleNavigation("/app/backup")}
-              active={checkActiveStatus("backup")}
+              onClick={() => handleNavigation("/app/info-portal")}
+              active={checkActiveStatus("info-portal")}
               elevation={0}
             >
               <SvgIcon
-                component={GearIcon}
-                color={checkActiveStatus("backup") ? "primary" : "secondary"}
+                component={InfoPortalIcon}
+                color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
               />
               <Typography
-                color={checkActiveStatus("backup") ? "primary" : "secondary"}
+                color={checkActiveStatus("info-portal") ? "primary" : "secondary"}
               >
-                Backup
+                Info Portal
+              </Typography>
+            </Item>
+          )}
+          {/* Drawing List sidebar - Only visible to users with drawingList:read permission */}
+          {checkPermission("drawingList:read") && (
+            <Item
+              onClick={() => handleNavigation("/app/drawing-list")}
+              active={checkActiveStatus("drawing-list")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={DescriptionIcon}
+                color={checkActiveStatus("drawing-list") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("drawing-list") ? "primary" : "secondary"}
+              >
+                Drawing List
+              </Typography>
+            </Item>
+          )}
+          {/* Metrics sidebar - Only visible to Admin users */}
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/metrics")}
+              active={checkActiveStatus("metrics")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={BarChartIcon}
+                color={checkActiveStatus("metrics") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("metrics") ? "primary" : "secondary"}
+              >
+                Metrics
+              </Typography>
+            </Item>
+          </RequireAdmin>
+          {/* Audit Logs sidebar - Only visible to Admin users */}
+          <RequireAdmin>
+            <Item
+              onClick={() => handleNavigation("/app/audit-logs")}
+              active={checkActiveStatus("audit-logs")}
+              elevation={0}
+            >
+              <SvgIcon
+                component={HistoryIcon}
+                color={checkActiveStatus("audit-logs") ? "primary" : "secondary"}
+              />
+              <Typography
+                color={checkActiveStatus("audit-logs") ? "primary" : "secondary"}
+              >
+                Audit Logs
               </Typography>
             </Item>
           </RequireAdmin>

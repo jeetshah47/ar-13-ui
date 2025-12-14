@@ -114,26 +114,33 @@ const VacationRequestCard = ({
       sx={(theme) => ({
         background: theme.palette.background.paper,
         boxShadow: theme.shadows[1],
-        borderRadius: "24px",
-        padding: "28px",
-        marginTop: "20px",
+        borderRadius: { xs: "24px", md: "24px" },
+        padding: { xs: "20px 18px", md: "28px" },
+        marginTop: { xs: "16px", md: "20px" },
       })}
     >
       {/* Header with user info and status */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-        <Box sx={{ display: "flex", gap: "18px", alignItems: "center" }}>
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: { xs: "column", md: "row" },
+        justifyContent: { xs: "flex-start", md: "space-between" }, 
+        alignItems: { xs: "flex-start", md: "flex-start" }, 
+        gap: { xs: "12px", md: 0 },
+        marginBottom: { xs: "16px", md: "20px" } 
+      }}>
+        <Box sx={{ display: "flex", gap: { xs: "12px", md: "18px" }, alignItems: "center", width: "100%" }}>
           <Avatar 
-            sx={{ width: "50px", height: "50px" }}
+            sx={{ width: { xs: "40px", md: "50px" }, height: { xs: "40px", md: "50px" } }}
             src={userAvatar}
           >
             {userName.split(' ').map(n => n[0]).join('')}
           </Avatar>
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Typography 
               sx={(theme) => ({ 
                 fontWeight: 700, 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 marginBottom: "2px"
               })}
@@ -142,8 +149,8 @@ const VacationRequestCard = ({
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary
               })}
             >
@@ -157,19 +164,25 @@ const VacationRequestCard = ({
             backgroundColor: getStatusColor(request.status),
             color: theme.palette.getContrastText(getStatusColor(request.status)),
             fontWeight: 600,
-            fontSize: "12px",
+            fontSize: { xs: "10px", md: "12px" },
+            alignSelf: { xs: "flex-start", md: "auto" }
           })}
         />
       </Box>
 
       {/* Request details */}
-      <Box sx={{ marginBottom: "20px" }}>
-        <Box sx={{ display: "flex", gap: "24px", marginBottom: "12px", flexWrap: "wrap" }}>
-          <Box>
+      <Box sx={{ marginBottom: { xs: "16px", md: "20px" } }}>
+        <Box sx={{ 
+          display: "flex", 
+          gap: { xs: "16px", md: "24px" }, 
+          marginBottom: { xs: "10px", md: "12px" }, 
+          flexWrap: "wrap" 
+        }}>
+          <Box sx={{ minWidth: { xs: "calc(50% - 8px)", md: "auto" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "4px"
               })}
@@ -178,8 +191,8 @@ const VacationRequestCard = ({
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 500
               })}
@@ -187,11 +200,11 @@ const VacationRequestCard = ({
               {getRequestTypeLabel(request.requestType)}
             </Typography>
           </Box>
-          <Box>
+          <Box sx={{ minWidth: { xs: "calc(50% - 8px)", md: "auto" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "4px"
               })}
@@ -200,8 +213,8 @@ const VacationRequestCard = ({
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 500
               })}
@@ -210,11 +223,11 @@ const VacationRequestCard = ({
             </Typography>
           </Box>
           {request.endDate && (
-            <Box>
+            <Box sx={{ minWidth: { xs: "calc(50% - 8px)", md: "auto" } }}>
               <Typography 
                 sx={(theme) => ({ 
-                  fontSize: "14px", 
-                  lineHeight: "19px",
+                  fontSize: { xs: "12px", md: "14px" }, 
+                  lineHeight: { xs: "16px", md: "19px" },
                   color: theme.palette.text.secondary,
                   marginBottom: "4px"
                 })}
@@ -223,8 +236,8 @@ const VacationRequestCard = ({
               </Typography>
               <Typography 
                 sx={(theme) => ({ 
-                  fontSize: "16px", 
-                  lineHeight: "24px",
+                  fontSize: { xs: "14px", md: "16px" }, 
+                  lineHeight: { xs: "20px", md: "24px" },
                   color: theme.palette.text.primary,
                   fontWeight: 500
                 })}
@@ -233,11 +246,11 @@ const VacationRequestCard = ({
               </Typography>
             </Box>
           )}
-          <Box>
+          <Box sx={{ minWidth: { xs: "calc(50% - 8px)", md: "auto" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "4px"
               })}
@@ -246,8 +259,8 @@ const VacationRequestCard = ({
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
                 fontWeight: 500
               })}
@@ -256,11 +269,11 @@ const VacationRequestCard = ({
             </Typography>
           </Box>
           {request.workingHours && (
-            <Box>
+            <Box sx={{ minWidth: { xs: "calc(50% - 8px)", md: "auto" } }}>
               <Typography 
                 sx={(theme) => ({ 
-                  fontSize: "14px", 
-                  lineHeight: "19px",
+                  fontSize: { xs: "12px", md: "14px" }, 
+                  lineHeight: { xs: "16px", md: "19px" },
                   color: theme.palette.text.secondary,
                   marginBottom: "4px"
                 })}
@@ -269,8 +282,8 @@ const VacationRequestCard = ({
               </Typography>
               <Typography 
                 sx={(theme) => ({ 
-                  fontSize: "16px", 
-                  lineHeight: "24px",
+                  fontSize: { xs: "14px", md: "16px" }, 
+                  lineHeight: { xs: "20px", md: "24px" },
                   color: theme.palette.text.primary,
                   fontWeight: 500
                 })}
@@ -282,11 +295,11 @@ const VacationRequestCard = ({
         </Box>
         
         {request.comments && (
-          <Box sx={{ marginTop: "16px" }}>
+          <Box sx={{ marginTop: { xs: "12px", md: "16px" } }}>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "14px", 
-                lineHeight: "19px",
+                fontSize: { xs: "12px", md: "14px" }, 
+                lineHeight: { xs: "16px", md: "19px" },
                 color: theme.palette.text.secondary,
                 marginBottom: "4px"
               })}
@@ -295,8 +308,8 @@ const VacationRequestCard = ({
             </Typography>
             <Typography 
               sx={(theme) => ({ 
-                fontSize: "16px", 
-                lineHeight: "24px",
+                fontSize: { xs: "14px", md: "16px" }, 
+                lineHeight: { xs: "20px", md: "24px" },
                 color: theme.palette.text.primary,
               })}
             >
@@ -308,7 +321,12 @@ const VacationRequestCard = ({
 
       {/* Action buttons - only show for pending requests */}
       {request.status === "pending" && (
-        <Box sx={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        <Box sx={{ 
+          display: "flex", 
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: "8px", md: "12px" }, 
+          alignItems: { xs: "stretch", md: "flex-start" } 
+        }}>
           {!showCommentField && (
             <>
               <Button
@@ -323,6 +341,7 @@ const VacationRequestCard = ({
                   },
                   textTransform: "none",
                   fontWeight: 600,
+                  width: { xs: "100%", md: "auto" },
                 }}
               >
                 Approve
@@ -339,6 +358,7 @@ const VacationRequestCard = ({
                   },
                   textTransform: "none",
                   fontWeight: 600,
+                  width: { xs: "100%", md: "auto" },
                 }}
               >
                 Reject
@@ -356,6 +376,7 @@ const VacationRequestCard = ({
                     borderColor: theme.palette.text.primary,
                     color: theme.palette.text.primary,
                   },
+                  width: { xs: "100%", md: "auto" },
                 })}
               >
                 Add Comment
@@ -363,7 +384,7 @@ const VacationRequestCard = ({
             </>
           )}
           {showCommentField && (
-            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: { xs: "8px", md: "12px" }, width: "100%" }}>
               <TextField
                 multiline
                 rows={3}
@@ -376,7 +397,11 @@ const VacationRequestCard = ({
                   },
                 }}
               />
-              <Box sx={{ display: "flex", gap: "12px" }}>
+              <Box sx={{ 
+                display: "flex", 
+                flexDirection: { xs: "column", md: "row" },
+                gap: { xs: "8px", md: "12px" } 
+              }}>
                 <Button
                   variant="contained"
                   startIcon={<CheckIcon />}
@@ -389,6 +414,7 @@ const VacationRequestCard = ({
                     },
                     textTransform: "none",
                     fontWeight: 600,
+                    width: { xs: "100%", md: "auto" },
                   }}
                 >
                   Approve
@@ -405,6 +431,7 @@ const VacationRequestCard = ({
                     },
                     textTransform: "none",
                     fontWeight: 600,
+                    width: { xs: "100%", md: "auto" },
                   }}
                 >
                   Reject
@@ -419,6 +446,7 @@ const VacationRequestCard = ({
                   sx={{
                     textTransform: "none",
                     fontWeight: 600,
+                    width: { xs: "100%", md: "auto" },
                   }}
                 >
                   Cancel

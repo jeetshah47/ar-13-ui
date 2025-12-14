@@ -44,6 +44,9 @@ const AnimatedPage = ({ children }: AnimatedPageProps) => {
       sx={{
         width: "100%",
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
         animation: isAnimating
           ? "fadeOut 0.15s ease-out"
           : "fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)",

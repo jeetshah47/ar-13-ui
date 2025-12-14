@@ -1,4 +1,4 @@
-import { Box, Button, SvgIcon, CircularProgress, Alert, Typography } from "@mui/material";
+import { Box, Button, SvgIcon, CircularProgress, Alert, Typography, Fab } from "@mui/material";
 import { Lock } from "@mui/icons-material";
 import PlusIcon from "../../assets/icons/general/plus.svg?react";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
@@ -8,7 +8,7 @@ import EmpCard from "./components/EmpCard";
 import type { EmployeeResponse } from "../../store/types/Employee/EmployeeResponse";
 import ActivitySection from "./components/ActivitySection";
 import Modal from "../../common/components/Modal/Modal";
-import EmployeeForm from "./components/EmployeeForm";
+import EmployeeRegistrationModal from "./components/EmployeeRegistrationModal";
 import { RequirePermission } from "../../common/components/RBAC";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { getAllEmployeesAction } from "../../store/features/employees/employeeActions";
@@ -31,6 +31,10 @@ const EmployeesPage = () => {
   const handleOnClickAddButton = () => {
     setShowFormModal(true);
   };
+  const handleEmployeeCreated = () => {
+    dispatch(getAllEmployeesAction());
+    setShowFormModal(false);
+  };
   const AddButton = (
     <RequirePermission permission="users:write">
       <Button
@@ -38,29 +42,75 @@ const EmployeesPage = () => {
         variant="contained"
         disabled={!!error || loading}
         startIcon={<SvgIcon component={PlusIcon} />}
+        sx={{
+          display: { xs: "none", sm: "flex" }
+        }}
       >
         Add Employees
       </Button>
     </RequirePermission>
   );
 
+  const FloatingActionButton = (
+    <RequirePermission permission="users:write">
+      <Fab
+        onClick={handleOnClickAddButton}
+        disabled={!!error || loading}
+        color="primary"
+        sx={{
+          position: "fixed",
+          bottom: { xs: "24px", sm: "32px" },
+          right: { xs: "20px", sm: "32px" },
+          display: { xs: "flex", sm: "none" },
+          zIndex: (theme) => theme.zIndex.speedDial,
+          boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
+          "&:hover": {
+            boxShadow: "0px 8px 16px 0px rgba(63, 140, 255, 0.35)",
+          }
+        }}
+      >
+        <SvgIcon component={PlusIcon} sx={{ color: "#fff" }} />
+      </Fab>
+    </RequirePermission>
+  );
+
   return (
-    <Box sx={{ height: "100%" }}>
-      <PageHeader
-        title={`Employees (${totalEmployees})`}
-        endElement={
+    <Box 
+      sx={{ 
+        height: "100%",
+        backgroundColor: { xs: "#F4F9FD", sm: "transparent" },
+        minHeight: "100vh",
+        paddingBottom: { xs: "100px", sm: "0" }
+      }}
+    >
+      <Box
+        sx={{
+          padding: { xs: "20px", sm: "0 0 20px 0", md: "0 0 20px 0", lg: "0 0 20px 0" },
+          paddingX: { xs: "20px", sm: 0, md: 0, lg: 0 }
+        }}
+      >
+        <PageHeader
+          title={`Employees (${totalEmployees})`}
+          endElement={
           <>
-            <Box sx={{width: "30%"}}>
-            <Tab
-              tabList={tabList}
-              currentTab={currentTab}
-              onChangeTab={(tab) => setCurrentTab(tab)}
-            />
+            <Box 
+              sx={{
+                width: { xs: "100%", sm: "100%", md: "35%", lg: "30%" },
+                marginBottom: { xs: "16px", sm: "16px", md: 0, lg: 0 },
+                order: { xs: -1, sm: -1, md: 0, lg: 0 }
+              }}
+            >
+              <Tab
+                tabList={tabList}
+                currentTab={currentTab}
+                onChangeTab={(tab) => setCurrentTab(tab)}
+              />
             </Box>
             {AddButton}
           </>
-        }
-      />
+          }
+        />
+      </Box>
       {/* Error Display - shown regardless of tab */}
       {error && error.toLowerCase().includes("admin access required") ? (
         <Box
@@ -139,23 +189,30 @@ const EmployeesPage = () => {
           </Typography>
         </Box>
       ) : error ? (
-        <Alert 
-          severity="error" 
-          sx={{ 
-            margin: "20px 0", 
-            borderRadius: "12px",
-            "& .MuiAlert-message": {
-              width: "100%"
-            }
-          }}
-        >
-          <Typography variant="body1" component="div">
-            {error}
-          </Typography>
-        </Alert>
+        <Box sx={{ padding: { xs: "0 20px", sm: "0" } }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              margin: "20px 0", 
+              borderRadius: "12px",
+              "& .MuiAlert-message": {
+                width: "100%"
+              }
+            }}
+          >
+            <Typography variant="body1" component="div">
+              {error}
+            </Typography>
+          </Alert>
+        </Box>
       ) : null}
       {currentTab === "List" && !error && (
-        <Box sx={{ padding: "28px 0px" }}>
+        <Box 
+          sx={{ 
+            padding: { xs: "20px", sm: "28px 0px" },
+            paddingX: { xs: "20px", sm: 0 }
+          }}
+        >
           {loading && (
             <Box sx={{ display: "flex", justifyContent: "center", padding: "40px" }}>
               <CircularProgress />
@@ -172,12 +229,32 @@ const EmployeesPage = () => {
         </Box>
       )}
       {currentTab === "Activity" && !error && (
-        <Box sx={{ padding: "28px 0px" }}>
+        <Box 
+          sx={{ 
+            padding: { xs: "20px", sm: "28px 0px" },
+            paddingX: { xs: "20px", sm: 0 }
+          }}
+        >
           <ActivitySection />
         </Box>
       )}
+      {FloatingActionButton}
       <Modal onClose={handleOnCloseModal} show={showFormModal}>
-        <EmployeeForm onClose={handleOnCloseModal} />
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <EmployeeRegistrationModal
+            onClose={handleOnCloseModal}
+            onSuccess={handleEmployeeCreated}
+          />
+        </Box>
       </Modal>
     </Box>
   );

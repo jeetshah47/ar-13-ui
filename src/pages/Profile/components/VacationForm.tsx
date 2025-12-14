@@ -226,7 +226,7 @@ const VacationForm = ({ onClose }: VacationFormProps) => {
             value={duration}
             onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
             inputProps={{ min: 1 }}
-            disabled={currentTab === "Days" && startDate && endDate}
+            disabled={currentTab === "Days" && !!(startDate && endDate)}
             helperText={currentTab === "Days" && startDate && endDate ? "Calculated from selected dates" : ""}
           />
         </Box>

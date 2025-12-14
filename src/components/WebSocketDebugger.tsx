@@ -3,7 +3,7 @@ import { Box, Button, Typography, Alert, Card, CardContent, Chip } from '@mui/ma
 import { useNotifications } from '../contexts/NotificationContext';
 
 const WebSocketDebugger: React.FC = () => {
-  const { isConnected, error, notifications, notificationCount, joinUserRoom, leaveUserRoom } = useNotifications();
+  const { isConnected, error, notifications, notificationCount } = useNotifications();
   const [connectionLogs, setConnectionLogs] = useState<string[]>([]);
   const [authToken, setAuthToken] = useState<string>('');
 
@@ -18,22 +18,11 @@ const WebSocketDebugger: React.FC = () => {
   };
 
   const testConnection = () => {
-    addLog('Testing WebSocket connection...');
+    addLog('Testing SSE connection...');
     addLog(`Auth Token: ${authToken ? 'Present' : 'Missing'}`);
     addLog(`Connection Status: ${isConnected ? 'Connected' : 'Disconnected'}`);
     addLog(`Error: ${error || 'None'}`);
     addLog(`Notifications: ${notifications.length} total, ${notificationCount.unread} unread`);
-    
-    // Test user room functionality
-    if (isConnected && authToken) {
-      const testUserId = 'test-user-123';
-      addLog(`Testing user room join/leave for user: ${testUserId}`);
-      joinUserRoom(testUserId);
-      setTimeout(() => {
-        leaveUserRoom(testUserId);
-        addLog(`Left user room for: ${testUserId}`);
-      }, 2000);
-    }
   };
 
   const clearLogs = () => {
@@ -44,7 +33,7 @@ const WebSocketDebugger: React.FC = () => {
     <Card sx={{ maxWidth: 800, margin: '20px auto', padding: 2 }}>
       <CardContent>
         <Typography variant="h5" gutterBottom>
-          WebSocket Connection Debugger
+          SSE Connection Debugger
         </Typography>
         
         <Box sx={{ mb: 2 }}>
@@ -122,13 +111,13 @@ const WebSocketDebugger: React.FC = () => {
           </Typography>
           <Typography variant="body2" component="div">
             1. Check if backend server is running on localhost:3000<br/>
-            2. Verify auth token is present in localStorage<br/>
-            3. Check browser console for WebSocket errors<br/>
-            4. Ensure backend has Socket.IO server with WebSocketService<br/>
+            2. Verify JWT token is present in localStorage (authToken)<br/>
+            3. Check browser console for SSE errors<br/>
+            4. Ensure backend has SSE endpoint configured at /api/events<br/>
             5. Check CORS settings on backend<br/>
-            6. Verify WebSocketAuthMiddleware is configured<br/>
-            7. Check if user is properly authenticated via middleware<br/>
-            8. Ensure user room joining works: user_${userId}
+            6. Verify JWT token is valid and not expired<br/>
+            7. Check if user is properly authenticated (token in query parameter)<br/>
+            8. Note: Server automatically extracts user ID from JWT token and handles user routing
           </Typography>
         </Box>
       </CardContent>

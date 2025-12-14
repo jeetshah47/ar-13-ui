@@ -1,13 +1,18 @@
-import { Avatar, AvatarGroup, Box, SvgIcon, Typography } from "@mui/material";
+import { Avatar, AvatarGroup, Box, SvgIcon, Typography, Tooltip, Button } from "@mui/material";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import AttachmentIcon from "../../../assets/icons/general/calendar-19.svg?react";
 import FilesIcon from "../../../assets/icons/general/calendar-20.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
+import EditIcon from "../../../assets/icons/general/gear.svg?react";
+import PlusIcon from "../../../assets/icons/general/plus.svg?react";
 
 interface ProjectInfoSidebarProps {
   projectTitle?: string;
   projectDescription?: string;
+  projectCode?: string;
+  productionDuration?: number;
+  siteDuration?: number;
   reporter?: {
     name: string;
     avatar?: string;
@@ -19,25 +24,88 @@ interface ProjectInfoSidebarProps {
   }>;
   priority?: string;
   deadline?: string;
+  timeSpent?: string | null;
+  agencyContact?: {
+    contact_name?: string;
+    contact_agency_type?: string;
+    phone_number?: string;
+    firm_name?: string;
+  };
+  created?: string | { _seconds: number; _nanoseconds: number };
+  updated?: string;
+  isArchived?: boolean;
+  onEditClick?: () => void;
+  onAddAgencyContact?: () => void;
+  onArchiveClick?: () => void;
+  showArchiveButton?: boolean;
 }
 
 const ProjectInfoSidebar = ({
   projectTitle,
   projectDescription,
+  projectCode,
+  productionDuration,
+  siteDuration,
   reporter,
   assignes,
   priority,
   deadline,
+  timeSpent,
+  agencyContact,
+  created,
+  updated,
+  isArchived,
+  onEditClick,
+  onAddAgencyContact,
+  onArchiveClick,
+  showArchiveButton,
 }: ProjectInfoSidebarProps) => {
+  // Format date from string or Firebase timestamp
+  const formatDate = (date?: string | { _seconds: number; _nanoseconds: number }): string => {
+    if (!date) return "N/A";
+    if (typeof date === "string") {
+      try {
+        return new Date(date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } catch {
+        return "Invalid date";
+      }
+    }
+    if (typeof date === "object" && "_seconds" in date) {
+      try {
+        return new Date(date._seconds * 1000).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } catch {
+        return "Invalid date";
+      }
+    }
+    return "N/A";
+  };
   return (
     <Box
       sx={{
-        width: "265px",
+        width: { xs: "100%", sm: "100%", md: "240px", lg: "265px" },
         background: "#FFFFFF",
-        borderRadius: "24px",
+        borderRadius: { xs: "20px", sm: "20px", md: "24px", lg: "24px" },
         boxShadow: "0px 6px 58px rgba(196, 203, 214, 0.103611)",
-        height: "100%",
-        padding: "18px",
+        height: { xs: "auto", sm: "auto", md: "100%", lg: "100%" },
+        padding: { xs: "16px", sm: "18px", md: "16px", lg: "18px" },
+        flexShrink: 0,
+        maxWidth: "100%",
+        boxSizing: "border-box",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        "@media (min-width: 1200px) and (max-width: 1600px)": {
+          width: "240px",
+          padding: "16px",
+        },
       }}
     >
       <Box
@@ -48,17 +116,57 @@ const ProjectInfoSidebar = ({
         }}
       >
         <Typography color="secondary">{projectTitle || "Project"}</Typography>
-        <Box
-          sx={{
-            backgroundColor: "#F4F9FD",
-            display: "flex",
-            padding: "10px",
-          }}
-        >
-          <SvgIcon component={FilterIcon} />
+        <Box sx={{ display: "flex", gap: "8px" }}>
+          {onEditClick && (
+            <Box
+              onClick={onEditClick}
+              sx={{
+                backgroundColor: "#fff",
+                display: "flex",
+                padding: "10px",
+                borderRadius: "14px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                  transform: "scale(1.05)",
+                },
+              }}
+            >
+              <SvgIcon component={EditIcon} />
+            </Box>
+          )}
+          <Box
+            sx={{
+              backgroundColor: "#F4F9FD",
+              display: "flex",
+              padding: "10px",
+            }}
+          >
+            <SvgIcon component={FilterIcon} />
+          </Box>
         </Box>
       </Box>
-      <Box sx={{ paddingTop: "24px" }}>
+      <Box 
+        sx={{ 
+          paddingTop: "24px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {projectCode && (
+          <Box sx={{ paddingBottom: "16px" }}>
+            <Typography color="secondary.main" fontSize="14px">
+              Project Code
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {projectCode}
+            </Typography>
+          </Box>
+        )}
         <Typography variant="h6">Description</Typography>
         <Typography color="secondary.main">
           {projectDescription || "No description available"}
@@ -79,12 +187,13 @@ const ProjectInfoSidebar = ({
           <Typography color="secondary.main">Assignes</Typography>
           <AvatarGroup sx={{ justifyContent: "start" }} spacing="medium">
             {assignes?.map((assigne) => (
-              <Avatar
-                key={assigne.id}
-                sx={{ width: "24px", height: "24px" }}
-                alt={assigne.name}
-                src={assigne.avatar || "/api/placeholder/24/24"}
-              />
+              <Tooltip key={assigne.id} title={assigne.name} arrow>
+                <Avatar
+                  sx={{ width: "24px", height: "24px", cursor: "pointer" }}
+                  alt={assigne.name}
+                  src={assigne.avatar || "/api/placeholder/24/24"}
+                />
+              </Tooltip>
             ))}
           </AvatarGroup>
         </Box>
@@ -95,12 +204,89 @@ const ProjectInfoSidebar = ({
             <Typography color="#FFBD21">{priority || "Medium"}</Typography>
           </Box>
         </Box>
+        {productionDuration && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Production Duration</Typography>
+            <Typography>
+              {productionDuration} {productionDuration === 1 ? "week" : "weeks"}
+            </Typography>
+          </Box>
+        )}
+        {siteDuration && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Site Duration</Typography>
+            <Typography>
+              {siteDuration} {siteDuration === 1 ? "month" : "months"}
+            </Typography>
+          </Box>
+        )}
         <Box sx={{ paddingTop: "10px" }}>
           <Typography color="secondary.main">Dead Line</Typography>
           <Typography>
             {deadline ? new Date(deadline).toLocaleDateString() : "No deadline set"}
           </Typography>
         </Box>
+        <Box sx={{ paddingTop: "10px" }}>
+          <Typography color="secondary.main">Agency Contact</Typography>
+          {agencyContact?.contact_name ? (
+            <Box sx={{ paddingTop: "4px" }}>
+              <Typography>{agencyContact.contact_name}</Typography>
+              {agencyContact.contact_agency_type && (
+                <Typography color="secondary.main" fontSize="14px">
+                  {agencyContact.contact_agency_type}
+                </Typography>
+              )}
+              {agencyContact.firm_name && (
+                <Typography color="secondary.main" fontSize="14px" sx={{ mt: 0.5 }}>
+                  Firm: {agencyContact.firm_name}
+                </Typography>
+              )}
+              {agencyContact.phone_number && (
+                <Typography color="secondary.main" fontSize="14px" sx={{ mt: 0.5 }}>
+                  Phone: {agencyContact.phone_number}
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                paddingTop: "4px",
+              }}
+            >
+              <Typography color="secondary.main" fontSize="14px">
+                No agency contact added
+              </Typography>
+              {onAddAgencyContact && (
+                <Box
+                  onClick={onAddAgencyContact}
+                  sx={{
+                    backgroundColor: "#F4F9FD",
+                    display: "flex",
+                    padding: "6px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "#e3f2fd",
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                >
+                  <SvgIcon component={PlusIcon} sx={{ fontSize: "16px" }} />
+                </Box>
+              )}
+            </Box>
+          )}
+        </Box>
+        {timeSpent && (
+          <Box sx={{ paddingTop: "10px" }}>
+            <Typography color="secondary.main">Time Spent</Typography>
+            <Typography>{timeSpent}</Typography>
+          </Box>
+        )}
         <Box
           sx={{
             paddingTop: "10px",
@@ -111,9 +297,24 @@ const ProjectInfoSidebar = ({
         >
           <SvgIcon component={CalendarIcon} />
           <Typography variant="subtitle2" color="secondary.main">
-            Created May 28, 2020
+            Created {formatDate(created)}
           </Typography>
         </Box>
+        {updated && (
+          <Box
+            sx={{
+              paddingTop: "6px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <SvgIcon component={CalendarIcon} />
+            <Typography variant="subtitle2" color="secondary.main">
+              Updated {formatDate(updated)}
+            </Typography>
+          </Box>
+        )}
         <Box
           sx={{
             paddingTop: "15px",
@@ -142,6 +343,30 @@ const ProjectInfoSidebar = ({
             <SvgIcon component={FilesIcon} />
           </Box>
         </Box>
+        {showArchiveButton && onArchiveClick && (
+          <Box 
+            sx={{ 
+              paddingTop: "16px",
+              marginTop: "auto",
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              fullWidth
+              variant="contained"
+              color={isArchived ? "success" : "warning"}
+              onClick={onArchiveClick}
+              sx={{
+                borderRadius: "14px",
+                textTransform: "none",
+                py: 1.5,
+                fontWeight: 500,
+              }}
+            >
+              {isArchived ? "Unarchive Project" : "Archive Project"}
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -12,11 +12,11 @@ const VacationSection = () => {
   const { profile, profileLoading } = useAppSelector((s) => s.userReducer);
   const leaveRequests = profile?.leaveRequests || [];
 
-  // Format Firestore timestamp to date string
-  const formatDate = (timestamp: { _seconds: number; _nanoseconds?: number } | undefined): string => {
-    if (!timestamp) return "N/A";
+  // Format ISO date string to readable format
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "N/A";
     try {
-      const dateObj = new Date(timestamp._seconds * 1000 + (timestamp._nanoseconds || 0) / 1000000);
+      const dateObj = new Date(dateString);
       if (isNaN(dateObj.getTime())) return "Invalid Date";
       return dateObj.toLocaleDateString("en-US", {
         year: "numeric",
@@ -208,7 +208,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.vacationDays} label="Vacation" />
+          <CircularProgressCust value={stats.vacationDays} />
           <Typography fontWeight={700}>Vacation</Typography>
           <Typography color="secondary.main">{stats.vacationDays} days used</Typography>
         </Box>
@@ -224,7 +224,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.sickLeaveDays} label="Sick Leave" />
+          <CircularProgressCust value={stats.sickLeaveDays} />
           <Typography fontWeight={700}>Sick Leave</Typography>
           <Typography color="secondary.main">{stats.sickLeaveDays} days used</Typography>
         </Box>
@@ -240,7 +240,7 @@ const VacationSection = () => {
             gap: "8px",
           }}
         >
-          <CircularProgressCust value={stats.remoteWorkDays} label="Remote Work" />
+          <CircularProgressCust value={stats.remoteWorkDays} />
           <Typography fontWeight={700}>Remote Work</Typography>
           <Typography color="secondary.main">{stats.remoteWorkDays} days used</Typography>
         </Box>

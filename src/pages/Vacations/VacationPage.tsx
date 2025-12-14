@@ -114,8 +114,18 @@ const VacationPage = () => {
     <RequirePermission permission="vacation:write">
       <Button 
         variant="contained" 
-        startIcon={<SvgIcon component={PlusIcon} />}
+        startIcon={<SvgIcon component={PlusIcon} sx={{ fontSize: { xs: "18px", sm: "20px" } }} />}
         onClick={handleOpenModal}
+        sx={{
+          textTransform: "none",
+          fontSize: { xs: "12px", sm: "14px" },
+          padding: { xs: "8px 16px", sm: "10px 20px" },
+          borderRadius: "8px",
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+          width: { xs: "100%", md: "auto" },
+          minWidth: { xs: "auto", md: "140px" },
+        }}
       >
         Add Request
       </Button>
@@ -126,22 +136,34 @@ const VacationPage = () => {
       <PageHeader
         title="Vacations"
         endElement={
-          <>
-            <Box sx={{width: "40%"}}>
+          <Box sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: "12px", sm: "16px" },
+            width: { xs: "100%", sm: "auto" },
+            alignItems: { xs: "stretch", sm: "center" },
+          }}>
+            <Box sx={{ 
+              width: { xs: "100%", sm: "auto" }, 
+              minWidth: { xs: "100%", sm: "400px", md: "450px" },
+              flexShrink: 0,
+            }}>
               <Tab
                 tabList={tabList}
                 currentTab={currentTab}
                 onChangeTab={(tab) => setCurrentTab(tab)}
               />
             </Box>
-            {AddButton}
-          </>
+            <Box sx={{ flexShrink: 0 }}>
+              {AddButton}
+            </Box>
+          </Box>
         }
       />
       {currentTab === "Vacation Requests" && isAdmin() && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "16px", md: "24px 0px", lg: "28px 0px" },
           }}
         >
           {(loading || usersLoading) && (
@@ -188,7 +210,7 @@ const VacationPage = () => {
       {currentTab === "Employee's Vacations" && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "20px", md: "28px 0px" },
           }}
         >
           {(loading || usersLoading) && (
@@ -227,8 +249,9 @@ const VacationPage = () => {
       {currentTab === "Calendar" && (
         <Box
           sx={{
-            padding: "28px 0px",
+            padding: { xs: "10px", sm: "20px", md: "28px 0px" },
             width: "100%",
+            display: { xs: "none", md: "block" },
           }}
         >
           <VacationsCalender />

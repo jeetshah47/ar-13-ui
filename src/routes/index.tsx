@@ -11,52 +11,122 @@ import ProjectPage from "../pages/Projects/ProjectPage";
 import VacationPage from "../pages/Vacations/VacationPage";
 import InfoPortalPage from "../pages/InfoPortal/InfoPortalPage";
 import BackupPage from "../pages/Backup/BackupPage";
-import { RequireAdmin } from "../common/components/RBAC/RequirePermission";
-import { Navigate } from "react-router";
+import DrawingListPage from "../pages/DrawingList/DrawingListPage";
+import MetricsPage from "../pages/Metrics/MetricsPage";
+import AuditLogsPage from "../pages/AuditLogs/AuditLogsPage";
+import { PermissionRoute } from "../common/components/RBAC/PermissionRoute";
 
 const authRoutes = [
   {
     path: "/dashboard",
-    component: <DashboardPage />,
+    component: (
+      <PermissionRoute permission="dashboard:read" redirectTo="/app/dashboard">
+        <DashboardPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/projects/*",
-    component: <ProjectPage />,
+    component: (
+      <PermissionRoute>
+        <ProjectPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/calendar/*",
-    component: <CalendarPage />,
+    component: (
+      <PermissionRoute permission="calendar:read" redirectTo="/app/dashboard">
+        <CalendarPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/vacations/*",
     component: (
-      <RequireAdmin fallback={<Navigate to="/dashboard" replace />}>
+      <PermissionRoute 
+        permission="vacation:read" 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
         <VacationPage />
-      </RequireAdmin>
+      </PermissionRoute>
     ),
   },
   {
     path: "/employees",
-    component: <EmployeesPage />,
+    component: (
+      <PermissionRoute permission="employees:read" redirectTo="/app/dashboard">
+        <EmployeesPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/employees/:userId",
-    component: <EmployeeProfilePage />,
+    component: (
+      <PermissionRoute permission="employees:read" redirectTo="/app/dashboard">
+        <EmployeeProfilePage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/profile/*",
-    component: <ProfilePage />,
+    component: (
+      <PermissionRoute permission="users:profile" redirectTo="/app/dashboard">
+        <ProfilePage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/info-portal/*",
-    component: <InfoPortalPage />,
+    component: (
+      <PermissionRoute permission="infoPortal:read" redirectTo="/app/dashboard">
+        <InfoPortalPage />
+      </PermissionRoute>
+    ),
   },
   {
     path: "/backup",
     component: (
-      <RequireAdmin fallback={<Navigate to="/dashboard" replace />}>
+      <PermissionRoute 
+        permission="backup:read"
+        redirectTo="/app/dashboard"
+      >
         <BackupPage />
-      </RequireAdmin>
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/drawing-list",
+    component: (
+      <PermissionRoute 
+        permission="drawingList:read"
+        redirectTo="/app/dashboard"
+      >
+        <DrawingListPage />
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/metrics",
+    component: (
+      <PermissionRoute 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
+        <MetricsPage />
+      </PermissionRoute>
+    ),
+  },
+  {
+    path: "/audit-logs",
+    component: (
+      <PermissionRoute 
+        role="Admin"
+        redirectTo="/app/dashboard"
+      >
+        <AuditLogsPage />
+      </PermissionRoute>
     ),
   },
 ];

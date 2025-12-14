@@ -3,7 +3,7 @@ import type { InfoPortalState } from "./infoPortalTypes";
 import type { GetFoldersResponse } from "../../types/InfoPortal/FolderResponse";
 import type { FolderDetailResponse } from "../../types/InfoPortal/FolderResponse";
 import type { FolderResponse } from "../../types/InfoPortal/FolderResponse";
-import type { PageDetailResponse } from "../../types/InfoPortal/PageResponse";
+import type { PageDetailResponse, PageResponse } from "../../types/InfoPortal/PageResponse";
 import type { StatisticsResponse } from "../../types/InfoPortal/StatisticsResponse";
 import type { InfoPortalErrorResponse } from "../../types/InfoPortal/InfoPortalErrorResponse";
 
@@ -153,7 +153,7 @@ const infoPortalSlice = createSlice({
       state.api.error = "";
       if (state.api.data.currentFolder) {
         const index = state.api.data.currentFolder.pages.findIndex(
-          (p) => p.id === action.payload.id
+          (p: PageResponse) => p.id === action.payload.id
         );
         if (index !== -1) {
           // Preserve existing sections and attachments
@@ -188,7 +188,7 @@ const infoPortalSlice = createSlice({
       state.api.error = "";
       if (state.api.data.currentFolder) {
         state.api.data.currentFolder.pages = state.api.data.currentFolder.pages.filter(
-          (p) => p.id !== action.payload
+          (p: PageResponse) => p.id !== action.payload
         );
       }
       if (state.api.data.currentPage?.id === action.payload) {

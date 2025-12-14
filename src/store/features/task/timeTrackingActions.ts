@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getTimeTrackingDataForProject, getTimeSpentForDateRange } from "../../apis/timeTrackingApis";
+import { getTimeSpentForDateRange } from "../../apis/timeTrackingApis";
 import { getTimeTrackingDataRequest, getTimeTrackingDataSuccess, getTimeTrackingDataFailed } from "./timeTrackingSlice";
 
 export const fetchTimeTrackingData = createAsyncThunk(
@@ -28,7 +28,7 @@ export const fetchTimeTrackingData = createAsyncThunk(
 export const fetchTimeTrackingDataForTasks = createAsyncThunk(
   "timeTracking/fetchTimeTrackingDataForTasks",
   async (
-    { projectId, taskIds, startDate, endDate }: { 
+    { projectId: _projectId, taskIds: _taskIds, startDate: _startDate, endDate: _endDate }: { 
       projectId: string; 
       taskIds: string[]; 
       startDate: string; 

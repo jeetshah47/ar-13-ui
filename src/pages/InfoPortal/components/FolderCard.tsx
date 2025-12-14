@@ -1,22 +1,24 @@
 import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import CustomCard from "../../../common/components/Card/CustomCard";
-import FolderIcon from "../../../assets/icons/infoportal/folder.svg";
+import FolderIcon from "./FolderIcon";
+
+// FolderCard component for displaying NAS folder information
 
 interface FolderCardProps {
-  id?: string;
+  path: string;
   name: string;
-  pageCount: number;
+  fileCount?: number;
   color?: string;
 }
 
-const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps) => {
+const FolderCard = ({ path, name, fileCount = 0, color = "#FFF7E3" }: FolderCardProps) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (id) {
-      navigate(`/app/info-portal/folder/${id}`);
-    }
+    // Navigate to folder detail page with path as parameter
+    const encodedPath = encodeURIComponent(path);
+    navigate(`/app/info-portal/folder?path=${encodedPath}`);
   };
 
   return (
@@ -46,13 +48,11 @@ const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps)
             borderRadius: "12px",
           }}
         >
-          <img
-            src={FolderIcon}
-            alt="Folder"
-            style={{
+          <FolderIcon
+            sx={{
               width: "44px",
               height: "39px",
-              objectFit: "contain",
+              fontSize: "44px",
             }}
           />
         </Box>
@@ -70,7 +70,7 @@ const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps)
           {name}
         </Typography>
 
-        {/* Page Count */}
+        {/* File Count */}
         <Typography
           sx={(theme) => ({
             fontSize: "14px",
@@ -79,7 +79,7 @@ const FolderCard = ({ id, name, pageCount, color = "#FFF7E3" }: FolderCardProps)
             color: theme.palette.text.secondary,
           })}
         >
-          {pageCount} {pageCount === 1 ? "page" : "pages"}
+          {fileCount} {fileCount === 1 ? "item" : "items"}
         </Typography>
       </Box>
     </CustomCard>

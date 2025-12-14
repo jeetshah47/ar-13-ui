@@ -6,10 +6,10 @@ import {
   Grid,
 } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
-import CardHeader from "../../../common/components/Card/CardHeader";
 import type { ProjectWithStatistics } from "../../../store/types/Project/ProjectStatisticsResponse";
 import { useTheme, alpha } from "@mui/material/styles";
 import CompletionRateChart from "./CompletionRateChart";
+import { formatTime } from "../../../utils/timeFormatting";
 
 interface ProjectStatisticsWidgetProps {
   project: ProjectWithStatistics;
@@ -20,14 +20,6 @@ const ProjectStatisticsWidget = ({ project }: ProjectStatisticsWidgetProps) => {
   const stats = project.statistics;
 
   const completionRate = stats.completionRate || 0;
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
 
   // Get priority breakdown
   const priorityEntries = Object.entries(stats.byPriority || {});

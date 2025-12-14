@@ -4,16 +4,10 @@ import CustomCard from "../../../common/components/Card/CustomCard";
 import AttachmentCard from "./AttachmentCard";
 import SectionEditor from "./SectionEditor";
 import { useInfoPortal } from "../../../store/hooks/useInfoPortal";
-
-interface Page {
-  id: string;
-  title: string;
-  lastModified: string;
-  isActive: boolean;
-}
+import type { PageResponse } from "../../../store/types/InfoPortal/PageResponse";
 
 interface PageContentProps {
-  page?: Page;
+  page?: PageResponse;
 }
 
 const PageContent = ({ page }: PageContentProps) => {

@@ -1,3 +1,5 @@
+import type { PageResponse } from "./PageResponse";
+
 export interface FolderResponse {
   id: string;
   name: string;

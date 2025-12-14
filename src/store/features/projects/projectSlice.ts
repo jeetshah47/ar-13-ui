@@ -14,6 +14,7 @@ const initialState: ProjectState = {
   },
   common: {
     selectedProjectId: "",
+    searchQuery: "",
   },
 };
 
@@ -48,6 +49,9 @@ const projectListSlice = createSlice({
     updateSelectedProjectId(state, action: PayloadAction<string>) {
       state.common.selectedProjectId = action.payload;
     },
+    setProjectSearchQuery(state, action: PayloadAction<string>) {
+      state.common.searchQuery = action.payload;
+    },
     addProjectRequest(state) {
       state.api.loading = true;
       state.api.error = "";
@@ -64,6 +68,56 @@ const projectListSlice = createSlice({
     setFilteredProjects(state, action: PayloadAction<ProjectResponse[]>) {
       state.api.data.filteredProjects = action.payload;
     },
+    updateProjectRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    updateProjectSuccess(state, action: PayloadAction<ProjectResponse>) {
+      state.api.loading = false;
+      state.api.error = "";
+      const index = state.api.data.projects.findIndex(
+        (p) => p.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.api.data.projects[index] = action.payload;
+      }
+      // Update filtered projects if the updated project is in the filtered list
+      const filteredIndex = state.api.data.filteredProjects.findIndex(
+        (p) => p.id === action.payload.id
+      );
+      if (filteredIndex !== -1) {
+        state.api.data.filteredProjects[filteredIndex] = action.payload;
+      }
+    },
+    updateProjectFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
+    archiveProjectRequest(state) {
+      state.api.loading = true;
+      state.api.error = "";
+    },
+    archiveProjectSuccess(state, action: PayloadAction<{ projectId: string; isArchived: boolean }>) {
+      state.api.loading = false;
+      state.api.error = "";
+      const index = state.api.data.projects.findIndex(
+        (p) => p.id === action.payload.projectId
+      );
+      if (index !== -1) {
+        state.api.data.projects[index].isArchived = action.payload.isArchived;
+      }
+      // Update filtered projects if the archived project is in the filtered list
+      const filteredIndex = state.api.data.filteredProjects.findIndex(
+        (p) => p.id === action.payload.projectId
+      );
+      if (filteredIndex !== -1) {
+        state.api.data.filteredProjects[filteredIndex].isArchived = action.payload.isArchived;
+      }
+    },
+    archiveProjectFailed(state, action: PayloadAction<ProjectErrorResponse>) {
+      state.api.loading = false;
+      state.api.error = action.payload.error;
+    },
   },
 });
 
@@ -72,10 +126,17 @@ export const {
   getProjectListSuccess,
   getProjectListFailed,
   updateSelectedProjectId,
+  setProjectSearchQuery,
   addProjectRequest,
   addProjectSuccess,
   addProjectFailed,
   setFilteredProjects,
+  updateProjectRequest,
+  updateProjectSuccess,
+  updateProjectFailed,
+  archiveProjectRequest,
+  archiveProjectSuccess,
+  archiveProjectFailed,
 } = projectListSlice.actions;
 
 export const projectListReducer = projectListSlice.reducer;

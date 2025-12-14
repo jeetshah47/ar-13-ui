@@ -26,12 +26,12 @@ export const useResourceAccess = () => {
       };
     }
     
-    // Standard users can only access projects they own or are members of
-    const hasAccess = isOwner || isMember;
+    // All users can read all projects, but can only write/delete if they own or are members
+    const hasWriteAccess = isOwner || isMember;
     
     return {
-      canRead: hasAccess,
-      canWrite: false, // Standard users cannot write to projects
+      canRead: true, // All users can view all projects
+      canWrite: hasWriteAccess, // Can only write if owner or member
       canDelete: false, // Standard users cannot delete projects
       canAssign: false, // Standard users cannot assign tasks
       isOwner,
@@ -40,7 +40,9 @@ export const useResourceAccess = () => {
   };
   
   const getTaskAccess = (task: TaskResponse): TaskAccess => {
-    const isAssigned = task.assignTo.includes(currentUserId);
+    // Check if task is assigned to current user
+    // assignTo is now an object with {id, name} or null
+    const isAssigned = task.assignTo?.id === currentUserId;
     
     // Admin has full access to all tasks
     if (isAdmin()) {
@@ -53,17 +55,23 @@ export const useResourceAccess = () => {
       };
     }
     
-    // Standard users can only access tasks assigned to them
+    // All users can read all tasks, but can only write/delete if assigned to them
     return {
-      canRead: isAssigned,
-      canWrite: isAssigned,
-      canDelete: isAssigned,
+      canRead: true, // All users can view all tasks
+      canWrite: isAssigned, // Can only write if assigned
+      canDelete: isAssigned, // Can only delete if assigned
       canAssign: false, // Standard users cannot assign tasks
       isAssigned,
     };
   };
   
+  /**
+   * Check if user can access (view) a project
+   * Standard users can view ALL projects (read-only access)
+   * Admin users can view and modify all projects
+   */
   const canAccessProject = (project: ProjectResponse): boolean => {
+    // All users (both Admin and Standard) can view all projects
     return getProjectAccess(project).canRead;
   };
   
@@ -99,6 +107,34 @@ export const useResourceAccess = () => {
     return checkPermission('users:write');
   };
   
+  /**
+   * Check if user can claim a task from a project
+   * User must be a member of the project (owner or member)
+   */
+  const canClaimTask = (project: ProjectResponse): boolean => {
+    if (isAdmin()) {
+      return true; // Admin can claim any task
+    }
+    
+    const isOwner = project.ownerId === currentUserId;
+    const isMember = project.membersIds?.includes(currentUserId) || false;
+    
+    return isOwner || isMember;
+  };
+  
+  /**
+   * Check if user can log time for a task
+   * User must be assigned to the task
+   */
+  const canLogTime = (task: TaskResponse): boolean => {
+    if (isAdmin()) {
+      return true; // Admin can log time for any task
+    }
+    
+    const taskAccess = getTaskAccess(task);
+    return taskAccess.canWrite; // Can log time if can write (i.e., assigned)
+  };
+  
   return {
     getProjectAccess,
     getTaskAccess,
@@ -111,5 +147,7 @@ export const useResourceAccess = () => {
     canAssignTask,
     canApproveVacation,
     canManageUsers,
+    canClaimTask,
+    canLogTime,
   };
 };

@@ -8,23 +8,30 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router";
 import { useNotifications } from "../../../contexts/NotificationContext";
-import { notificationService } from "../../../services/websocket/NotificationService";
-import type { Notification } from "../../../services/websocket/types";
-import { NotificationType } from "../../../services/websocket/types";
+import { notificationService } from "../../../services/sse/NotificationService";
+import type { Notification } from "../../../services/sse/types";
+import { NotificationType } from "../../../services/sse/types";
 
 interface NotificationModalProps {
   onClose: () => void;
 }
 
 const NotificationModal = ({ onClose }: NotificationModalProps) => {
+  const navigate = useNavigate();
   const {
     notifications,
     isLoading,
     error,
+    isConnected,
     markAsRead,
     markAllAsRead,
     refreshNotifications
@@ -43,6 +50,30 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
       await markAllAsRead();
     } catch {
       // Handle error silently or show user-friendly message
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read if unread
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+
+    // Navigate based on notification type and available IDs
+    if (notification.taskId && notification.projectId) {
+      navigate(`/app/projects/details/${notification.projectId}/${notification.taskId}`);
+      onClose();
+    } else if (notification.projectId) {
+      navigate(`/app/projects/info/${notification.projectId}`);
+      onClose();
+    } else if (notification.relatedEntityType === "PROJECT" && notification.relatedEntityId) {
+      navigate(`/app/projects/info/${notification.relatedEntityId}`);
+      onClose();
+    } else if (notification.relatedEntityType === "TASK" && notification.relatedEntityId) {
+      // For task notifications without projectId, we might need to fetch it
+      // For now, just navigate to projects list
+      navigate(`/app/projects`);
+      onClose();
     }
   };
 
@@ -90,17 +121,45 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
               borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Typography
-              variant="h6"
-              sx={(theme) => ({
-                fontSize: "16px",
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                margin: 0,
-              })}
-            >
-              Notifications
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <Typography
+                variant="h6"
+                sx={(theme) => ({
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  margin: 0,
+                })}
+              >
+                Notifications
+              </Typography>
+              {/* Connection Status Indicator */}
+              <Tooltip title={isConnected ? "Connected to server" : "Disconnected from server"}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  {isConnected ? (
+                    <CheckCircleIcon
+                      sx={{
+                        fontSize: "16px",
+                        color: "#10b981",
+                      }}
+                    />
+                  ) : (
+                    <ErrorIcon
+                      sx={{
+                        fontSize: "16px",
+                        color: "#ef4444",
+                      }}
+                    />
+                  )}
+                </Box>
+              </Tooltip>
+            </Box>
             <IconButton
               onClick={onClose}
               size="small"
@@ -203,7 +262,7 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                       },
                       cursor: "pointer",
                     }}
-                    onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     {/* Avatar */}
                     <Avatar
@@ -244,6 +303,25 @@ const NotificationModal = ({ onClose }: NotificationModalProps) => {
                       >
                         {formatNotificationMessage(notification)}
                       </Typography>
+                      
+                      {/* Project Title Badge */}
+                      {notification.projectTitle && (
+                        <Box sx={{ marginBottom: "8px" }}>
+                          <Chip
+                            label={notification.projectTitle}
+                            size="small"
+                            sx={(theme) => ({
+                              fontSize: "11px",
+                              height: "20px",
+                              backgroundColor: theme.palette.primary.light,
+                              color: theme.palette.primary.contrastText,
+                              "&:hover": {
+                                backgroundColor: theme.palette.primary.main,
+                              },
+                            })}
+                          />
+                        </Box>
+                      )}
                       
                       <Box
                         sx={{

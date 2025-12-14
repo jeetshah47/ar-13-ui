@@ -1,5 +1,5 @@
 import { useAppSelector } from '../store';
-import type { Permission, UserRole } from '../types/RBAC';
+import type { Permission } from '../types/RBAC';
 import { hasPermission, hasAnyPermission, hasAllPermissions } from '../types/RBAC/config';
 
 export const usePermissions = () => {

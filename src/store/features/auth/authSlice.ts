@@ -3,7 +3,7 @@ import type { AuthState } from "./authTypes";
 import type { AuthResponse } from "../../types/Auth/AuthResponse";
 import type { AuthError } from "../../types/Auth/AuthError";
 import { getPermissionsForRole } from "../../types/RBAC/config";
-import type { UserRole } from "../../types/RBAC";
+import type { UserRole, Permission } from "../../types/RBAC";
 
 const checkAuthFromToken = (): AuthState => {
   const token = localStorage.getItem("authToken");
@@ -28,11 +28,14 @@ const checkAuthFromToken = (): AuthState => {
     },
     error: "",
     loading: false,
+    permissionsLoading: false,
+    permissionsError: null,
     tokenValidation: {
       isValidating: false,
       isValid: null,
       error: "",
       reason: undefined,
+      email: undefined,
     },
   };
   
@@ -109,6 +112,8 @@ const authSlice = createSlice({
     },
     authLogout(state) {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("tokenExpiresIn");
       localStorage.removeItem("uid");
       localStorage.removeItem("userRole");
       localStorage.removeItem("userEmail");
@@ -122,6 +127,8 @@ const authSlice = createSlice({
       state.user.name = null;
       state.loading = false;
       state.error = "";
+      state.permissionsLoading = false;
+      state.permissionsError = null;
     },
     authSignUpRequest(state) {
       state.loading = true;
@@ -139,10 +146,13 @@ const authSlice = createSlice({
       state.tokenValidation.isValidating = true;
       state.tokenValidation.error = "";
     },
-    validateSignupTokenSuccess(state) {
+    validateSignupTokenSuccess(state, action: PayloadAction<{ email?: string }>) {
       state.tokenValidation.isValidating = false;
       state.tokenValidation.isValid = true;
       state.tokenValidation.error = "";
+      if (action.payload.email) {
+        state.tokenValidation.email = action.payload.email;
+      }
     },
     validateSignupTokenFailed(state, action: PayloadAction<{ message: string; reason?: string }>) {
       state.tokenValidation.isValidating = false;
@@ -155,6 +165,22 @@ const authSlice = createSlice({
       state.tokenValidation.isValid = null;
       state.tokenValidation.error = "";
       state.tokenValidation.reason = undefined;
+      state.tokenValidation.email = undefined;
+    },
+    fetchPermissionsRequest(state) {
+      state.permissionsLoading = true;
+      state.permissionsError = null;
+    },
+    fetchPermissionsSuccess(state, action: PayloadAction<{ role: UserRole; permissions: Permission[] }>) {
+      state.permissionsLoading = false;
+      state.permissionsError = null;
+      state.user.role = action.payload.role;
+      state.user.permissions = action.payload.permissions;
+    },
+    fetchPermissionsFailed(state, action: PayloadAction<string>) {
+      state.permissionsLoading = false;
+      state.permissionsError = action.payload;
+      // Keep existing permissions on failure (don't clear them)
     },
   },
 });
@@ -171,6 +197,9 @@ export const {
   validateSignupTokenSuccess,
   validateSignupTokenFailed,
   clearTokenValidation,
+  fetchPermissionsRequest,
+  fetchPermissionsSuccess,
+  fetchPermissionsFailed,
 } = authSlice.actions;
 
 export const authReducer = authSlice.reducer;

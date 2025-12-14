@@ -16,6 +16,8 @@ export type Permission =
   | 'users:read'
   | 'users:write'
   | 'users:delete'
+  | 'users:profile'
+  | 'users:invite'
   // Calendar Permissions
   | 'calendar:read'
   | 'calendar:write'
@@ -29,8 +31,36 @@ export type Permission =
   | 'notifications:read'
   | 'notifications:write'
   | 'notifications:delete'
+  // Activity Logs Permissions
+  | 'activityLogs:read'
   // Dashboard Permissions
-  | 'dashboard:read';
+  | 'dashboard:read'
+  // Employees Permissions
+  | 'employees:read'
+  // Info Portal Permissions
+  | 'infoPortal:read'
+  | 'infoPortal:write'
+  | 'infoPortal:delete'
+  // Google Account Permissions
+  | 'googleAccount:read'
+  | 'googleAccount:write'
+  | 'googleAccount:link'
+  | 'googleAccount:unlink'
+  // WebSocket Permissions
+  | 'websocket:connect'
+  // Auth Permissions
+  | 'auth:read'
+  // Project Details Permissions
+  | 'projectDetails:read'
+  | 'projectDetails:write'
+  | 'projectDetails:delete'
+  // Backup Permissions
+  | 'backup:read'
+  | 'backup:write'
+  // Drawing List Permissions
+  | 'drawingList:read'
+  | 'drawingList:write'
+  | 'drawingList:delete';
 
 export interface RolePermissions {
   [key: string]: Permission[];
@@ -59,4 +89,10 @@ export interface ProjectAccess extends ResourceAccess {
 
 export interface TaskAccess extends ResourceAccess {
   isAssigned: boolean;
+}
+
+// Permissions API Response
+export interface PermissionsResponse {
+  role: UserRole;
+  permissions: Permission[];
 }

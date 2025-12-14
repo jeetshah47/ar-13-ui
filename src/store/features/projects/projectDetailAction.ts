@@ -4,12 +4,16 @@ import {
   fetchProjectDetailSuccess,
   fetchProjectDetailFailed,
   updateTaskStatus,
+  fetchProjectInfoRequest,
+  fetchProjectInfoSuccess,
+  fetchProjectInfoFailed,
 } from "./projectDetailSlice";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { getTaskDetailById, updateTaskStatus as updateTaskStatusApi } from "../../apis/taskApis";
 import { getProjectDetails } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
+import type { ProjectDetailResponse } from "../../types/Project/ProjectDetailResponse";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
 import { mapStatusToUnified, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
@@ -26,7 +30,7 @@ export const fetchProjectDetailAction =
       dispatch(
         fetchProjectDetailSuccess({
           taskDetails: taskResponse.task,
-          projectDetails: projectResponse.projectDetails,
+          projectDetails: projectResponse.project || projectResponse.projectDetails,
         })
       );
     } catch (error: unknown) {
@@ -51,7 +55,7 @@ const mapStatusToApiFormat = (status: TaskStatus | string): string => {
 };
 
 export const updateTaskStatusAction =
-  (taskId: string, newStatus: string, projectId: string, currentTaskDetails?: TaskResponse) =>
+  (taskId: string, newStatus: string, projectId: string, remark: string, currentTaskDetails?: TaskResponse) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
     try {
       // Get current task details from state if not provided
@@ -71,11 +75,12 @@ export const updateTaskStatusAction =
       // Map status to API format
       const apiStatus = mapStatusToApiFormat(newStatus);
 
-      // Call the new API endpoint
-      await updateTaskStatusApi(projectId, taskId, apiStatus);
+      // Call the new API endpoint with status and remark
+      await updateTaskStatusApi(projectId, taskId, apiStatus, remark);
       
-      // Update the local state
-      dispatch(updateTaskStatus(newStatus));
+      // Update the local state - convert to TaskStatus type
+      const unifiedStatus = mapStatusToUnified(newStatus);
+      dispatch(updateTaskStatus(unifiedStatus));
       
       // Refresh task details to get the latest status from server
       dispatch(fetchProjectDetailAction(taskId, projectId));
@@ -87,6 +92,108 @@ export const updateTaskStatusAction =
         toast.error(`Failed to update task: ${axiosError.response.data.error}`);
       } else {
         toast.error("Failed to update task status");
+      }
+    }
+  };
+
+export const fetchProjectInfoAction =
+  (projectId: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
+    dispatch(fetchProjectInfoRequest());
+    try {
+      const projectResponse = await getProjectDetails(projectId);
+      
+      // Handle different response structures
+      // The API might return { project: {...} }, { projectDetails: {...} } or just the project object directly
+      let projectDetails: ProjectDetailResponse['project'] | ProjectDetailResponse['projectDetails'] | null = null;
+      
+      if (projectResponse) {
+        // Check if response has project property (new API format)
+        if ('project' in projectResponse && projectResponse.project) {
+          projectDetails = projectResponse.project;
+        }
+        // Check if response has projectDetails property (old API format)
+        else if ('projectDetails' in projectResponse && projectResponse.projectDetails) {
+          projectDetails = projectResponse.projectDetails;
+        }
+        // Check if response is the project object directly (has id, title, etc.)
+        else if ('id' in projectResponse && 'title' in projectResponse) {
+          // Type assertion: treat the response as project details
+          projectDetails = projectResponse as unknown as ProjectDetailResponse['project'];
+        }
+      }
+      
+      if (projectDetails) {
+        dispatch(
+          fetchProjectInfoSuccess({
+            projectDetails: projectDetails as ProjectDetailResponse['projectDetails'],
+          })
+        );
+      } else {
+        // If we can't parse the response, try to use project from store as fallback
+        const state = getState();
+        const projectFromStore = state.projectListReducer.api.data.projects.find(
+          (p) => p.id === projectId
+        );
+        
+        if (projectFromStore) {
+          dispatch(
+            fetchProjectInfoSuccess({
+            projectDetails: {
+              ...projectFromStore,
+              assignes: undefined,
+              priority: undefined,
+              deadline: projectFromStore.deadLine,
+              created: (() => {
+                if (!projectFromStore.created) return undefined;
+                if (typeof projectFromStore.created === 'string') return projectFromStore.created;
+                if (typeof projectFromStore.created === 'object' && '_seconds' in projectFromStore.created) {
+                  return new Date(projectFromStore.created._seconds * 1000).toISOString();
+                }
+                return undefined;
+              })() as string | undefined,
+            } as any,
+            })
+          );
+        } else {
+          dispatch(fetchProjectInfoFailed({ error: "Invalid response from server" }));
+        }
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ProjectErrorResponse>;
+      const errorMessage = 
+        axiosError?.response?.data?.error || 
+        axiosError?.message || 
+        "Failed to load project details";
+      
+      // Check if we have project in store as fallback
+      const state = getState();
+      const projectFromStore = state.projectListReducer.api.data.projects.find(
+        (p) => p.id === projectId
+      );
+      
+      if (projectFromStore) {
+        // Convert ProjectResponse to ProjectDetailResponse format
+        dispatch(
+          fetchProjectInfoSuccess({
+            projectDetails: {
+              ...projectFromStore,
+              assignes: undefined,
+              priority: undefined,
+              deadline: projectFromStore.deadLine,
+              created: (() => {
+                if (!projectFromStore.created) return undefined;
+                if (typeof projectFromStore.created === 'string') return projectFromStore.created;
+                if (typeof projectFromStore.created === 'object' && '_seconds' in projectFromStore.created) {
+                  return new Date(projectFromStore.created._seconds * 1000).toISOString();
+                }
+                return undefined;
+              })() as string | undefined,
+            } as any,
+          })
+        );
+      } else {
+        dispatch(fetchProjectInfoFailed({ error: errorMessage }));
+        toast.error(`Failed to load project: ${errorMessage}`);
       }
     }
   };

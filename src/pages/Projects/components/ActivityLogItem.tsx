@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { InsertEmoticon, AlternateEmail, Send } from "@mui/icons-material";
-import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import EmojiPicker, { type EmojiClickData, Theme } from "emoji-picker-react";
 import AttachIcon from "../../../assets/icons/general/attach/dark.svg?react";
 import AddLinkIcon from "../../../assets/icons/general/addlink/dark.svg?react";
 import type { ActivityLog } from "../../../store/types/Task/TaskTypes";
@@ -19,6 +19,7 @@ interface ActivityLogItemProps {
   activityIcon: React.ComponentType;
   formattedDate: string;
   formattedTime: string;
+  onReplyClick?: (activity: ActivityLog) => void;
 }
 
 const ActivityLogItem = ({
@@ -26,6 +27,7 @@ const ActivityLogItem = ({
   activityIcon: ActivityIcon,
   formattedDate,
   formattedTime,
+  onReplyClick,
 }: ActivityLogItemProps) => {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -47,10 +49,16 @@ const ActivityLogItem = ({
   const hasReplies = mockReplies.length > 0;
 
   const handleToggleReplyInput = () => {
-    setShowReplyInput((prev) => !prev);
-    if (showReplyInput) {
-      setReplyText("");
-      setSelectedFiles([]);
+    if (onReplyClick) {
+      // Open sidebar instead of inline reply
+      onReplyClick(activity);
+    } else {
+      // Fallback to inline reply (for backward compatibility)
+      setShowReplyInput((prev) => !prev);
+      if (showReplyInput) {
+        setReplyText("");
+        setSelectedFiles([]);
+      }
     }
   };
 
@@ -420,7 +428,7 @@ const ActivityLogItem = ({
                       onEmojiClick={handleEmojiClick}
                       width={350}
                       height={400}
-                      theme="light"
+                      theme={Theme.LIGHT}
                       previewConfig={{
                         showPreview: false,
                       }}

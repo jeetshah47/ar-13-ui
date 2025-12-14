@@ -24,7 +24,7 @@ interface FilteredTaskListProps {
   children: (filteredTasks: any[]) => React.ReactNode;
 }
 
-export const FilteredTaskList: React.FC<FilteredTaskListProps> = ({ projectId, children }) => {
+export const FilteredTaskList: React.FC<FilteredTaskListProps> = ({ children }) => {
   const taskListState = useAppSelector((state) => state.taskListReducer.api);
   const { canAccessTask } = useResourceAccess();
   

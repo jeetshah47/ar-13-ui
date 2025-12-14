@@ -1,46 +1,38 @@
 import { Box, Button, TextField, Alert, CircularProgress, Card, CardContent, Typography, Stack } from "@mui/material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import { useState } from "react";
-import { createBackup, createBackupWithCustomLocation } from "../../store/apis/backupApis";
-import toast from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { createBackupAction, createBackupWithCustomLocationAction } from "../../store/features/backup/backupActions";
+import { usePermissions } from "../../store/hooks/usePermissions";
+import { RequirePermission } from "../../common/components/RBAC/RequirePermission";
 
 const BackupPage = () => {
-  const [loading, setLoading] = useState(false);
+  const { checkPermission } = usePermissions();
+  const dispatch = useAppDispatch();
+  const backupState = useAppSelector((state) => state.backupReducer.api);
   const [customDir, setCustomDir] = useState("");
-  const [lastBackupLocation, setLastBackupLocation] = useState<string | null>(null);
+  
+  const canWrite = checkPermission("backup:write");
+  const loading = backupState.loading;
+  const lastBackupLocation = backupState.data.lastBackupLocation;
 
   const handleDefaultBackup = async () => {
-    setLoading(true);
     try {
-      const response = await createBackup();
-      toast.success(response.message || "Backup created successfully");
-      if (response.backupLocation) {
-        setLastBackupLocation(response.backupLocation);
-      }
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to create backup");
-    } finally {
-      setLoading(false);
+      await dispatch(createBackupAction());
+    } catch {
+      // Error is already handled by the action with toast
     }
   };
 
   const handleCustomBackup = async () => {
     if (!customDir.trim()) {
-      toast.error("Please enter a backup directory path");
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await createBackupWithCustomLocation(customDir.trim());
-      toast.success(response.message || "Backup created successfully");
-      if (response.backupLocation) {
-        setLastBackupLocation(response.backupLocation);
-      }
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to create backup");
-    } finally {
-      setLoading(false);
+      await dispatch(createBackupWithCustomLocationAction(customDir.trim()));
+    } catch {
+      // Error is already handled by the action with toast
     }
   };
 
@@ -50,8 +42,9 @@ const BackupPage = () => {
         
         <Box
           sx={{
-            padding: "28px 0px",
-            maxWidth: "800px",
+            padding: { xs: "16px 0px", sm: "20px 0px", md: "24px 0px", lg: "28px 0px" },
+            maxWidth: { xs: "100%", sm: "100%", md: "750px", lg: "800px" },
+            margin: { xs: "0", sm: "0", md: "0 auto", lg: "0 auto" },
           }}
         >
           <Card sx={{ marginBottom: "24px" }}>
@@ -70,51 +63,58 @@ const BackupPage = () => {
               )}
 
               <Stack spacing={3}>
-                <Box>
-                  <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
-                    Default Backup Location
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
-                    Creates a backup in the default location: <code>upload/backups/</code>
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={handleDefaultBackup}
-                    disabled={loading}
-                    sx={{ minWidth: "200px" }}
-                  >
-                    {loading ? <CircularProgress size={20} /> : "Create Default Backup"}
-                  </Button>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
-                    Custom Backup Location
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
-                    Specify a custom directory path for the backup.
-                  </Typography>
-                  <Stack direction="row" spacing={2} alignItems="flex-start">
-                    <TextField
-                      fullWidth
-                      label="Backup Directory Path"
-                      placeholder="/path/to/backup"
-                      value={customDir}
-                      onChange={(e) => setCustomDir(e.target.value)}
-                      disabled={loading}
-                      size="small"
-                      helperText="Enter the full path where you want to store the backup"
-                    />
+                <RequirePermission permission="backup:write">
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
+                      Default Backup Location
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
+                      Creates a backup in the default location: <code>upload/backups/</code>
+                    </Typography>
                     <Button
                       variant="contained"
-                      onClick={handleCustomBackup}
-                      disabled={loading || !customDir.trim()}
-                      sx={{ minWidth: "200px", marginTop: "8px" }}
+                      onClick={handleDefaultBackup}
+                      disabled={loading}
+                      sx={{ minWidth: "200px" }}
                     >
-                      {loading ? <CircularProgress size={20} /> : "Create Custom Backup"}
+                      {loading ? <CircularProgress size={20} /> : "Create Default Backup"}
                     </Button>
-                  </Stack>
-                </Box>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ marginBottom: "12px", fontWeight: "medium" }}>
+                      Custom Backup Location
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "16px" }}>
+                      Specify a custom directory path for the backup.
+                    </Typography>
+                    <Stack direction={{ xs: "column", sm: "column", md: "row", lg: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "stretch", md: "flex-start", lg: "flex-start" }}>
+                      <TextField
+                        fullWidth
+                        label="Backup Directory Path"
+                        placeholder="/path/to/backup"
+                        value={customDir}
+                        onChange={(e) => setCustomDir(e.target.value)}
+                        disabled={loading}
+                        size="small"
+                        helperText="Enter the full path where you want to store the backup"
+                      />
+                      <Button
+                        variant="contained"
+                        onClick={handleCustomBackup}
+                        disabled={loading || !customDir.trim()}
+                        sx={{ minWidth: { xs: "100%", sm: "100%", md: "200px", lg: "200px" }, marginTop: { xs: "0", sm: "0", md: "8px", lg: "8px" } }}
+                      >
+                        {loading ? <CircularProgress size={20} /> : "Create Custom Backup"}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </RequirePermission>
+                {!canWrite && (
+                  <Alert severity="info">
+                    You have read-only access to the backup page. You need the <strong>backup:write</strong> permission to create backups.
+                  </Alert>
+                )}
               </Stack>
             </CardContent>
           </Card>
@@ -135,7 +135,10 @@ const BackupPage = () => {
                   Custom backup paths must be absolute paths (e.g., /home/user/backups)
                 </Typography>
                 <Typography component="li" variant="body2" color="text.secondary">
-                  Only administrators can access this page
+                  Users with <strong>backup:read</strong> permission can view this page
+                </Typography>
+                <Typography component="li" variant="body2" color="text.secondary">
+                  Users with <strong>backup:write</strong> permission can create backups
                 </Typography>
               </Box>
             </CardContent>

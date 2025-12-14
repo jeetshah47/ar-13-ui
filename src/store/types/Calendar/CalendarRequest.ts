@@ -13,5 +13,6 @@ export interface CalendarRequest {
   addToGoogleCalendar?: boolean;
   eventType?: "offline" | "online";
   invitedMemberIds?: string[];
+  invites?: string[];
   duration?: number;
 }

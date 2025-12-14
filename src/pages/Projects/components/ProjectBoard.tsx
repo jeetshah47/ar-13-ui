@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, type DragEvent } from "react";
+import React, { useState, useEffect, useCallback, useRef, type DragEvent } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -7,15 +7,20 @@ import {
   CardContent,
   Avatar,
 } from "@mui/material";
-import { subscribeToProjectTasks, updateTaskStatus, type FirebaseTask } from "../../../services/firebaseTaskService";
 import { mapStatusToUnified } from "../constants/taskStatus.constants";
+import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
+import { getTaskStatusesAction } from "../../../store/features/task/projectAction";
+import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
+import { useNotifications } from "../../../contexts/NotificationContext";
+import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
+import { updateTaskStatus } from "../../../store/apis/taskApis";
 
 interface TaskItem {
   id: string;
   title: string;
   code: string;
   priority: "Low" | "Medium" | "High";
-  duration: string;
+  deadline: string; // Deadline in readable format
   assignee: {
     name: string;
     avatar: string;
@@ -34,23 +39,12 @@ interface ProjectBoardProps {
   projectId: string;
 }
 
-// Format duration from Date to string - moved outside component for performance
-const formatDuration = (date: Date | { toDate: () => Date } | string): string => {
-  if (!date) return "0h";
+// Format duration from Date string to readable format
+const formatDuration = (dateString: string): string => {
+  if (!dateString) return "0h";
 
-  let dateObj: Date;
-  
   try {
-    // Check if it's a Firestore timestamp object with toDate method
-    if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: () => Date }).toDate === 'function') {
-      dateObj = (date as { toDate: () => Date }).toDate();
-    } else if (typeof date === 'string' || date instanceof Date) {
-      // Handle string dates or regular Date objects
-      dateObj = new Date(date as string | Date);
-    } else {
-      return "0h";
-    }
-    
+    const dateObj = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
 
@@ -68,73 +62,313 @@ const formatDuration = (date: Date | { toDate: () => Date } | string): string =>
 
 const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
   const navigate = useNavigate();
-  const [columns, setColumns] = useState<Column[]>([
-    {
-      id: "pending",
-      title: "Pending",
-      items: [],
-      status: "pending",
-    },
-    {
-      id: "todo",
-      title: "Todo",
-      items: [],
-      status: "todo",
-    },
-    {
-      id: "review",
-      title: "Review",
-      items: [],
-      status: "review",
-    },
-    {
-      id: "completed",
-      title: "Completed",
-      items: [],
-      status: "completed",
-    },
-  ]);
+  const dispatch = useAppDispatch();
+  const taskListState = useAppSelector((state: RootState) => state.taskListReducer.api);
+  const taskStatuses = useAppSelector((state: RootState) => state.taskListReducer.api.data.taskStatuses);
+  const { onEvent, offEvent, isConnected } = useNotifications();
+  
+  // Initialize columns from API task statuses, fallback to default if not loaded
+  const getInitialColumns = useCallback((): Column[] => {
+    if (taskStatuses.length > 0) {
+      // Create a copy of the array before sorting (Redux state is read-only)
+      return [...taskStatuses]  
+        .sort((a, b) => {
+          // First, sort by order field if available (from API response)
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          
+          // Fallback: Sort by category: active first, then completed, then final
+          const categoryOrder: Record<string, number> = { active: 0, completed: 1, final: 2 };
+          const categoryDiff = (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99);
+          if (categoryDiff !== 0) return categoryDiff;
+          // Within same category, active statuses first
+          if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+          return 0;
+        })
+        .map((status: TaskStatus) => ({
+          id: status.value,
+          title: status.displayName,
+          items: [],
+          status: status.value,
+        }));
+    }
+    // Fallback to default columns if API statuses not loaded yet
+    return [
+      {
+        id: "pending",
+        title: "Pending",
+        items: [],
+        status: "pending",
+      },
+      {
+        id: "todo",
+        title: "Todo",
+        items: [],
+        status: "todo",
+      },
+      {
+        id: "review",
+        title: "Review",
+        items: [],
+        status: "review",
+      },
+      {
+        id: "completed",
+        title: "Completed",
+        items: [],
+        status: "completed",
+      },
+    ];
+  }, [taskStatuses]);
+
+  const [columns, setColumns] = useState<Column[]>(getInitialColumns());
 
   const [draggedItem, setDraggedItem] = useState<TaskItem | null>(null);
   const [draggedFromColumn, setDraggedFromColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const pendingUpdatesRef = useRef<Map<string, { fromColumn: string; toColumn: string; task: TaskItem }>>(new Map());
 
-  // Convert Firebase task to TaskItem
-  const convertFirebaseTaskToTaskItem = useCallback((firebaseTask: FirebaseTask): TaskItem => {
+  // Fetch task statuses if not already loaded
+  useEffect(() => {
+    if (taskStatuses.length === 0) {
+      dispatch(getTaskStatusesAction());
+    }
+  }, [dispatch, taskStatuses.length]);
+
+  // Update columns when task statuses are loaded
+  useEffect(() => {
+    if (taskStatuses.length > 0) {
+      // Create a copy of the array before sorting (Redux state is read-only)
+      // Create columns from API task statuses, ordered by order field from API response
+      const newColumns = [...taskStatuses]
+        .sort((a, b) => {
+          // First, sort by order field if available (from API response)
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          
+          // Fallback: Sort by category: active first, then completed, then final
+          const categoryOrder: Record<string, number> = { active: 0, completed: 1, final: 2 };
+          const categoryDiff = (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99);
+          if (categoryDiff !== 0) return categoryDiff;
+          // Within same category, active statuses first
+          if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+          return 0;
+        })
+        .map((status: TaskStatus) => ({
+          id: status.value,
+          title: status.displayName,
+          items: [],
+          status: status.value,
+        }));
+      
+      setColumns(prevColumns => {
+        // Preserve items when updating columns structure
+        return newColumns.map(newCol => {
+          const prevCol = prevColumns.find(col => col.id === newCol.id || col.status === newCol.status);
+          return {
+            ...newCol,
+            items: prevCol?.items || [],
+          };
+        });
+      });
+    }
+  }, [taskStatuses]);
+
+  // Convert TaskResponse to TaskItem
+  const convertTaskResponseToTaskItem = useCallback((task: TaskResponse): TaskItem => {
+    const assigneeName = task.assignDetails && task.assignDetails.length > 0 
+      ? task.assignDetails[0].name 
+      : (task.assignTo?.name || "Unassigned");
+    const assigneeAvatar = "/api/placeholder/24/24";
+
+    // Use drawing type name if available, otherwise fall back to subject
+    const taskTitle = task.drawingInfo?.typeName || task.subject;
+
     return {
-      id: firebaseTask.id,
-      title: firebaseTask.subject,
-      code: firebaseTask.code,
-      priority: firebaseTask.priority as "Low" | "Medium" | "High",
-      duration: formatDuration(firebaseTask.duration),
+      id: task.id,
+      title: taskTitle,
+      code: task.code,
+      priority: task.priority as "Low" | "Medium" | "High",
+      deadline: formatDuration(task.deadline),
       assignee: {
-        name: "UI/UX Designer", // You can get this from assignTo array
-        avatar: "/api/placeholder/24/24",
+        name: assigneeName,
+        avatar: assigneeAvatar,
       },
-      status: firebaseTask.status,
+      status: task.status,
     };
   }, []);
 
-  // Subscribe to real-time updates
+  // Note: Tasks are fetched by ProjectList component when projectId changes
+  // ProjectBoard just reads from Redux state, no need to fetch here
+
+  // Update columns when tasks are loaded from Redux state
   useEffect(() => {
-    if (!projectId) return;
-
-    const unsubscribe = subscribeToProjectTasks(projectId, (firebaseTasks: FirebaseTask[]) => {
-      const taskItems = firebaseTasks.map(convertFirebaseTaskToTaskItem);
-      setColumns(prevColumns => 
-        prevColumns.map(column => ({
+    if (taskListState?.data?.tasks && projectId && !taskListState.loading) {
+      const taskItems = taskListState.data.tasks.map(convertTaskResponseToTaskItem);
+      setColumns(prevColumns => {
+        // Initialize all columns with empty items
+        const newColumns = prevColumns.map(column => ({
           ...column,
-          items: taskItems.filter(task => {
-            // Normalize task status to unified format for comparison
-            const normalizedTaskStatus = mapStatusToUnified(task.status);
-            return normalizedTaskStatus === column.status;
-          })
-        }))
-      );
-    });
+          items: [] as TaskItem[],
+        }));
+        
+        // Assign each task to exactly one column (the first matching one)
+        taskItems.forEach(task => {
+          if (!task.status) return;
+          
+          const taskStatus = task.status.trim();
+          
+          // Find the first matching column for this task
+          for (const column of newColumns) {
+            const columnStatus = column.status.trim();
+            const columnId = column.id.trim();
+            
+            // Try direct exact match first (most reliable)
+            if (taskStatus === columnStatus || taskStatus === columnId) {
+              column.items.push(task);
+              return; // Task assigned, move to next task
+            }
+            
+            // Try case-insensitive match
+            if (taskStatus.toLowerCase() === columnStatus.toLowerCase() || 
+                taskStatus.toLowerCase() === columnId.toLowerCase()) {
+              column.items.push(task);
+              return; // Task assigned, move to next task
+            }
+          }
+          
+          // If no direct match found, try unified mapping as fallback
+          const normalizedTaskStatus = mapStatusToUnified(task.status);
+          for (const column of newColumns) {
+            const normalizedColumnStatus = mapStatusToUnified(column.status);
+            if (normalizedTaskStatus === normalizedColumnStatus) {
+              column.items.push(task);
+              return; // Task assigned, move to next task
+            }
+          }
+          
+          // If no match found at all, task won't appear in any column
+        });
+        
+        // Only update if columns actually changed
+        const hasChanged = prevColumns.some((prevCol, index) => {
+          const newCol = newColumns[index];
+          return prevCol.items.length !== newCol.items.length ||
+            prevCol.items.some((item, itemIndex) => 
+              !newCol.items[itemIndex] || newCol.items[itemIndex].id !== item.id
+            );
+        });
+        
+        return hasChanged ? newColumns : prevColumns;
+      });
+    }
+  }, [taskListState?.data?.tasks, taskListState.loading, projectId, convertTaskResponseToTaskItem]);
 
-    return () => unsubscribe();
-  }, [projectId, convertFirebaseTaskToTaskItem]);
+  // Listen for task status updates from SSE
+  useEffect(() => {
+    if (!isConnected || !projectId) return;
+
+    // Listen for task status updates from other users
+    const handleTaskStatusUpdated = (messageData: {
+      projectId: string;
+      taskId: string;
+      status: string;
+      updatedBy?: string;
+      task?: TaskResponse;
+    }) => {
+      // Only process updates for this project
+      if (messageData.projectId !== projectId) return;
+
+      console.log('Task status updated via SSE:', messageData);
+
+      // If we have a pending update for this task, remove it (server confirmed)
+      pendingUpdatesRef.current.delete(messageData.taskId);
+
+      // Update the task in the columns
+      setColumns(prevColumns => {
+        const updatedColumns = prevColumns.map(column => {
+          // Remove task from all columns first
+          const filteredItems = column.items.filter(item => item.id !== messageData.taskId);
+          
+          // If this column matches the new status, add the task
+          // Use direct matching first, then fallback to unified mapping
+          const newStatus = messageData.status.trim();
+          const columnStatus = column.status.trim();
+          const columnId = column.id.trim();
+          
+          const statusMatches = 
+            newStatus === columnStatus || 
+            newStatus === columnId ||
+            newStatus.toLowerCase() === columnStatus.toLowerCase() ||
+            newStatus.toLowerCase() === columnId.toLowerCase() ||
+            mapStatusToUnified(messageData.status) === mapStatusToUnified(column.status);
+          
+          if (statusMatches) {
+            // Find the task in any column to get its details
+            let taskToMove: TaskItem | null = null;
+            prevColumns.forEach(col => {
+              const found = col.items.find(item => item.id === messageData.taskId);
+              if (found) {
+                taskToMove = { ...found, status: messageData.status };
+              }
+            });
+
+            // If task not found in any column, convert from TaskResponse if provided
+            if (!taskToMove && messageData.task) {
+              taskToMove = convertTaskResponseToTaskItem(messageData.task);
+            }
+
+            if (taskToMove) {
+              return {
+                ...column,
+                items: [...filteredItems, taskToMove]
+              };
+            }
+          }
+
+          return {
+            ...column,
+            items: filteredItems
+          };
+        });
+
+        return updatedColumns;
+      });
+    };
+
+    // Listen for success response to our own updates
+    const handleUpdateSuccess = (messageData: {
+      projectId: string;
+      taskId: string;
+      status: string;
+      updatedBy?: string;
+      task?: TaskResponse;
+    }) => {
+      // Only process updates for this project
+      if (messageData.projectId !== projectId) return;
+
+      console.log('Task status update successful:', messageData);
+      
+      // Remove from pending updates
+      pendingUpdatesRef.current.delete(messageData.taskId);
+    };
+
+    // Register event listeners
+    onEvent('task:status-updated', handleTaskStatusUpdated);
+    onEvent('task:update-status:success', handleUpdateSuccess);
+
+    // Cleanup
+    return () => {
+      offEvent('task:status-updated', handleTaskStatusUpdated);
+      offEvent('task:update-status:success', handleUpdateSuccess);
+    };
+  }, [isConnected, projectId, onEvent, offEvent, convertTaskResponseToTaskItem]);
 
   const handleDragStart = (
     e: DragEvent<HTMLDivElement>,
@@ -166,10 +400,10 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     }
   };
 
-  const handleDrop = async (
+  const handleDrop = (
     e: DragEvent<HTMLDivElement>,
     targetColumnId: string
-  ): Promise<void> => {
+  ): void => {
     e.preventDefault();
 
     if (draggedItem && draggedFromColumn) {
@@ -184,16 +418,73 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
       const targetColumn = columns.find(col => col.id === targetColumnId);
       if (!targetColumn) return;
 
-      try {
-        // Update the task status in Firebase
-        await updateTaskStatus(projectId, draggedItem.id, targetColumn.status);
-        
-        // The real-time listener will automatically update the UI
-        // so we don't need to manually update the columns state
-      } catch {
-        // You might want to show a toast notification here
-        // For now, we'll silently handle the error
-      }
+      // Store the original state for potential rollback
+      const originalTask = { ...draggedItem };
+      pendingUpdatesRef.current.set(draggedItem.id, {
+        fromColumn: draggedFromColumn,
+        toColumn: targetColumnId,
+        task: originalTask,
+      });
+
+      // Optimistically update the UI
+      setColumns(prevColumns => 
+        prevColumns.map(column => {
+          if (column.id === draggedFromColumn) {
+            return {
+              ...column,
+              items: column.items.filter(item => item.id !== draggedItem.id)
+            };
+          }
+          if (column.id === targetColumnId) {
+            return {
+              ...column,
+              items: [...column.items, { ...draggedItem, status: targetColumn.status }]
+            };
+          }
+          return column;
+        })
+      );
+
+      // Update task status via REST API (SSE is unidirectional)
+      updateTaskStatus(projectId, draggedItem.id, targetColumn.status, '')
+        .then(() => {
+          console.log('Task status update API call successful:', {
+            projectId: projectId,
+            taskId: draggedItem.id,
+            status: targetColumn.status,
+          });
+          // The SSE event will be received separately to update the UI
+        })
+        .catch((error) => {
+          console.error('Task status update failed:', error);
+          
+          // Revert the optimistic update
+          const pendingUpdate = pendingUpdatesRef.current.get(draggedItem.id);
+          if (pendingUpdate) {
+            setColumns(prevColumns => 
+              prevColumns.map(column => {
+                if (column.id === pendingUpdate.toColumn) {
+                  return {
+                    ...column,
+                    items: column.items.filter(item => item.id !== draggedItem.id)
+                  };
+                }
+                if (column.id === pendingUpdate.fromColumn) {
+                  return {
+                    ...column,
+                    items: [...column.items, pendingUpdate.task]
+                  };
+                }
+                return column;
+              })
+            );
+            pendingUpdatesRef.current.delete(draggedItem.id);
+          }
+
+          // Show error notification
+          const errorMessage = error instanceof Error ? error.message : 'Failed to update task status';
+          alert(`Failed to update task status: ${errorMessage}`);
+        });
     }
 
     setDraggedItem(null);
@@ -383,7 +674,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
                           color: theme.palette.text.secondary,
                         })}
                       >
-                        {item.duration}
+                        {item.deadline}
                       </Typography>
                     </Box>
 

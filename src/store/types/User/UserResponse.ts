@@ -4,6 +4,7 @@ export interface UserResponse {
   role: string;
   password: string;
   designation: string;
+  forceChangePassword?: boolean;
   created: Created;
   id: string;
 }

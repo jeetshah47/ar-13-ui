@@ -3,11 +3,14 @@ import type { UserRole, Permission } from '../../types/RBAC';
 export interface AuthState {
   loading: boolean;
   error: string;
+  permissionsLoading: boolean;
+  permissionsError: string | null;
   tokenValidation: {
     isValidating: boolean;
     isValid: boolean | null;
     error: string;
     reason?: string;
+    email?: string;
   };
   api: {
     token: string;

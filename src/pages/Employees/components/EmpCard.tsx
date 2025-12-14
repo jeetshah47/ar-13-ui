@@ -21,14 +21,16 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
         background: theme.palette.background.paper,
         boxShadow: theme.shadows[1],
         borderRadius: "24px",
-        padding: "20px 28px",
+        padding: { xs: "20px", sm: "20px 28px" },
         display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: { xs: "flex-start", sm: "center" },
         marginTop: "20px",
         minHeight: "80px",
         cursor: "pointer",
         transition: "all 0.2s ease",
+        gap: { xs: "16px", sm: 0 },
         "&:hover": {
           boxShadow: theme.shadows[4],
           transform: "translateY(-2px)",
@@ -39,8 +41,8 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
         display: "flex", 
         gap: "18px", 
         alignItems: "center",
-        width: "280px",
-        flex: "0 0 280px"
+        width: { xs: "100%", sm: "280px" },
+        flex: { xs: "1 1 auto", sm: "0 0 280px" }
       }}>
         <Avatar sx={{ width: "50px", height: "50px", flexShrink: 0 }}>
           {employee.name.charAt(0).toUpperCase()}
@@ -91,7 +93,7 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
       </Box>
       
       <Box sx={{ 
-        display: "flex", 
+        display: { xs: "none", sm: "flex" },
         flexDirection: "column", 
         alignItems: "center", 
         gap: "8px",
@@ -109,7 +111,7 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
       </Box>
       
       <Box sx={{ 
-        display: "flex", 
+        display: { xs: "none", md: "flex" },
         flexDirection: "column", 
         alignItems: "center", 
         gap: "8px",
@@ -125,7 +127,7 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
       </Box>
       
       <Box sx={{ 
-        display: "flex", 
+        display: { xs: "none", md: "flex" },
         flexDirection: "column", 
         alignItems: "center", 
         gap: "8px",
@@ -141,7 +143,7 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
       </Box>
       
       <Box sx={{ 
-        display: "flex", 
+        display: { xs: "none", md: "flex" },
         flexDirection: "column", 
         alignItems: "center", 
         gap: "8px",
@@ -157,7 +159,7 @@ const EmpCard: React.FC<EmpCardProps> = ({ employee }) => {
       </Box>
       
       <Box sx={{ 
-        display: "flex", 
+        display: { xs: "none", md: "flex" },
         flexDirection: "column", 
         alignItems: "center", 
         gap: "8px",

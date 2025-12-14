@@ -1,4 +1,5 @@
 import { http } from "../../config/http";
+import { API_BASE_URL } from "../../config/api";
 
 export interface BackupResponse {
   message: string;
@@ -10,7 +11,7 @@ export interface BackupResponse {
  * POST /api/backup/all
  */
 export async function createBackup(): Promise<BackupResponse> {
-  const url = `http://localhost:3000/api/backup/all`;
+  const url = `${API_BASE_URL}/backup/all`;
   const result = await http.post(url);
   return result.data;
 }
@@ -22,7 +23,7 @@ export async function createBackup(): Promise<BackupResponse> {
 export async function createBackupWithCustomLocation(
   customDir: string
 ): Promise<BackupResponse> {
-  const url = `http://localhost:3000/api/backup/all`;
+  const url = `${API_BASE_URL}/backup/all`;
   const result = await http.post(url, null, {
     params: {
       dir: customDir,

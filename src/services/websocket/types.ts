@@ -1,21 +1,27 @@
 // WebSocket Notification Service Types
 
-export enum NotificationType {
-  PROJECT_CREATED = "PROJECT_CREATED",
-  TASK_CREATED = "TASK_CREATED",
-  TASK_ASSIGNED = "TASK_ASSIGNED",
-  PROJECT_UPDATED = "PROJECT_UPDATED",
-  TASK_UPDATED = "TASK_UPDATED",
-  LEAVE_REQUEST_CREATED = "LEAVE_REQUEST_CREATED",
-  LEAVE_REQUEST_APPROVED = "LEAVE_REQUEST_APPROVED",
-  LEAVE_REQUEST_REJECTED = "LEAVE_REQUEST_REJECTED",
-}
+export const NotificationType = {
+  PROJECT_CREATED: "PROJECT_CREATED",
+  TASK_CREATED: "TASK_CREATED",
+  TASK_ASSIGNED: "TASK_ASSIGNED",
+  PROJECT_UPDATED: "PROJECT_UPDATED",
+  TASK_UPDATED: "TASK_UPDATED",
+  LEAVE_REQUEST_CREATED: "LEAVE_REQUEST_CREATED",
+  LEAVE_REQUEST_APPROVED: "LEAVE_REQUEST_APPROVED",
+  LEAVE_REQUEST_REJECTED: "LEAVE_REQUEST_REJECTED",
+  USER_LOGIN: "USER_LOGIN",
+  USER_LOGOUT: "USER_LOGOUT",
+} as const;
 
-export enum RelatedEntityType {
-  PROJECT = "PROJECT",
-  TASK = "TASK",
-  LEAVE_REQUEST = "LEAVE_REQUEST",
-}
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+export const RelatedEntityType = {
+  PROJECT: "PROJECT",
+  TASK: "TASK",
+  LEAVE_REQUEST: "LEAVE_REQUEST",
+} as const;
+
+export type RelatedEntityType = typeof RelatedEntityType[keyof typeof RelatedEntityType];
 
 export interface Notification {
   id: string;
@@ -29,6 +35,18 @@ export interface Notification {
   createdAt: Date;
   created: Date;
   updated?: Date;
+  // Additional metadata that may come from WebSocket events
+  taskId?: string;
+  projectId?: string;
+  projectTitle?: string;
+  // Event-specific additional data
+  updaterName?: string;
+  oldStatus?: string;
+  newStatus?: string;
+  memberName?: string;
+  hours?: number;
+  date?: string;
+  timeDescription?: string;
 }
 
 // Alias for backward compatibility
@@ -45,14 +63,22 @@ export interface WebSocketConfig {
   autoConnect?: boolean;
 }
 
+// WebSocket message structure
+export interface WebSocketMessage {
+  type: string;
+  data: any;
+}
+
+// notifications-available event data structure
+export interface NotificationsAvailableEvent {
+  userId: string;
+}
+
 export interface NotificationClientEvents {
   connect: () => void;
-  disconnect: () => void;
-  notification: (notification: Notification) => void;
-  project_notification: (notification: Notification) => void;
-  global_notification: (notification: Notification) => void;
-  notification_count: (count: NotificationCount) => void;
-  authenticated: (data: { success: boolean }) => void;
+  disconnect: (reason?: string) => void;
+  authenticated: (data: { userId: string }) => void;
+  'notifications-available': (data: NotificationsAvailableEvent) => void;
   connect_error: (error: Error) => void;
   reconnect: (attemptNumber: number) => void;
   reconnect_error: (error: Error) => void;
@@ -67,9 +93,11 @@ export interface NotificationContextType {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
-  joinProject: (projectId: string) => void;
-  leaveProject: (projectId: string) => void;
-  joinUserRoom: (userId: string) => void;
-  leaveUserRoom: (userId: string) => void;
   refreshNotifications: () => Promise<void>;
+  // WebSocket methods for listening to events
+  onEvent: (event: string, listener: (...args: any[]) => void) => void;
+  offEvent: (event: string, listener?: (...args: any[]) => void) => void;
+  // WebSocket method for sending messages
+  sendMessage: (message: { type: string; data: any }) => void;
 }
+

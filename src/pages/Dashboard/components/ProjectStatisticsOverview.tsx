@@ -1,7 +1,7 @@
 import { Box, Typography, Grid, CircularProgress, Alert } from "@mui/material";
 import CustomCard from "../../../common/components/Card/CustomCard";
 import { useAppSelector, type RootState } from "../../../store/store";
-import type { ProjectStatistics } from "../../../store/types/Project/ProjectStatisticsResponse";
+import { formatTime } from "../../../utils/timeFormatting";
 
 const ProjectStatisticsOverview = () => {
   const statisticsState = useAppSelector(
@@ -62,14 +62,6 @@ const ProjectStatisticsOverview = () => {
       ? (aggregatedStats.completedTasks / aggregatedStats.totalTasks) * 100
       : 0;
 
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
 
   const statsCards = [
     {
@@ -149,12 +141,12 @@ const ProjectStatisticsOverview = () => {
                 </Typography>
 
                 <Typography
-                  sx={(theme) => ({
+                  sx={{
                     fontSize: "42px",
                     fontWeight: 700,
                     lineHeight: 1.1,
                     color: stat.color,
-                  })}
+                  }}
                 >
                   {stat.value}
                 </Typography>

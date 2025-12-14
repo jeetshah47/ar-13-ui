@@ -8,8 +8,24 @@ type PageHeaderProps = {
 
 const PageHeader = ({ title, endElement }: PageHeaderProps) => {
   return (
-    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <Typography variant="h4" sx={{fontWeight: "bold"}}>{title}</Typography>
+    <Box 
+      sx={{ 
+        display: "flex", 
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: { xs: "flex-start", sm: "space-between" }, 
+        alignItems: { xs: "flex-start", sm: "center" },
+        gap: { xs: "12px", sm: 0 }
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        sx={{
+          fontWeight: "bold",
+          fontSize: { xs: "20px", sm: "24px", md: "32px" }
+        }}
+      >
+        {title}
+      </Typography>
       {endElement}
     </Box>
   );
