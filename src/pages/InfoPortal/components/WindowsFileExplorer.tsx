@@ -20,6 +20,7 @@ import {
   DialogActions,
   DialogContentText,
 } from "@mui/material";
+import DownloadProgressModal from "../../../common/components/DownloadProgressModal";
 import {
   ArrowBack,
   ArrowForward,
@@ -37,7 +38,10 @@ import {
   deleteItem,
   createFolder,
   moveItem,
+  downloadFile,
 } from "../../../store/apis/storageApi";
+import { openFileWithDefaultApp } from "../../../services/nas/nasService";
+import toast from "react-hot-toast";
 
 interface WindowsFileExplorerProps {
   initialPath?: string;
@@ -82,6 +86,11 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
   
   const [notImplementedModalOpen, setNotImplementedModalOpen] = useState(false);
   const [notImplementedMessage, setNotImplementedMessage] = useState<string>("");
+  
+  // Download progress state
+  const [downloadProgressOpen, setDownloadProgressOpen] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadingFilename, setDownloadingFilename] = useState<string>("");
 
   useEffect(() => {
     loadFolderContents(currentPath);
@@ -160,9 +169,64 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
     }
   };
 
-  const handleItemDoubleClick = (item: FileBrowserItem) => {
+  const handleItemDoubleClick = async (item: FileBrowserItem) => {
     if (item.isFolder) {
       handleNavigate(item.path);
+    } else {
+      // Handle file download/opening
+      try {
+        // Check if running in Electron
+        if (window.electronAPI) {
+          // Use NAS mount to open file directly
+          const result = await openFileWithDefaultApp(item.path, item.size);
+          if (result.success) {
+            toast.success(`Opening file: ${item.name}`);
+          } else {
+            toast.error(result.error || "Failed to open file");
+            // Fallback to download if mount fails
+            try {
+              // Show download progress modal
+              setDownloadingFilename(item.name);
+              setDownloadProgress(0);
+              setDownloadProgressOpen(true);
+              
+              await downloadFile(item.path, item.name, (progress) => {
+                setDownloadProgress(progress);
+              });
+              
+              // Close modal after a short delay to show completion
+              setTimeout(() => {
+                setDownloadProgressOpen(false);
+                setDownloadProgress(0);
+              }, 1000);
+            } catch (downloadErr) {
+              console.error("Failed to download file:", downloadErr);
+              setDownloadProgressOpen(false);
+              toast.error("Failed to download file");
+            }
+          }
+        } else {
+          // Web browser: download file
+          // Show download progress modal
+          setDownloadingFilename(item.name);
+          setDownloadProgress(0);
+          setDownloadProgressOpen(true);
+          
+          await downloadFile(item.path, item.name, (progress) => {
+            setDownloadProgress(progress);
+          });
+          
+          // Close modal after a short delay to show completion
+          setTimeout(() => {
+            setDownloadProgressOpen(false);
+            setDownloadProgress(0);
+          }, 1000);
+        }
+      } catch (err: any) {
+        console.error("Failed to open/download file:", err);
+        setDownloadProgressOpen(false);
+        toast.error(err.message || "Failed to open/download file");
+      }
     }
   };
 
@@ -781,6 +845,19 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Download Progress Modal */}
+      <DownloadProgressModal
+        open={downloadProgressOpen}
+        filename={downloadingFilename}
+        progress={downloadProgress}
+        onClose={() => {
+          if (downloadProgress >= 100) {
+            setDownloadProgressOpen(false);
+            setDownloadProgress(0);
+          }
+        }}
+      />
     </Box>
   );
 };

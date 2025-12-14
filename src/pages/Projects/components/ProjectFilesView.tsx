@@ -11,6 +11,7 @@ import {
   Toolbar,
   Link,
 } from "@mui/material";
+import DownloadProgressModal from "../../../common/components/DownloadProgressModal";
 import {
   ArrowBack,
   ArrowForward,
@@ -21,7 +22,7 @@ import {
   ChevronRight,
 } from "@mui/icons-material";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
-import { browseNAS, getFileDownloadUrl } from "../../../store/apis/storageApi";
+import { browseNAS, downloadFile } from "../../../store/apis/storageApi";
 import { openFileWithDefaultApp } from "../../../services/nas/nasService";
 import FileExplorer from "../../InfoPortal/components/FileExplorer";
 import toast from "react-hot-toast";
@@ -115,6 +116,11 @@ const ProjectFilesView = ({ projectCode }: ProjectFilesViewProps) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [history, setHistory] = useState<string[]>([basePath]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
+  
+  // Download progress state
+  const [downloadProgressOpen, setDownloadProgressOpen] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadingFilename, setDownloadingFilename] = useState<string>("");
 
   // Reset state when project code changes
   useEffect(() => {
@@ -219,20 +225,47 @@ const ProjectFilesView = ({ projectCode }: ProjectFilesViewProps) => {
             toast.error(result.error || "Failed to open file");
             // Fallback to download if mount fails
             try {
-              const downloadUrl = await getFileDownloadUrl(item.path);
-              window.open(downloadUrl, "_blank");
+              // Show download progress modal
+              setDownloadingFilename(item.name);
+              setDownloadProgress(0);
+              setDownloadProgressOpen(true);
+              
+              await downloadFile(item.path, item.name, (progress) => {
+                setDownloadProgress(progress);
+              });
+              
+              // Close modal after a short delay to show completion
+              setTimeout(() => {
+                setDownloadProgressOpen(false);
+                setDownloadProgress(0);
+              }, 1000);
             } catch (downloadErr) {
-              console.error("Failed to get download URL:", downloadErr);
+              console.error("Failed to download file:", downloadErr);
+              setDownloadProgressOpen(false);
+              toast.error("Failed to download file");
             }
           }
         } else {
           // Web browser: download file
-          const downloadUrl = await getFileDownloadUrl(item.path);
-          window.open(downloadUrl, "_blank");
+          // Show download progress modal
+          setDownloadingFilename(item.name);
+          setDownloadProgress(0);
+          setDownloadProgressOpen(true);
+          
+          await downloadFile(item.path, item.name, (progress) => {
+            setDownloadProgress(progress);
+          });
+          
+          // Close modal after a short delay to show completion
+          setTimeout(() => {
+            setDownloadProgressOpen(false);
+            setDownloadProgress(0);
+          }, 1000);
         }
       } catch (err: any) {
-        console.error("Failed to open file:", err);
-        toast.error(err.message || "Failed to open file");
+        console.error("Failed to open/download file:", err);
+        setDownloadProgressOpen(false);
+        toast.error(err.message || "Failed to open/download file");
       }
     }
   };
@@ -536,6 +569,19 @@ const ProjectFilesView = ({ projectCode }: ProjectFilesViewProps) => {
           )}
         </Paper>
       </Box>
+
+      {/* Download Progress Modal */}
+      <DownloadProgressModal
+        open={downloadProgressOpen}
+        filename={downloadingFilename}
+        progress={downloadProgress}
+        onClose={() => {
+          if (downloadProgress >= 100) {
+            setDownloadProgressOpen(false);
+            setDownloadProgress(0);
+          }
+        }}
+      />
     </Box>
   );
 };

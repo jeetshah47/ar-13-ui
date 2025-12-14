@@ -13,6 +13,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Use a more resilient approach for Windows
+    rollupOptions: {
+      output: {
+        // This helps avoid file locking issues on Windows
+        manualChunks: undefined,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -132,24 +132,22 @@ export async function browseNAS(path: string = "/"): Promise<BrowseResponse> {
   return result.data;
 }
 
-// FileBrowser service response types
+// Backend API response types
 export interface RenameFileResponse {
-  name: string;
+  message: string;
   path: string;
-  isFolder: boolean;
-  size: number;
-  modified: string;
-  mimeType?: string;
+  newName: string;
 }
 
 export interface DeleteFileResponse {
+  message: string;
   path: string;
-  deletedAt: string;
 }
 
 export interface CreateFolderResponse {
-  path: string;
-  createdAt: string;
+  message: string;
+  parentPath: string;
+  folderName: string;
 }
 
 export interface MoveFileResponse {
@@ -159,7 +157,7 @@ export interface MoveFileResponse {
 }
 
 /**
- * Rename a file or folder in NAS storage using FileBrowser service
+ * Rename a file or folder in NAS storage through backend API
  * @param path - Current path of the file or folder
  * @param newName - New name for the file or folder
  * @returns Rename response
@@ -168,8 +166,8 @@ export async function renameItem(
   path: string,
   newName: string
 ): Promise<RenameFileResponse> {
-  const url = "/api/rename";
-  const result = await filebrowserHttp.put<RenameFileResponse>(
+  const url = `${API_BASE_URL}/storage/rename`;
+  const result = await http.put<RenameFileResponse>(
     url,
     { newName },
     {
@@ -180,20 +178,20 @@ export async function renameItem(
 }
 
 /**
- * Delete a file or folder from NAS storage using FileBrowser service
+ * Delete a file or folder from NAS storage through backend API
  * @param path - Path to the file or folder to delete
  * @returns Delete response
  */
 export async function deleteItem(path: string): Promise<DeleteFileResponse> {
-  const url = "/api/delete";
-  const result = await filebrowserHttp.delete<DeleteFileResponse>(url, {
+  const url = `${API_BASE_URL}/storage/delete`;
+  const result = await http.delete<DeleteFileResponse>(url, {
     params: { path },
   });
   return result.data;
 }
 
 /**
- * Create a new folder in NAS storage using FileBrowser service
+ * Create a new folder in NAS storage through backend API
  * @param parentPath - Parent directory path (e.g., "/folder"). Defaults to "/"
  * @param folderName - Name of the folder to create
  * @returns Create folder response
@@ -202,8 +200,8 @@ export async function createFolder(
   parentPath: string = "/",
   folderName: string
 ): Promise<CreateFolderResponse> {
-  const url = "/api/create-folder";
-  const result = await filebrowserHttp.post<CreateFolderResponse>(
+  const url = `${API_BASE_URL}/storage/create-folder`;
+  const result = await http.post<CreateFolderResponse>(
     url,
     { folderName },
     {
@@ -214,10 +212,7 @@ export async function createFolder(
 }
 
 /**
- * Move a file or folder to a new location in NAS storage
- * Note: The filebrowser service doesn't have a move endpoint yet.
- * This function is kept for compatibility but will need backend implementation
- * or a move endpoint added to the filebrowser service.
+ * Move a file or folder to a new location in NAS storage through backend API
  * @param sourcePath - Current path of the file or folder
  * @param destinationPath - Destination path for the file or folder
  * @returns Move response
@@ -226,8 +221,6 @@ export async function moveItem(
   sourcePath: string,
   destinationPath: string
 ): Promise<MoveFileResponse> {
-  // TODO: FileBrowser service doesn't have a move endpoint yet
-  // For now, use backend API as fallback
   const url = `${API_BASE_URL}/storage/move`;
   const result = await http.put<MoveFileResponse>(
     url,
@@ -237,5 +230,69 @@ export async function moveItem(
     }
   );
   return result.data;
+}
+
+/**
+ * Download progress callback type
+ */
+export type DownloadProgressCallback = (progress: number) => void;
+
+/**
+ * Download a file from NAS storage through backend API
+ * This function triggers a proper file download in the browser with authentication
+ * @param path - Path to the file to download
+ * @param filename - Optional filename for the download (defaults to file name from path)
+ * @param onProgress - Optional callback function to track download progress (0-100)
+ */
+export async function downloadFile(
+  path: string,
+  filename?: string,
+  onProgress?: DownloadProgressCallback
+): Promise<void> {
+  const url = `${API_BASE_URL}/storage/download`;
+  
+  try {
+    // Use http client to download with proper authentication headers
+    const response = await http.get(url, {
+      params: { path },
+      responseType: "blob", // Important: set response type to blob for file downloads
+      onDownloadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          onProgress(percentCompleted);
+        }
+      },
+    });
+    
+    // Report 100% completion
+    if (onProgress) {
+      onProgress(100);
+    }
+    
+    // Create a blob URL from the response
+    const blob = new Blob([response.data]);
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename || path.split("/").pop() || "download";
+    link.style.display = "none";
+    
+    // Add to DOM, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the blob URL after a short delay
+    setTimeout(() => {
+      window.URL.revokeObjectURL(blobUrl);
+    }, 100);
+  } catch (error) {
+    console.error("Failed to download file:", error);
+    throw error;
+  }
 }
 
