@@ -20,7 +20,6 @@ import TaskDetailsHeader, { TaskDetailsContent } from "../components/TaskDetails
 import FileAttachmentsSection from "../components/FileAttachmentsSection";
 import ActivityLogsSection from "../components/ActivityLogsSection";
 import ActivityLogThreadSidebar from "../components/ActivityLogThreadSidebar";
-import TimeTrackingSection from "../components/TimeTrackingSection";
 import Modal from "../../../common/components/Modal/Modal";
 import { parseFirebaseTimestamp, isImageAttachment } from "../utils/taskUtils";
 import { getActivityIcon } from "../utils/activityLogUtils";
@@ -94,16 +93,6 @@ const ProjectDetail = () => {
     }
   }, [fileAttachments]);
 
-  // Calculate time logged from timeSpent entries using utility function
-  const calculateTimeLogged = (timeSpent?: Array<{ timeSpent: number }>) => {
-    if (!timeSpent || timeSpent.length === 0) {
-      return "0h 0m logged";
-    }
-    const totalMinutes = timeSpent.reduce((sum, entry) => sum + (entry.timeSpent || 0), 0);
-    return `${formatTime(totalMinutes)} logged`;
-  };
-
-  const timeLogged = calculateTimeLogged(taskDetails?.timeSpent);
 
   // Modal states
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
@@ -112,7 +101,7 @@ const ProjectDetail = () => {
   const [showClaimTaskModal, setShowClaimTaskModal] = useState(false);
   const [showTransferTaskModal, setShowTransferTaskModal] = useState(false);
   const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [taskStatusRefreshKey, setTaskStatusRefreshKey] = useState(0);
   const [previewImage, setPreviewImage] = useState<FileAttachment | null>(null);
   const [projectActivityLogs, setProjectActivityLogs] = useState<ActivityLogItem[]>([]);
   const [selectedActivityLog, setSelectedActivityLog] = useState<ActivityLog | null>(null);
@@ -319,12 +308,15 @@ const ProjectDetail = () => {
   }, [activityLogItems, users]);
 
   // Get preview image URL (use previewUrl if available, otherwise fallback to fileUrl)
+  // Only load image when modal is actually shown (lazy loading)
   const previewImageUrl = previewImage?.previewUrl 
     ? previewImage.previewUrl 
     : (previewImage?.fileUrl ? `${SERVER_BASE_URL}${previewImage.fileUrl}` : null);
 
-  // Load image with JWT token using the utility hook
-  const { blobUrl: previewImageBlobUrl, loading: previewImageLoading } = useImageWithAuth(previewImageUrl || undefined);
+  // Load image with JWT token using the utility hook - only when preview modal is shown
+  const { blobUrl: previewImageBlobUrl, loading: previewImageLoading } = useImageWithAuth(
+    previewImage ? (previewImageUrl || undefined) : undefined
+  );
 
   // TODO: Replace with backend API polling or WebSocket for real-time activity logs
   // Real-time activity logs subscription removed (Firebase dependency)
@@ -400,22 +392,20 @@ const ProjectDetail = () => {
   }, [claimTaskLoading, showClaimTaskModal, taskId, projectId, dispatch]);
 
   // Handlers
-  const handleStatusChange = (newStatus: string) => {
-    // Store the selected status and show the modal
-    setSelectedStatus(newStatus);
+  const handleStatusChange = () => {
+    // Just open the modal, status selection happens in the modal
     setShowUpdateStatusModal(true);
   };
 
-  const handleStatusUpdate = async (remark: string) => {
-    if (!taskDetails || !taskId || !projectId || !selectedStatus) return;
+  const handleStatusUpdate = async (newStatus: string, remark: string) => {
+    if (!taskDetails || !taskId || !projectId || !newStatus) return;
     
     try {
       // Update task status with remark
-      await dispatch(updateTaskStatusAction(taskId, selectedStatus, projectId, remark, taskDetails));
+      await dispatch(updateTaskStatusAction(taskId, newStatus, projectId, remark, taskDetails));
       
       // Close the modal
       setShowUpdateStatusModal(false);
-      setSelectedStatus(null);
       
       // Refresh task details and activity logs after status update
       if (taskId && projectId) {
@@ -429,8 +419,8 @@ const ProjectDetail = () => {
 
   const handleCloseUpdateStatusModal = () => {
     setShowUpdateStatusModal(false);
-    setSelectedStatus(null);
   };
+
 
   const handleOpenFileUpload = () => setShowFileUploadModal(true);
   const handleCloseFileUpload = () => setShowFileUploadModal(false);
@@ -823,10 +813,12 @@ const ProjectDetail = () => {
             currentStatus={currentStatus}
             onStatusChange={handleStatusChange}
             onClaimTaskClick={handleOpenClaimTask}
+            refreshKey={taskStatusRefreshKey}
             project={projectDetails as ProjectResponse}
             taskStatuses={taskStatuses}
             projectId={projectId}
             taskId={taskId}
+            assigneeId={assigneeId}
           >
             {/* File Attachments Section */}
             <FileAttachmentsSection
@@ -839,17 +831,6 @@ const ProjectDetail = () => {
               isImageAttachment={isImageAttachment}
             />
 
-            {/* Time Tracking Section - Mobile only */}
-            {isMobile && (
-              <TimeTrackingSection
-                timeLogged={timeLogged}
-                originalEstimate="Original Estimate 3d 8h"
-                projectId={projectId}
-                taskId={taskId}
-                task={taskDetails}
-                progress={taskDetails?.progress ?? null}
-              />
-            )}
 
             {/* Activity Logs Section */}
             <ActivityLogsSection
@@ -895,7 +876,6 @@ const ProjectDetail = () => {
                 ? new Date(taskDetails.deadline).toLocaleDateString()
                 : undefined
             }
-            timeLogged={timeLogged}
             originalEstimate={undefined}
             projectId={projectId}
             taskId={taskId}
@@ -944,7 +924,6 @@ const ProjectDetail = () => {
                 ? new Date(taskDetails.deadline).toLocaleDateString()
                 : undefined
             }
-            timeLogged={timeLogged}
             originalEstimate={undefined}
             projectId={projectId}
             taskId={taskId}
@@ -1014,15 +993,15 @@ const ProjectDetail = () => {
         }
       />
 
-      {selectedStatus && (
-        <UpdateTaskStatusModal
-          show={showUpdateStatusModal}
-          onClose={handleCloseUpdateStatusModal}
-          onUpdate={handleStatusUpdate}
-          status={selectedStatus}
-          isLoading={false}
-        />
-      )}
+      <UpdateTaskStatusModal
+        show={showUpdateStatusModal}
+        onClose={handleCloseUpdateStatusModal}
+        onUpdate={handleStatusUpdate}
+        currentStatus={currentStatus}
+        taskStatuses={taskStatuses}
+        isLoading={false}
+      />
+
 
       {/* Activity Log Thread Sidebar */}
       {selectedActivityLog && (

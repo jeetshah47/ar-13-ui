@@ -66,6 +66,10 @@ const ChangePasswordForm = ({
         };
 
         await changePassword(request);
+        // Clear temp password from localStorage when password is changed
+        if (uid) {
+          localStorage.removeItem(`tempPassword_${uid}`);
+        }
         toast.success("Password changed successfully!");
         formik.resetForm();
         if (onSuccess) {

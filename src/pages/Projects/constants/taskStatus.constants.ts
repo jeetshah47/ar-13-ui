@@ -1,81 +1,84 @@
 /**
- * Unified task status constants
- * Only four statuses are allowed: pending, todo, completed, review
+ * Task status constants - aligned with backend
+ * Backend statuses: pending, in_progress, in_review, completed, accepted, rejected
  */
 export const TASK_STATUS = {
   PENDING: "pending",
-  TODO: "todo",
+  IN_PROGRESS: "in_progress",
+  IN_REVIEW: "in_review",
   COMPLETED: "completed",
-  REVIEW: "review",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
 } as const;
 
 export type TaskStatus = typeof TASK_STATUS[keyof typeof TASK_STATUS];
 
 /**
- * Map old/legacy status values to the new unified status values
- * Also handles new API status values: in_progress, in_review, accepted, rejected
+ * Normalize status string to match backend status values
+ * Handles legacy/variant status formats and maps them to backend statuses
+ * Also handles new backend status names: "Not Started", "In Progress", "On Hold", "Review", "Completed", "Cancelled"
  */
-export const mapStatusToUnified = (status: string): TaskStatus => {
-  const statusLower = status.toLowerCase().trim().replace(/-/g, " ").replace(/_/g, " ");
+export const normalizeTaskStatus = (status: string): TaskStatus => {
+  if (!status) return TASK_STATUS.PENDING;
   
-  // Map common status values to unified format
-  const statusMap: Record<string, TaskStatus> = {
-    // Direct matches
-    "pending": TASK_STATUS.PENDING,
-    "todo": TASK_STATUS.TODO,
-    "to do": TASK_STATUS.TODO,
-    "completed": TASK_STATUS.COMPLETED,
-    "complete": TASK_STATUS.COMPLETED,
-    "review": TASK_STATUS.REVIEW,
-    
-    // New API status values (mapped to closest unified status)
-    "in progress": TASK_STATUS.TODO,        // in_progress -> todo
-    "inprogress": TASK_STATUS.TODO,
-    "in review": TASK_STATUS.REVIEW,        // in_review -> review
-    "inreview": TASK_STATUS.REVIEW,
-    "accepted": TASK_STATUS.COMPLETED,      // accepted -> completed
-    "rejected": TASK_STATUS.PENDING,       // rejected -> pending
-    
-    // Legacy mappings
-    "done": TASK_STATUS.COMPLETED,
-    "success": TASK_STATUS.COMPLETED,
-    "progress": TASK_STATUS.TODO,
-    "backlog": TASK_STATUS.PENDING,
-    
-    // Display name mappings
-    "To Do": TASK_STATUS.TODO,
-    "In Progress": TASK_STATUS.TODO,
-    "Done": TASK_STATUS.COMPLETED,
-    "Review": TASK_STATUS.REVIEW,
-    "In Review": TASK_STATUS.REVIEW,
-    "Accepted": TASK_STATUS.COMPLETED,
-    "Rejected": TASK_STATUS.PENDING,
-  };
-
-  return statusMap[statusLower] || TASK_STATUS.PENDING;
+  const statusLower = status.toLowerCase().trim().replace(/-/g, "_").replace(/\s+/g, "_");
+  
+  // New backend status mappings
+  if (statusLower === "not_started" || statusLower === "notstarted") return TASK_STATUS.PENDING;
+  if (statusLower === "in_progress" || statusLower === "inprogress") return TASK_STATUS.IN_PROGRESS;
+  if (statusLower === "on_hold" || statusLower === "onhold") return TASK_STATUS.PENDING; // Map to pending for now
+  if (statusLower === "review" || statusLower === "in_review" || statusLower === "inreview") return TASK_STATUS.IN_REVIEW;
+  if (statusLower === "completed" || statusLower === "complete") return TASK_STATUS.COMPLETED;
+  if (statusLower === "cancelled" || statusLower === "canceled") return TASK_STATUS.REJECTED;
+  
+  // Direct matches with legacy backend statuses
+  if (statusLower === "pending") return TASK_STATUS.PENDING;
+  if (statusLower === "accepted") return TASK_STATUS.ACCEPTED;
+  if (statusLower === "rejected") return TASK_STATUS.REJECTED;
+  
+  // Legacy mappings for backward compatibility
+  if (statusLower === "todo" || statusLower === "to_do" || statusLower === "backlog") return TASK_STATUS.PENDING;
+  if (statusLower === "done" || statusLower === "finished" || statusLower === "success") return TASK_STATUS.COMPLETED;
+  
+  // Default fallback
+  return TASK_STATUS.PENDING;
 };
 
 /**
- * Convert unified status to display name
+ * Convert status to display name
  */
-export const getStatusDisplayName = (status: TaskStatus): string => {
+export const getStatusDisplayName = (status: TaskStatus | string): string => {
+  const normalizedStatus = typeof status === 'string' ? normalizeTaskStatus(status) : status;
+  
   const displayMap: Record<TaskStatus, string> = {
     [TASK_STATUS.PENDING]: "Pending",
-    [TASK_STATUS.TODO]: "Todo",
+    [TASK_STATUS.IN_PROGRESS]: "In Progress",
+    [TASK_STATUS.IN_REVIEW]: "In Review",
     [TASK_STATUS.COMPLETED]: "Completed",
-    [TASK_STATUS.REVIEW]: "Review",
+    [TASK_STATUS.ACCEPTED]: "Accepted",
+    [TASK_STATUS.REJECTED]: "Rejected",
   };
   
-  return displayMap[status] || "Pending";
+  return displayMap[normalizedStatus] || "Pending";
 };
 
 /**
- * Get all task statuses in order
+ * Get all task statuses in order (matching backend order)
  */
 export const TASK_STATUSES_ARRAY: TaskStatus[] = [
   TASK_STATUS.PENDING,
-  TASK_STATUS.TODO,
-  TASK_STATUS.REVIEW,
+  TASK_STATUS.IN_PROGRESS,
+  TASK_STATUS.IN_REVIEW,
   TASK_STATUS.COMPLETED,
+  TASK_STATUS.ACCEPTED,
+  TASK_STATUS.REJECTED,
 ];
+
+/**
+ * Check if a status string is a valid task status
+ */
+export const isValidTaskStatus = (status: string): boolean => {
+  const normalized = normalizeTaskStatus(status);
+  return TASK_STATUSES_ARRAY.includes(normalized);
+};
 

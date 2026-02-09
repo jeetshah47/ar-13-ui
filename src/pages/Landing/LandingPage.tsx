@@ -17,10 +17,23 @@ const LandingPage = () => {
           padding: { xs: "12px", sm: "16px", md: "20px", lg: "28px" }, 
           flex: 1,
           minHeight: 0,
-          overflow: "hidden",
+          overflow: "auto",
           paddingTop: { xs: "60px", sm: "16px", md: "20px", lg: "28px" }, // Extra top padding on mobile for menu button
           display: "flex",
           flexDirection: "column",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(0,0,0,0.2)",
+            borderRadius: "4px",
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.3)",
+            },
+          },
         }}
       >
         <AnimatedPage>

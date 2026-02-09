@@ -63,6 +63,7 @@ export interface TaskStatus {
   createdAt: string; // Creation timestamp (ISO 8601)
   updatedAt: string; // Last update timestamp (ISO 8601)
   _id?: string; // MongoDB document ID (optional, may be present in some responses)
+  color?: string; // Status color from backend (optional, e.g., "#808080")
 }
 
 export interface TaskStatusResponse {

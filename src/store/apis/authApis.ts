@@ -46,8 +46,30 @@ export async function loginApi(
 }
 
 export async function logoutApi(): Promise<boolean> {
-  await new Promise((res) => setTimeout(res, 100));
-  return true;
+  const url = `${API_BASE_URL}/auth/logout`;
+  const token = localStorage.getItem("authToken");
+  
+  try {
+    // Call backend logout API - this will stop all active time tracking sessions
+    // Backend handles stopping all sessions via StopAllUserSessions()
+    if (token) {
+      await axios.post(
+        url,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+    return true;
+  } catch (err) {
+    // Log error but don't fail logout - allow user to logout even if API call fails
+    console.error("Failed to call logout API:", err);
+    return true;
+  }
 }
 
 export async function signupApi(

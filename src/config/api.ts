@@ -35,7 +35,9 @@ export const SERVER_BASE_URL = getServerBaseUrl();
 
 /**
  * Get the filebrowser service base URL from environment variables
+ * @deprecated No longer needed - backend now uses direct filesystem access
  * Defaults to http://localhost:8082 if not set
+ * Kept for backward compatibility only
  */
 const getFilebrowserBaseUrl = (): string => {
   const baseUrl = import.meta.env.VITE_FILEBROWSER_BASE_URL;

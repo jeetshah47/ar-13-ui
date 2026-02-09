@@ -26,6 +26,7 @@ import { addProjectAction } from "../../../store/features/projects/projectAction
 import type { AppDispatch, RootState } from "../../../store/store";
 import { getUsersAction } from "../../../store/features/user/userAction";
 import type { SelectChangeEvent } from "@mui/material";
+import { useErrorHandler } from "../../../hooks/useErrorHandler";
 
 const steps = ["Basic Details", "Team Members"];
 
@@ -61,6 +62,7 @@ const AddProject = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [productionDurationMode, setProductionDurationMode] = useState<"select" | "custom">("select");
   const [siteDurationMode, setSiteDurationMode] = useState<"select" | "custom">("select");
+  const { handleFormError } = useErrorHandler();
 
   useEffect(() => {
     dispatch(getUsersAction());
@@ -79,11 +81,13 @@ const AddProject = () => {
     validationSchema: step1ValidationSchema,
     validateOnChange: true,
     validateOnBlur: true,
-    onSubmit: (values) => {
+    onSubmit: (values, { setFieldError }) => {
       const submitValues = {
         ...values,
         code: projectCode,
       };
+      // Note: addProjectAction handles errors internally and shows toast
+      // If backend returns field-specific errors, they would need to be handled here
       dispatch(
         addProjectAction(submitValues, () => {
           navigate("/app/projects");
@@ -554,59 +558,132 @@ const AddProject = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "background.paper",
-        padding: { xs: "16px", sm: "20px", md: "24px", lg: "24px" },
+        height: "100%",
         display: "flex",
         flexDirection: "column",
-        maxWidth: { xs: "100%", sm: "100%", md: "100%", lg: "1400px" },
-        margin: { xs: "0 auto", sm: "0 auto", md: "0 auto", lg: "0 auto" },
+        minHeight: 0,
+        overflow: "hidden",
+        width: "100%",
+        margin: { xs: "-12px", sm: "-16px", md: "-20px", lg: "-28px" },
+        padding: { xs: "12px", sm: "16px", md: "20px", lg: "28px" },
       }}
     >
-      <PageHeader title="Add Project" />
-      
-      <Stepper activeStep={activeStep} sx={{ mb: 4, mt: 2 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Box sx={{ width: "100%", minHeight: "400px" }}>
-        {renderStepContent(activeStep)}
-      </Box>
-
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: { xs: 2, sm: 3, md: 3, lg: 4 }, flexDirection: { xs: "column-reverse", sm: "row", md: "row", lg: "row" }, gap: { xs: "12px", sm: "0", md: "0", lg: "0" } }}>
-        <Button
-          disabled={activeStep === 0}
-          onClick={handleBack}
-          sx={{ mr: { xs: 0, sm: 1, md: 1, lg: 1 }, width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" } }}
-        >
-          Back
-        </Button>
-        <Box sx={{ width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" } }}>
-          {activeStep === steps.length - 1 ? (
-            <Button 
-              variant="contained" 
-              onClick={handleSubmit}
-              disabled={formik.isSubmitting || !formik.isValid || !formik.values.title.trim()}
-              fullWidth={!isLargeScreen}
-              sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}
-            >
-              Save Project
-            </Button>
-          ) : (
-            <Button 
-              variant="contained" 
-              onClick={handleNext}
-              fullWidth={!isLargeScreen}
-              sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" } }}
-            >
-              Next
-            </Button>
-          )}
+      <Paper
+        elevation={0}
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflow: "hidden",
+          width: "100%",
+          backgroundColor: "background.paper",
+          borderRadius: { xs: "16px", sm: "20px", md: "24px" },
+          padding: 0,
+        }}
+      >
+        <Box sx={{ flexShrink: 0, padding: { xs: "16px", sm: "20px", md: "24px", lg: "24px" }, paddingBottom: { xs: "12px", sm: "16px", md: "20px", lg: "20px" } }}>
+          <PageHeader title="Add Project" />
         </Box>
-      </Box>
+        
+        <Box sx={{ flexShrink: 0, paddingX: { xs: "16px", sm: "20px", md: "24px", lg: "24px" }, paddingBottom: { xs: "12px", sm: "16px", md: "20px", lg: "20px" } }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Box>
+
+        <Box 
+          sx={{ 
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            width: "100%",
+            paddingX: { xs: "16px", sm: "20px", md: "24px", lg: "24px" },
+            "&::-webkit-scrollbar": {
+              width: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderRadius: "4px",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.3)",
+              },
+            },
+          }}
+        >
+          <Box sx={{ width: "100%", minHeight: "400px", paddingBottom: { xs: "16px", sm: "20px", md: "24px", lg: "24px" } }}>
+            {renderStepContent(activeStep)}
+          </Box>
+        </Box>
+
+        <Box 
+          sx={{ 
+            flexShrink: 0,
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            padding: { xs: "16px", sm: "20px", md: "24px", lg: "24px" },
+            paddingTop: { xs: "12px", sm: "16px", md: "20px", lg: "20px" },
+            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+            flexDirection: { xs: "column-reverse", sm: "row", md: "row", lg: "row" }, 
+            gap: { xs: "12px", sm: "12px", md: "0", lg: "0" },
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          <Button
+            disabled={activeStep === 0}
+            onClick={handleBack}
+            sx={{ 
+              mr: { xs: 0, sm: 1, md: 1, lg: 1 }, 
+              width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" },
+              minWidth: { xs: "auto", sm: "100px", md: "100px", lg: "100px" },
+            }}
+          >
+            Back
+          </Button>
+          <Box sx={{ 
+            width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" },
+            display: "flex",
+            justifyContent: { xs: "stretch", sm: "flex-end", md: "flex-end", lg: "flex-end" },
+          }}>
+            {activeStep === steps.length - 1 ? (
+              <Button 
+                variant="contained" 
+                onClick={handleSubmit}
+                disabled={formik.isSubmitting || !formik.isValid || !formik.values.title.trim()}
+                fullWidth={!isLargeScreen}
+                sx={{ 
+                  width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" },
+                  minWidth: { xs: "auto", sm: "140px", md: "140px", lg: "140px" },
+                }}
+              >
+                Save Project
+              </Button>
+            ) : (
+              <Button 
+                variant="contained" 
+                onClick={handleNext}
+                fullWidth={!isLargeScreen}
+                sx={{ 
+                  width: { xs: "100%", sm: "auto", md: "auto", lg: "auto" },
+                  minWidth: { xs: "auto", sm: "100px", md: "100px", lg: "100px" },
+                }}
+              >
+                Next
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
     </Box>
   );
 };

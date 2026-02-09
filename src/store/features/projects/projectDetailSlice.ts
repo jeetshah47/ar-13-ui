@@ -3,12 +3,7 @@ import type { ProjectDetailState } from "./projectDetailTypes";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
 import type { ProjectDetailResponse } from "../../types/Project/ProjectDetailResponse";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
-import { mapStatusToUnified, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
-
-// Map API status values to unified status format
-const mapStatusToUnifiedFormat = (status: string): TaskStatus => {
-  return mapStatusToUnified(status);
-};
+import { normalizeTaskStatus, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
 const initialState: ProjectDetailState = {
   api: {
@@ -45,7 +40,7 @@ const projectDetailSlice = createSlice({
       state.api.error = "";
       state.api.data.taskDetails = action.payload.taskDetails;
       state.api.data.projectDetails = action.payload.projectDetails;
-      state.common.currentStatus = mapStatusToUnifiedFormat(action.payload.taskDetails.status);
+      state.common.currentStatus = normalizeTaskStatus(action.payload.taskDetails.status);
     },
     fetchProjectDetailFailed(state, action: PayloadAction<ProjectErrorResponse>) {
       state.api.loading = false;
@@ -55,8 +50,12 @@ const projectDetailSlice = createSlice({
     },
     updateTaskStatus(state, action: PayloadAction<TaskStatus>) {
       if (state.api.data.taskDetails) {
-        // action.payload is the unified status format
+        // action.payload is the normalized status format
         state.common.currentStatus = action.payload;
+        // Also update the taskDetails status
+        if (state.api.data.taskDetails) {
+          state.api.data.taskDetails.status = action.payload;
+        }
       }
     },
     clearProjectDetail(state) {

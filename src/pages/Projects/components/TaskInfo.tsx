@@ -7,7 +7,6 @@ import {
 } from "@mui/material";
 import CalendarIcon from "../../../assets/icons/sidebar/calendar/inactive.svg?react";
 import YellowArrow from "../../../assets/icons/general/calendar-23.svg?react";
-import LogTimeModal from "./LogTimeModal";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
 
 type TaskInfoProps = {
@@ -23,7 +22,6 @@ type TaskInfoProps = {
   isAssignedUserOnline?: boolean;
   priority?: string;
   deadline?: string;
-  timeLogged?: string;
   originalEstimate?: string;
   projectId?: string;
   taskId?: string;
@@ -37,17 +35,11 @@ const TaskInfo = ({
   isAssignedUserOnline = false,
   priority,
   deadline,
-  timeLogged,
   originalEstimate,
   projectId,
   taskId,
   task,
 }: TaskInfoProps) => {
-  const [showLogTimeModal, setShowLogTimeModal] = React.useState(false);
-
-  const handleCloseLogTimeModal = () => {
-    setShowLogTimeModal(false);
-  };
 
   return (
     <Box
@@ -236,66 +228,6 @@ const TaskInfo = ({
         </Box>
       )}
 
-      {/* Time Tracking Section */}
-      <Box
-        sx={{
-          backgroundColor: "#F4F9FD",
-          borderRadius: "14px",
-          padding: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <Typography
-          sx={{
-            fontWeight: 700,
-            fontSize: "16px",
-            lineHeight: "1.5",
-            color: "#0A1629",
-            marginBottom: "16px",
-          }}
-        >
-          Time tracking
-        </Typography>
-        
-        {timeLogged && (
-          <Typography
-            sx={{
-              fontWeight: 400,
-              fontSize: "16px",
-              lineHeight: "1.5",
-              color: "#0A1629",
-              marginBottom: "4px",
-            }}
-          >
-            {timeLogged}
-          </Typography>
-        )}
-        
-        {originalEstimate ? (
-          <Typography
-            sx={{
-              fontWeight: 400,
-              fontSize: "14px",
-              lineHeight: "1.36",
-              color: "#91929E",
-            }}
-          >
-            {originalEstimate}
-          </Typography>
-        ) : (
-          <Typography
-            sx={{
-              fontWeight: 400,
-              fontSize: "14px",
-              lineHeight: "1.36",
-              color: "#91929E",
-              fontStyle: "italic",
-            }}
-          >
-            No estimate available
-          </Typography>
-        )}
-      </Box>
 
       {/* Created Date */}
       {task?.created && (
@@ -339,15 +271,6 @@ const TaskInfo = ({
         </Box>
       )}
 
-      {/* Log Time Modal */}
-      {showLogTimeModal && (
-        <LogTimeModal
-          onClose={handleCloseLogTimeModal}
-          projectId={projectId}
-          taskId={taskId}
-          task={task}
-        />
-      )}
     </Box>
   );
 };

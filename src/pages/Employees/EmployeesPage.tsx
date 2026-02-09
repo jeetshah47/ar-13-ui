@@ -78,15 +78,18 @@ const EmployeesPage = () => {
     <Box 
       sx={{ 
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
         backgroundColor: { xs: "#F4F9FD", sm: "transparent" },
-        minHeight: "100vh",
-        paddingBottom: { xs: "100px", sm: "0" }
+        minHeight: 0,
+        overflow: "hidden",
       }}
     >
       <Box
         sx={{
           padding: { xs: "20px", sm: "0 0 20px 0", md: "0 0 20px 0", lg: "0 0 20px 0" },
-          paddingX: { xs: "20px", sm: 0, md: 0, lg: 0 }
+          paddingX: { xs: "20px", sm: 0, md: 0, lg: 0 },
+          flexShrink: 0,
         }}
       >
         <PageHeader
@@ -206,6 +209,26 @@ const EmployeesPage = () => {
           </Alert>
         </Box>
       ) : null}
+      <Box sx={{ 
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        paddingBottom: { xs: "100px", sm: "0" },
+        "&::-webkit-scrollbar": {
+          width: "8px",
+        },
+        "&::-webkit-scrollbar-track": {
+          backgroundColor: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: "rgba(0,0,0,0.2)",
+          borderRadius: "4px",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.3)",
+          },
+        },
+      }}>
       {currentTab === "List" && !error && (
         <Box 
           sx={{ 
@@ -238,6 +261,7 @@ const EmployeesPage = () => {
           <ActivitySection />
         </Box>
       )}
+      </Box>
       {FloatingActionButton}
       <Modal onClose={handleOnCloseModal} show={showFormModal}>
         <Box

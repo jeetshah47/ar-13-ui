@@ -1,23 +1,25 @@
 import { Box } from "@mui/material";
-import { mapStatusToUnified, getStatusDisplayName, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
+import { normalizeTaskStatus, getStatusDisplayName, TASK_STATUS, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
 
 type StatusTagProps = {
   status: string; // Accept any string and normalize it
 };
 
 const StatusTag = ({ status }: StatusTagProps) => {
-  // Normalize status to unified format
-  const unifiedStatus = mapStatusToUnified(status);
+  // Normalize status to backend format
+  const normalizedStatus = normalizeTaskStatus(status);
   
   const colorMaps: Record<TaskStatus, { bg: string; text: string }> = {
-    pending: { bg: "rgba(125,133,146,14%)", text: "#7D8592" },
-    todo: { bg: "rgba(125,133,146,14%)", text: "#7D8592" },
-    review: { bg: "rgba(196,24,230,11%)", text: "#C418E6" },
-    completed: { bg: "#E0F9F2", text: "#00D097" },
+    [TASK_STATUS.PENDING]: { bg: "rgba(125,133,146,14%)", text: "#7D8592" },
+    [TASK_STATUS.IN_PROGRESS]: { bg: "rgba(63,140,255,14%)", text: "#3F8CFF" },
+    [TASK_STATUS.IN_REVIEW]: { bg: "rgba(196,24,230,11%)", text: "#C418E6" },
+    [TASK_STATUS.COMPLETED]: { bg: "#E0F9F2", text: "#00D097" },
+    [TASK_STATUS.ACCEPTED]: { bg: "#E0F9F2", text: "#00D097" },
+    [TASK_STATUS.REJECTED]: { bg: "rgba(244,67,54,14%)", text: "#F44336" },
   };
 
   // Get color mapping with fallback for unknown status
-  const colorMapping = colorMaps[unifiedStatus] || colorMaps.pending;
+  const colorMapping = colorMaps[normalizedStatus] || colorMaps[TASK_STATUS.PENDING];
 
   return (
     <Box
@@ -30,7 +32,7 @@ const StatusTag = ({ status }: StatusTagProps) => {
         fontSize: "var(--font-size-sm, 13px)"
       }}
     >
-      {getStatusDisplayName(unifiedStatus)}
+      {getStatusDisplayName(normalizedStatus)}
     </Box>
   );
 };

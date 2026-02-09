@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Button, SvgIcon, Typography, useMediaQuery, useTheme, Select, MenuItem, FormControl } from "@mui/material";
+import { Box, Button, SvgIcon, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
 import EditIcon from "../../../assets/icons/general/gear.svg?react";
 import FilterIcon from "../../../assets/icons/general/calendar-5.svg?react";
@@ -8,9 +8,9 @@ import type { ProjectResponse } from "../../../store/types/Project/ProjectRespon
 import { RequirePermission } from "../../../common/components/RBAC/RequirePermission";
 import { usePermissions } from "../../../store/hooks/usePermissions";
 import type { TaskStatus } from "../../../store/types/Task/TaskTypes";
-import { mapStatusToUnified } from "../../../pages/Projects/constants/taskStatus.constants";
-import { startTimeTracking, stopTimeTracking } from "../../../store/apis/taskApis";
+import { normalizeTaskStatus, TASK_STATUS } from "../../../pages/Projects/constants/taskStatus.constants";
 import toast from "react-hot-toast";
+import { useAppSelector } from "../../../store/store";
 
 interface TaskDetailsHeaderProps {
   onEditClick: () => void;
@@ -99,12 +99,14 @@ interface TaskDetailsContentProps {
   taskCode?: string;
   taskSubject?: string;
   currentStatus: string;
-  onStatusChange: (status: string) => void;
+  onStatusChange: () => void; // Changed to just open modal, no parameter needed
   onClaimTaskClick: () => void;
+  refreshKey?: number; // Key to trigger status refresh
   project?: ProjectResponse;
   taskStatuses?: TaskStatus[];
   projectId?: string;
   taskId?: string;
+  assigneeId?: string; // ID of the user assigned to the task
   children: React.ReactNode;
 }
 
@@ -114,48 +116,28 @@ export const TaskDetailsContent = ({
   currentStatus,
   onStatusChange,
   onClaimTaskClick,
+  refreshKey,
   project,
   taskStatuses = [],
   projectId,
   taskId,
+  assigneeId,
   children,
 }: TaskDetailsContentProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { canClaimTask } = useResourceAccess();
-  const showClaimButton = project ? canClaimTask(project) : false;
-  const [isStartingTask, setIsStartingTask] = React.useState(false);
-  const [isEndingTask, setIsEndingTask] = React.useState(false);
+  const authState = useAppSelector((state) => state.authReducer);
+  const currentUserId = authState.api.uid;
+  
+  // Check if user can claim task AND task is not already assigned to them
+  const canShowClaimButton = project ? canClaimTask(project) : false;
+  const isTaskAssignedToCurrentUser = assigneeId && currentUserId && assigneeId === currentUserId;
+  const showClaimButton = canShowClaimButton && !isTaskAssignedToCurrentUser;
 
   // Check if task is in progress
-  const normalizedCurrentStatus = currentStatus ? mapStatusToUnified(currentStatus) : null;
-  // mapStatusToUnified maps "in_progress" to "todo", so check for "todo"
-  const isTaskInProgress = normalizedCurrentStatus === "todo";
-  const isTaskPending = normalizedCurrentStatus === "pending" || !normalizedCurrentStatus;
-
-  // Handle Start Task
-  const handleStartTask = async () => {
-    if (!projectId || !taskId) {
-      toast.error("Project ID or Task ID is missing");
-      return;
-    }
-
-    setIsStartingTask(true);
-    try {
-      // Start time tracking
-      await startTimeTracking(projectId, taskId);
-      
-      // Update status to in_progress
-      onStatusChange("in_progress");
-      
-      toast.success("Task started successfully");
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.error || error?.message || "Failed to start task";
-      toast.error(errorMessage);
-    } finally {
-      setIsStartingTask(false);
-    }
-  };
+  const normalizedCurrentStatus = currentStatus ? normalizeTaskStatus(currentStatus) : null;
+  const isTaskInProgress = normalizedCurrentStatus === TASK_STATUS.IN_PROGRESS;
 
   // Handle End Task
   const handleEndTask = async () => {
@@ -164,44 +146,23 @@ export const TaskDetailsContent = ({
       return;
     }
 
-    setIsEndingTask(true);
     try {
-      // Stop time tracking
-      await stopTimeTracking(projectId, taskId);
-      
       // Update status to pending
-      onStatusChange("pending");
+      onStatusChange(TASK_STATUS.PENDING);
       
       toast.success("Task ended successfully");
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to end task";
       toast.error(errorMessage);
-    } finally {
-      setIsEndingTask(false);
     }
   };
 
-  // Find the current status object by matching unified status values
-  // Try to match by normalizing both the currentStatus and taskStatus values
+  // Find the current status object by matching normalized status values for display
   const currentStatusObj = taskStatuses.find((status) => {
     if (!status.value) return false;
-    const normalizedStatusValue = mapStatusToUnified(status.value);
+    const normalizedStatusValue = normalizeTaskStatus(status.value);
     return normalizedStatusValue === normalizedCurrentStatus;
   });
-
-  // Filter active statuses and sort by order if available, otherwise keep original order
-  const sortedStatuses = [...taskStatuses]
-    .filter((status) => status.isActive !== false) // Include statuses where isActive is true or undefined
-    .sort((a, b) => {
-      if (a.order !== undefined && b.order !== undefined) {
-        return a.order - b.order;
-      }
-      return 0;
-    });
-
-  // Get the selected value for the dropdown
-  // Use the actual status value from taskStatuses if found, otherwise use currentStatus
-  const selectedValue = currentStatusObj?.value || currentStatus || "";
 
   return (
     <Box
@@ -239,7 +200,7 @@ export const TaskDetailsContent = ({
             alignItems: { xs: "flex-start", sm: "flex-start", md: "center", lg: "center" },
             justifyContent: "space-between",
             flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
-            gap: { xs: 2, sm: 2, md: 0, lg: 0 },
+            gap: { xs: 2, sm: 2, md: 2, lg: 2 },
           }}
         >
         <Typography 
@@ -249,6 +210,7 @@ export const TaskDetailsContent = ({
             fontSize: { xs: "18px", sm: "19px", md: "19px", lg: "20px" },
             lineHeight: { xs: "1.4", sm: "1.45", md: "1.45", lg: "1.5" },
             width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
+            flex: { xs: "1 1 100%", sm: "1 1 100%", md: "1 1 auto", lg: "1 1 auto" },
             wordBreak: "break-word",
             overflowWrap: "break-word",
             maxWidth: "100%",
@@ -259,49 +221,33 @@ export const TaskDetailsContent = ({
         <Box sx={{ 
           display: "flex", 
           gap: { xs: "8px", sm: "12px", md: "14px", lg: "16px" }, 
-          alignItems: "center",
+          alignItems: { xs: "stretch", sm: "stretch", md: "center", lg: "center" },
           flexDirection: { xs: "column", sm: "column", md: "row", lg: "row" },
           width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" },
+          flexShrink: 0,
         }}>
-          <Box sx={{ width: { xs: "100%", sm: "100%", md: "auto", lg: "auto" }, minWidth: { xs: "100%", sm: "100%", md: "200px", lg: "200px" } }}>
-            <FormControl fullWidth={isMobile} sx={{ minWidth: { xs: "100%", sm: "100%", md: "200px", lg: "200px" } }}>
-              <Select
-                value={selectedValue}
-                onChange={(e) => onStatusChange(e.target.value)}
-                displayEmpty
-                sx={{
-                  borderRadius: "14px",
-                  backgroundColor: "#fff",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#E0E0E0",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#3F8CFF",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#3F8CFF",
-                  },
-                  "& .MuiSelect-select": {
-                    padding: { xs: "10px 16px", sm: "12px 20px" },
-                    fontSize: { xs: "14px", sm: "16px" },
-                    fontWeight: 500,
-                  },
-                }}
-              >
-                {sortedStatuses.length > 0 ? (
-                  sortedStatuses.map((status) => (
-                    <MenuItem key={status.id || status.value} value={status.value}>
-                      {status.displayName || status.value}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem value={currentStatus} disabled>
-                    {currentStatusObj?.displayName || currentStatus || "No status"}
-                  </MenuItem>
-                )}
-              </Select>
-            </FormControl>
-          </Box>
+          <Button
+            variant="outlined"
+            onClick={onStatusChange}
+            fullWidth={isMobile}
+            sx={{
+              borderColor: "#E0E0E0",
+              color: "#3F8CFF",
+              borderRadius: "14px",
+              padding: { xs: "10px 16px", sm: "12px 20px" },
+              height: { xs: "40px", sm: "44px", md: "44px", lg: "44px" },
+              fontWeight: 500,
+              fontSize: { xs: "14px", sm: "16px" },
+              whiteSpace: "nowrap",
+              backgroundColor: "#fff",
+              "&:hover": {
+                borderColor: "#3F8CFF",
+                backgroundColor: "#F4F9FD",
+              },
+            }}
+          >
+            {currentStatusObj?.displayName || currentStatus || "Change Status"}
+          </Button>
           {showClaimButton && (
             <Button
               variant="contained"
@@ -312,9 +258,11 @@ export const TaskDetailsContent = ({
                 color: "#FFFFFF",
                 borderRadius: "14px",
                 padding: { xs: "10px 16px", sm: "13px 20px" },
+                height: { xs: "40px", sm: "44px", md: "44px", lg: "44px" },
                 fontWeight: 700,
                 fontSize: { xs: "14px", sm: "16px" },
                 lineHeight: 1.364,
+                whiteSpace: "nowrap",
                 boxShadow: "0px 6px 12px 0px rgba(63, 140, 255, 0.26)",
                 "&:hover": {
                   backgroundColor: "#3A81EB",
@@ -325,60 +273,29 @@ export const TaskDetailsContent = ({
               Claim Task
             </Button>
           )}
-          {projectId && taskId && isTaskPending && (
-            <Button
-              variant="contained"
-              onClick={handleStartTask}
-              disabled={isStartingTask}
-              fullWidth={isMobile}
-              sx={{
-                backgroundColor: "#4CAF50",
-                color: "#FFFFFF",
-                borderRadius: "14px",
-                padding: { xs: "10px 16px", sm: "13px 20px" },
-                fontWeight: 700,
-                fontSize: { xs: "14px", sm: "16px" },
-                lineHeight: 1.364,
-                boxShadow: "0px 6px 12px 0px rgba(76, 175, 80, 0.26)",
-                "&:hover": {
-                  backgroundColor: "#45a049",
-                  boxShadow: "0px 6px 12px 0px rgba(76, 175, 80, 0.42)",
-                },
-                "&:disabled": {
-                  backgroundColor: "#81c784",
-                  color: "#FFFFFF",
-                },
-              }}
-            >
-              {isStartingTask ? "Starting..." : "Start Task"}
-            </Button>
-          )}
           {projectId && taskId && isTaskInProgress && (
             <Button
               variant="contained"
               onClick={handleEndTask}
-              disabled={isEndingTask}
               fullWidth={isMobile}
               sx={{
                 backgroundColor: "#f44336",
                 color: "#FFFFFF",
                 borderRadius: "14px",
                 padding: { xs: "10px 16px", sm: "13px 20px" },
+                height: { xs: "40px", sm: "44px", md: "44px", lg: "44px" },
                 fontWeight: 700,
                 fontSize: { xs: "14px", sm: "16px" },
                 lineHeight: 1.364,
+                whiteSpace: "nowrap",
                 boxShadow: "0px 6px 12px 0px rgba(244, 67, 54, 0.26)",
                 "&:hover": {
                   backgroundColor: "#da190b",
                   boxShadow: "0px 6px 12px 0px rgba(244, 67, 54, 0.42)",
                 },
-                "&:disabled": {
-                  backgroundColor: "#e57373",
-                  color: "#FFFFFF",
-                },
               }}
             >
-              {isEndingTask ? "Ending..." : "End Task"}
+              End Task
             </Button>
           )}
         </Box>

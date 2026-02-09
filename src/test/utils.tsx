@@ -16,7 +16,6 @@ import { projectListReducer } from '../store/features/projects/projectSlice';
 import { projectDetailReducer } from '../store/features/projects/projectDetailSlice';
 import { projectStatisticsReducer } from '../store/features/projects/projectStatisticsSlice';
 import { taskListReducer } from '../store/features/task/taskSlice';
-import { timeTrackingReducer } from '../store/features/task/timeTrackingSlice';
 import { dashboardReducer } from '../store/features/dashboard/dashboardSlice';
 import { userReducer } from '../store/features/user/userSlice';
 import { calendarReducer } from '../store/features/calendar/calendarSlice';
@@ -45,7 +44,6 @@ export function renderWithProviders(
         projectDetailReducer,
         projectStatisticsReducer,
         taskListReducer,
-        timeTrackingReducer,
         dashboardReducer,
         userReducer,
         calendarReducer,

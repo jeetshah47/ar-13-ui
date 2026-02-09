@@ -267,62 +267,6 @@ export async function updateTaskStatus(
 }
 
 /**
- * Start time tracking for a task
- */
-export async function startTimeTracking(
-  projectId: string,
-  taskId: string
-): Promise<{ message: string }> {
-  const url = `${API_BASE_URL}/tasks/start-tracking/${projectId}/${taskId}`;
-  const result = await http.post(url);
-  return result.data;
-}
-
-/**
- * Stop time tracking for a task
- */
-export async function stopTimeTracking(
-  projectId: string,
-  taskId: string
-): Promise<{ message: string }> {
-  const url = `${API_BASE_URL}/tasks/stop-tracking/${projectId}/${taskId}`;
-  const result = await http.post(url);
-  return result.data;
-}
-
-/**
- * Update user activity for time tracking
- */
-export async function updateActivity(
-  projectId: string,
-  taskId: string
-): Promise<{ message: string }> {
-  const url = `${API_BASE_URL}/tasks/update-activity/${projectId}/${taskId}`;
-  const result = await http.post(url);
-  return result.data;
-}
-
-/**
- * Get current tracking status for a task
- */
-export async function getTrackingStatus(
-  projectId: string,
-  taskId: string
-): Promise<{
-  isTracking: boolean;
-  session: {
-    id: string;
-    startTime: string;
-    lastActive: string;
-    totalMinutes: number;
-  } | null;
-}> {
-  const url = `${API_BASE_URL}/tasks/tracking-status/${projectId}/${taskId}`;
-  const result = await http.get(url);
-  return result.data;
-}
-
-/**
  * Transfer task to another user (admin only)
  * @param projectId - The project ID
  * @param taskId - The task ID
@@ -347,5 +291,60 @@ export async function transferTask(
 export async function getTaskStatuses(): Promise<TaskStatusResponse> {
   const url = `${API_BASE_URL}/tasks/statuses`;
   const result = await http.get(url);
-  return result.data;
+  
+  // Transform backend response to match frontend TaskStatus interface
+  // Backend returns: { name, id, order, color, description, created, _id }
+  // Frontend expects: { value, displayName, id, order, description, createdAt, isActive, isCompleted, category }
+  // Map backend status names to frontend normalized values
+  const statusNameToValueMap: Record<string, string> = {
+    'Not Started': 'pending',
+    'In Progress': 'in_progress',
+    'On Hold': 'pending', // Map to pending for now
+    'Review': 'in_review',
+    'Completed': 'completed',
+    'Cancelled': 'rejected',
+    // Legacy mappings
+    'Pending': 'pending',
+    'Accepted': 'accepted',
+    'Rejected': 'rejected',
+  };
+  
+  const transformedStatuses = (result.data.statuses || []).map((status: any) => {
+    // Map status name to normalized value
+    const normalizedValue = status.name 
+      ? (statusNameToValueMap[status.name] || status.name.toLowerCase().trim().replace(/\s+/g, '_').replace(/-/g, '_'))
+      : '';
+    
+    // Determine category based on status name
+    const statusNameLower = status.name?.toLowerCase() || '';
+    let category: "active" | "completed" | "final" = "active";
+    let isCompleted = false;
+    
+    if (statusNameLower.includes('completed') || statusNameLower.includes('done')) {
+      category = "completed";
+      isCompleted = true;
+    } else if (statusNameLower.includes('cancelled') || statusNameLower.includes('rejected')) {
+      category = "final";
+    }
+    
+    return {
+      id: status.id || status._id || '',
+      value: normalizedValue,
+      displayName: status.name || '',
+      description: status.description || '',
+      category: category,
+      isActive: status.isActive !== false, // Default to true if not specified
+      isCompleted: isCompleted,
+      order: status.order || 0,
+      createdAt: status.created || status.createdAt || new Date().toISOString(),
+      updatedAt: status.updatedAt || status.created || new Date().toISOString(),
+      _id: status._id,
+      color: status.color, // Keep color for potential future use
+    };
+  });
+  
+  return {
+    statuses: transformedStatuses,
+    total: result.data.total || transformedStatuses.length,
+  };
 }

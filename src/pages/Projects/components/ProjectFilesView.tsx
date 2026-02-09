@@ -22,7 +22,7 @@ import {
   ChevronRight,
 } from "@mui/icons-material";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
-import { browseNAS, downloadFile } from "../../../store/apis/storageApi";
+import { listFiles, downloadFile } from "../../../store/apis/storageApi";
 import { openFileWithDefaultApp } from "../../../services/nas/nasService";
 import FileExplorer from "../../InfoPortal/components/FileExplorer";
 import toast from "react-hot-toast";
@@ -142,8 +142,17 @@ const ProjectFilesView = ({ projectCode }: ProjectFilesViewProps) => {
     setError(null);
     setFolderNotFound(false);
     try {
-      const response = await browseNAS(path);
-      setItems(response.files);
+      const response = await listFiles(path);
+      // Convert StorageObject[] to FileBrowserItem[] format
+      const items: FileBrowserItem[] = response.files.map((file) => ({
+        name: file.name,
+        path: file.path,
+        isFolder: file.isFolder,
+        size: file.size,
+        modified: file.lastModified,
+        mimeType: file.contentType,
+      }));
+      setItems(items);
     } catch (err: any) {
       console.error("Failed to load folder contents:", err);
       // Check if it's a 404 or folder not found error

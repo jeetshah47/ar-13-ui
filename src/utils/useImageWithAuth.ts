@@ -21,17 +21,17 @@ export function useImageWithAuth(imageUrl: string | undefined): {
       return;
     }
 
-    // If URL doesn't point to filebrowser service, use it directly
+    // If URL doesn't point to backend storage API, use it directly
     // (assuming it's a public URL or doesn't need auth)
-    const isFilebrowserUrl = imageUrl.includes("/api/download") || imageUrl.includes("/api/browse");
+    const isBackendStorageUrl = imageUrl.includes("/api/download") || imageUrl.includes("/api/browse");
     
-    if (!isFilebrowserUrl) {
+    if (!isBackendStorageUrl) {
       setBlobUrl(imageUrl);
       setLoading(false);
       return;
     }
 
-    // For filebrowser URLs, fetch with JWT token
+    // For backend storage API URLs, fetch with JWT token
     setLoading(true);
     setError(null);
     const token = localStorage.getItem("authToken");

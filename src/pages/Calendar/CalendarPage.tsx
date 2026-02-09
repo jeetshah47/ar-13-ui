@@ -287,6 +287,7 @@ const CalendarPage = () => {
                 overflow: { xs: "visible", sm: "hidden" },
                 display: "flex",
                 flexDirection: "column",
+                maxHeight: { xs: "none", sm: "calc(100vh - 200px)" },
               })}
             >
           {/* Loading Overlay */}
@@ -583,7 +584,8 @@ const CalendarPage = () => {
               flex: "1 0 0",
               display: "flex",
               flexDirection: "column",
-              // overflow: "hidden",
+              overflow: "hidden",
+              minHeight: 0,
             }}
           >
             {/* Day Headers */}
@@ -624,7 +626,25 @@ const CalendarPage = () => {
             <Box
               sx={{
                 flex: "1 0 0",
-                // overflow: "auto",
+                overflow: "auto",
+                minHeight: 0,
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "transparent",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: (theme) => theme.palette.mode === "dark" 
+                    ? "rgba(255, 255, 255, 0.2)" 
+                    : "rgba(0, 0, 0, 0.2)",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.mode === "dark" 
+                      ? "rgba(255, 255, 255, 0.3)" 
+                      : "rgba(0, 0, 0, 0.3)",
+                  },
+                },
               }}
             >
               <Grid 
@@ -632,6 +652,7 @@ const CalendarPage = () => {
                 columns={7}
                 sx={{
                   width: "100%",
+                  height: "100%",
                   "& > .MuiGrid-item": {
                     padding: 0,
                     display: "flex",
@@ -652,7 +673,8 @@ const CalendarPage = () => {
                       size={{ xs: 1, sm: 1 }} 
                       key={index}
                       sx={{
-                        minHeight: { xs: "46px", sm: "128px" },
+                        minHeight: { xs: "46px", sm: "100px", md: "110px", lg: "120px" },
+                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
                         overflow: "hidden",

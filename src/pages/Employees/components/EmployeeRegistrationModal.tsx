@@ -74,6 +74,10 @@ const EmployeeRegistrationModal = ({
 
         const response = await createEmployee(request);
         setTempPassword(response.tempPassword);
+        // Store temp password in localStorage for later display on profile page
+        if (response.tempPassword && response.user.id) {
+          localStorage.setItem(`tempPassword_${response.user.id}`, response.tempPassword);
+        }
         toast.success("Employee created successfully!");
         if (onSuccess) {
           onSuccess();

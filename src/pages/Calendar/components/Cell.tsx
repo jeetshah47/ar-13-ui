@@ -41,7 +41,8 @@ const Cell = ({ date, onClickCell, events, onClickEvent, currentMonth }: CellPro
       sx={{
         display: "flex",
         width: "100%",
-        minHeight: { xs: "46px", sm: "128px" },
+        minHeight: { xs: "46px", sm: "100px", md: "110px", lg: "120px" },
+        height: "100%",
         flexDirection: "column",
         alignItems: { xs: "center", sm: "flex-start" },
         justifyContent: { xs: "center", sm: "flex-start" },

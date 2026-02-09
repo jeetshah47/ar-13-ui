@@ -23,6 +23,7 @@ import type { AxiosError } from "axios";
 import type { UserErrorResponse } from "../../types/User/UserErrorResponse";
 import type { UpdateUserRequest } from "../../types/User/UpdateUserRequest";
 import toast from "react-hot-toast";
+import { handleActionError } from "../../../utils/errorUtils";
 
 export const getUsersAction = () => async (dispatch: AppDispatch) => {
   dispatch(getUsersRequest());
@@ -32,13 +33,17 @@ export const getUsersAction = () => async (dispatch: AppDispatch) => {
         dispatch(getUsersSuccess(data));
       })
       .catch((error: AxiosError<UserErrorResponse>) => {
-        if (error?.response?.data) {
-          dispatch(getUsersFailed(error?.response?.data));
+        const errorMessage = handleActionError(error, false);
+        const axiosError = error as AxiosError<UserErrorResponse>;
+        if (axiosError?.response?.data) {
+          dispatch(getUsersFailed(axiosError.response.data));
+        } else {
+          dispatch(getUsersFailed({ error: errorMessage }));
         }
       });
-  } catch {
-    toast.error("Failed to get users");
-    dispatch(getUsersFailed({ error: "Unkown Error" }));
+  } catch (error) {
+    const errorMessage = handleActionError(error);
+    dispatch(getUsersFailed({ error: errorMessage }));
   }
 };
 
@@ -49,10 +54,8 @@ export const getUserPermissionsAction = (userId: string) => async (dispatch: App
     const data = await getUserPermissions(userId);
     dispatch(getUserPermissionsSuccess(data));
   } catch (error) {
-    const axiosError = error as AxiosError<UserErrorResponse>;
-    const errorMessage = axiosError?.response?.data?.error || "Failed to get user permissions";
+    const errorMessage = handleActionError(error);
     dispatch(getUserPermissionsFailed(errorMessage));
-    toast.error(errorMessage);
   }
 };
 
@@ -66,10 +69,8 @@ export const updateUserAction = (userData: UpdateUserRequest) => async (dispatch
     // Refresh the users list to reflect the changes
     dispatch(getUsersAction());
   } catch (error) {
-    const axiosError = error as AxiosError<UserErrorResponse>;
-    const errorMessage = axiosError?.response?.data?.error || "Failed to update user";
+    const errorMessage = handleActionError(error);
     dispatch(updateUserFailed(errorMessage));
-    toast.error(errorMessage);
   }
 };
 
@@ -80,9 +81,7 @@ export const deleteUserAction = (userId: string) => async (dispatch: AppDispatch
     dispatch(deleteUserSuccess(userId));
     toast.success("User deleted successfully");
   } catch (error) {
-    const axiosError = error as AxiosError<UserErrorResponse>;
-    const errorMessage = axiosError?.response?.data?.error || "Failed to delete user";
+    const errorMessage = handleActionError(error);
     dispatch(deleteUserFailed(errorMessage));
-    toast.error(errorMessage);
   }
 };

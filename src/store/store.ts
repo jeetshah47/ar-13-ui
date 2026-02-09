@@ -6,7 +6,6 @@ import { projectListReducer } from "./features/projects/projectSlice";
 import { projectDetailReducer } from "./features/projects/projectDetailSlice";
 import { projectStatisticsReducer } from "./features/projects/projectStatisticsSlice";
 import { taskListReducer } from "./features/task/taskSlice";
-import { timeTrackingReducer } from "./features/task/timeTrackingSlice";
 import { dashboardReducer } from "./features/dashboard/dashboardSlice";
 import { userReducer } from "./features/user/userSlice";
 import { calendarReducer } from "./features/calendar/calendarSlice";
@@ -26,7 +25,6 @@ export const store = configureStore({
     projectDetailReducer,
     projectStatisticsReducer,
     taskListReducer,
-    timeTrackingReducer,
     dashboardReducer,
     userReducer,
     calendarReducer,

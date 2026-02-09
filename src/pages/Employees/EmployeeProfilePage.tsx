@@ -7,7 +7,9 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff, ContentCopy, Check } from "@mui/icons-material";
 import PageHeader from "../../common/components/PageHeader/PageHeader";
 import Tab from "../../common/components/Tab/Tab";
 import { useEffect, useState } from "react";
@@ -20,6 +22,7 @@ import { clearSelectedEmployee, clearEmployeeStats } from "../../store/features/
 import { getUserProfileAction } from "../../store/features/user/userActions";
 import StatsSection from "./components/StatsSection";
 import EmployeePermissionsSection from "./components/EmployeePermissionsSection";
+import toast from "react-hot-toast";
 
 // Helper function to generate initials from name
 const getInitials = (name: string | null | undefined): string => {
@@ -36,6 +39,8 @@ const tabList = ["Projects", "Team", "Statistics", "Permissions"];
 const EmployeeProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const [currentTab, setCurrentTab] = useState("Projects");
+  const [showTempPassword, setShowTempPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -46,6 +51,24 @@ const EmployeeProfilePage = () => {
   const { profile, profileLoading } = useAppSelector(
     (state) => state.userReducer
   );
+
+  // Get temp password from localStorage if forceChangePassword is true
+  const tempPassword = userId && profile?.forceChangePassword 
+    ? localStorage.getItem(`tempPassword_${userId}`) 
+    : null;
+
+  const handleCopyPassword = async () => {
+    if (tempPassword) {
+      try {
+        await navigator.clipboard.writeText(tempPassword);
+        setPasswordCopied(true);
+        toast.success("Password copied to clipboard!");
+        setTimeout(() => setPasswordCopied(false), 2000);
+      } catch (err) {
+        toast.error("Failed to copy password");
+      }
+    }
+  };
 
   useEffect(() => {
     if (userId) {
@@ -177,6 +200,59 @@ const EmployeeProfilePage = () => {
                 size={isMobile ? "small" : "medium"}
               />
             </Box>
+            {/* Temporary Password Section - Only show if forceChangePassword is true and temp password exists */}
+            {tempPassword && profile?.forceChangePassword && (
+              <Box sx={{ width: "100%", paddingTop: "10px" }}>
+                <Typography
+                  color="secondary"
+                  sx={{ fontWeight: "bold", fontSize: { xs: "13px", md: "14px" }, mb: 1 }}
+                >
+                  Temporary Password
+                </Typography>
+                <Alert severity="info" sx={{ mb: 1, fontSize: { xs: "12px", md: "13px" } }}>
+                  This password will be hidden once the user changes their password.
+                </Alert>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    p: 1.5,
+                    backgroundColor: "grey.50",
+                    borderRadius: "8px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "monospace",
+                      flex: 1,
+                      letterSpacing: 1,
+                      fontSize: { xs: "13px", md: "14px" },
+                    }}
+                  >
+                    {showTempPassword ? tempPassword : "••••••••••"}
+                  </Typography>
+                  <IconButton
+                    onClick={() => setShowTempPassword(!showTempPassword)}
+                    size="small"
+                    sx={{ p: 0.5 }}
+                  >
+                    {showTempPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                  </IconButton>
+                  <IconButton 
+                    onClick={handleCopyPassword} 
+                    size="small" 
+                    color="primary"
+                    sx={{ p: 0.5 }}
+                  >
+                    {passwordCopied ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
+                  </IconButton>
+                </Box>
+              </Box>
+            )}
           </Box>
           <Box sx={(theme) => ({ borderTop: `1px solid ${theme.palette.divider}`, paddingTop: { xs: "20px", md: "26px" }, marginTop: { xs: "16px", md: "20px" } })}>
             <Typography fontWeight={700} fontSize={{ xs: "16px", md: "18px" }} sx={{ marginBottom: { xs: "12px", md: "16px" } }}>Task Statistics</Typography>

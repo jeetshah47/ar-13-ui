@@ -15,7 +15,8 @@ import { getProjectDetails } from "../../apis/projectApis";
 import type { ProjectErrorResponse } from "../../types/Project/ProjectErrorResponse";
 import type { ProjectDetailResponse } from "../../types/Project/ProjectDetailResponse";
 import type { TaskResponse } from "../../types/Task/TaskResponse";
-import { mapStatusToUnified, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
+import { normalizeTaskStatus, type TaskStatus } from "../../../pages/Projects/constants/taskStatus.constants";
+import { handleActionError, isAdminAccessError } from "../../../utils/errorUtils";
 
 export const fetchProjectDetailAction =
   (taskId: string, projectId: string) => async (dispatch: AppDispatch) => {
@@ -34,24 +35,26 @@ export const fetchProjectDetailAction =
         })
       );
     } catch (error: unknown) {
+      const errorMessage = handleActionError(error, false);
       const axiosError = error as AxiosError<ProjectErrorResponse>;
+      
       if (axiosError?.response?.data) {
         dispatch(fetchProjectDetailFailed(axiosError.response.data));
-        toast.error(`Failed to load details: ${axiosError.response.data.error}`);
       } else {
-        dispatch(fetchProjectDetailFailed({ error: "Unknown Error" }));
-        toast.error("Failed to load task or project details");
+        dispatch(fetchProjectDetailFailed({ error: errorMessage }));
+      }
+      
+      // Only show toast if not an admin access error (handled globally)
+      if (!isAdminAccessError(errorMessage)) {
+        toast.error(errorMessage);
       }
     }
   };
 
-// Map unified status to API format (for backward compatibility with API)
-const mapStatusToApiFormat = (status: TaskStatus | string): string => {
-  // First normalize to unified format
-  const unifiedStatus = mapStatusToUnified(status);
-  
-  // Return the unified status as-is (API should accept the unified format)
-  return unifiedStatus;
+// Normalize status to backend format
+const normalizeStatusToBackend = (status: TaskStatus | string): string => {
+  // Normalize to backend format (backend uses the same status values)
+  return normalizeTaskStatus(status);
 };
 
 export const updateTaskStatusAction =
@@ -72,27 +75,22 @@ export const updateTaskStatusAction =
         return;
       }
 
-      // Map status to API format
-      const apiStatus = mapStatusToApiFormat(newStatus);
+      // Normalize status to backend format
+      const apiStatus = normalizeStatusToBackend(newStatus);
 
       // Call the new API endpoint with status and remark
       await updateTaskStatusApi(projectId, taskId, apiStatus, remark);
       
-      // Update the local state - convert to TaskStatus type
-      const unifiedStatus = mapStatusToUnified(newStatus);
-      dispatch(updateTaskStatus(unifiedStatus));
+      // Update the local state - normalize to TaskStatus type
+      const normalizedStatus = normalizeTaskStatus(newStatus);
+      dispatch(updateTaskStatus(normalizedStatus));
       
       // Refresh task details to get the latest status from server
       dispatch(fetchProjectDetailAction(taskId, projectId));
       
       toast.success("Task status updated successfully");
     } catch (error: unknown) {
-      const axiosError = error as AxiosError<ProjectErrorResponse>;
-      if (axiosError?.response?.data) {
-        toast.error(`Failed to update task: ${axiosError.response.data.error}`);
-      } else {
-        toast.error("Failed to update task status");
-      }
+      handleActionError(error);
     }
   };
 
@@ -159,11 +157,7 @@ export const fetchProjectInfoAction =
         }
       }
     } catch (error: unknown) {
-      const axiosError = error as AxiosError<ProjectErrorResponse>;
-      const errorMessage = 
-        axiosError?.response?.data?.error || 
-        axiosError?.message || 
-        "Failed to load project details";
+      const errorMessage = handleActionError(error, false);
       
       // Check if we have project in store as fallback
       const state = getState();
@@ -192,8 +186,17 @@ export const fetchProjectInfoAction =
           })
         );
       } else {
-        dispatch(fetchProjectInfoFailed({ error: errorMessage }));
-        toast.error(`Failed to load project: ${errorMessage}`);
+        const axiosError = error as AxiosError<ProjectErrorResponse>;
+        if (axiosError?.response?.data) {
+          dispatch(fetchProjectInfoFailed(axiosError.response.data));
+        } else {
+          dispatch(fetchProjectInfoFailed({ error: errorMessage }));
+        }
+        
+        // Only show toast if not an admin access error
+        if (!isAdminAccessError(errorMessage)) {
+          toast.error(errorMessage);
+        }
       }
     }
   };

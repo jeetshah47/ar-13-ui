@@ -132,34 +132,61 @@ const VacationPage = () => {
     </RequirePermission>
   );
   return (
-    <Box sx={{ height: "100%" }}>
-      <PageHeader
-        title="Vacations"
-        endElement={
-          <Box sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: { xs: "12px", sm: "16px" },
-            width: { xs: "100%", sm: "auto" },
-            alignItems: { xs: "stretch", sm: "center" },
-          }}>
-            <Box sx={{ 
-              width: { xs: "100%", sm: "auto" }, 
-              minWidth: { xs: "100%", sm: "400px", md: "450px" },
-              flexShrink: 0,
+    <Box sx={{ 
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      minHeight: 0,
+      overflow: "hidden",
+    }}>
+      <Box sx={{ flexShrink: 0 }}>
+        <PageHeader
+          title="Vacations"
+          endElement={
+            <Box sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: { xs: "12px", sm: "16px" },
+              width: { xs: "100%", sm: "auto" },
+              alignItems: { xs: "stretch", sm: "center" },
             }}>
-              <Tab
-                tabList={tabList}
-                currentTab={currentTab}
-                onChangeTab={(tab) => setCurrentTab(tab)}
-              />
+              <Box sx={{ 
+                width: { xs: "100%", sm: "auto" }, 
+                minWidth: { xs: "100%", sm: "400px", md: "450px" },
+                flexShrink: 0,
+              }}>
+                <Tab
+                  tabList={tabList}
+                  currentTab={currentTab}
+                  onChangeTab={(tab) => setCurrentTab(tab)}
+                />
+              </Box>
+              <Box sx={{ flexShrink: 0 }}>
+                {AddButton}
+              </Box>
             </Box>
-            <Box sx={{ flexShrink: 0 }}>
-              {AddButton}
-            </Box>
-          </Box>
-        }
-      />
+          }
+        />
+      </Box>
+      <Box sx={{ 
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        "&::-webkit-scrollbar": {
+          width: "8px",
+        },
+        "&::-webkit-scrollbar-track": {
+          backgroundColor: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: "rgba(0,0,0,0.2)",
+          borderRadius: "4px",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.3)",
+          },
+        },
+      }}>
       {currentTab === "Vacation Requests" && isAdmin() && (
         <Box
           sx={{
@@ -257,6 +284,7 @@ const VacationPage = () => {
           <VacationsCalender />
         </Box>
       )}
+      </Box>
       
       {/* Vacation Request Modal */}
       <Modal

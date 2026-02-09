@@ -124,7 +124,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
     initialValues: {
       subject: isEditMode && task ? task.subject || "" : "",
       code: isEditMode && task ? task.code || "" : "",
-      status: isEditMode && task ? task.status || "" : "todo",
+      status: isEditMode && task ? task.status || "" : "pending",
       startDate: isEditMode && task && task.startDate 
         ? (typeof task.startDate === 'string' ? task.startDate.split('T')[0] : new Date(task.startDate).toISOString().split('T')[0])
         : "",
@@ -204,7 +204,7 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
         id: isEditMode && task ? task.id : undefined,
         subject: values.subject.trim(),
         code: values.code.trim(),
-        status: values.status || "todo",
+        status: values.status || "pending",
         startDate: startDateISO,
         endDate: endDateISO,
         deadline: deadlineISO,
@@ -465,10 +465,12 @@ const TaskForm = ({ onClose, task, isEditMode = false }: TaskFormProps) => {
                 <MenuItem value="">
                   <em>Select Status</em>
                 </MenuItem>
-                <MenuItem value="todo">Todo</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="review">Review</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="in_review">In Review</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="accepted">Accepted</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
               </Select>
             </FormControl>
           </Box>

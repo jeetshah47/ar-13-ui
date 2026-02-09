@@ -1,14 +1,15 @@
-import { Box, Button, IconButton, Typography, TextField, SvgIcon } from "@mui/material";
+import { Box, Button, IconButton, Typography, TextField, SvgIcon, Select, MenuItem, FormControl } from "@mui/material";
 import CloseIcon from "../../../assets/icons/general/close/blue.svg?react";
 import Modal from "../../../common/components/Modal/Modal";
-import { useState } from "react";
-import { getStatusDisplayName, type TaskStatus } from "../constants/taskStatus.constants";
+import { useState, useEffect } from "react";
+import { getStatusDisplayName, normalizeTaskStatus, type TaskStatus } from "../constants/taskStatus.constants";
 
 interface UpdateTaskStatusModalProps {
   show: boolean;
   onClose: () => void;
-  onUpdate: (remark: string) => void;
-  status: TaskStatus | string;
+  onUpdate: (status: string, remark: string) => void;
+  currentStatus: string;
+  taskStatuses?: Array<{ id?: string; value: string; displayName?: string; isActive?: boolean; order?: number }>;
   isLoading?: boolean;
 }
 
@@ -16,23 +17,65 @@ const UpdateTaskStatusModal = ({
   show, 
   onClose, 
   onUpdate, 
-  status, 
+  currentStatus,
+  taskStatuses = [],
   isLoading = false 
 }: UpdateTaskStatusModalProps) => {
   const [remark, setRemark] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>(currentStatus);
+
+  // Update selectedStatus when currentStatus changes
+  useEffect(() => {
+    setSelectedStatus(currentStatus);
+  }, [currentStatus]);
+
+  // Find the current status object
+  const normalizedCurrentStatus = currentStatus ? normalizeTaskStatus(currentStatus) : null;
+  const currentStatusObj = taskStatuses.find((status) => {
+    if (!status.value) return false;
+    const normalizedStatusValue = normalizeTaskStatus(status.value);
+    return normalizedStatusValue === normalizedCurrentStatus;
+  });
+
+  // Filter active statuses and sort by order if available
+  const sortedStatuses = [...taskStatuses]
+    .filter((status) => {
+      // Filter out statuses without a value
+      if (!status.value) return false;
+      // Include statuses where isActive is true or undefined
+      return status.isActive !== false;
+    })
+    .sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      // If no order, maintain original order
+      return 0;
+    });
+
+  // Get the selected value for the dropdown
+  const selectedValue = selectedStatus || currentStatus || "";
+
+  // Get display name for selected status
+  const getSelectedStatusDisplayName = () => {
+    if (!selectedValue) return "";
+    const selectedStatusObj = sortedStatuses.find((status) => status.value === selectedValue);
+    if (selectedStatusObj?.displayName) return selectedStatusObj.displayName;
+    const normalized = normalizeTaskStatus(selectedValue);
+    return getStatusDisplayName(normalized);
+  };
 
   const handleUpdate = () => {
-    onUpdate(remark);
+    onUpdate(selectedStatus, remark);
     // Reset remark after update
     setRemark("");
   };
 
   const handleClose = () => {
     setRemark("");
+    setSelectedStatus(currentStatus);
     onClose();
   };
-
-  const statusDisplayName = getStatusDisplayName(status as TaskStatus);
 
   return (
     <Modal show={show} onClose={handleClose}>
@@ -91,29 +134,90 @@ const UpdateTaskStatusModal = ({
           </Typography>
         </Box>
 
-        {/* Status Display */}
-        <Box sx={{ mb: 3, textAlign: "center" }}>
+        {/* Status Dropdown */}
+        <Box sx={{ mb: 3 }}>
           <Typography
             sx={(theme) => ({
-              fontWeight: 400,
-              fontSize: "16px",
+              fontWeight: 600,
+              fontSize: "14px",
               lineHeight: 1.5,
-              color: theme.palette.text.secondary,
+              color: theme.palette.text.primary,
               mb: 1,
             })}
           >
-            Changing status to:
+            Status <span style={{ color: "#d32f2f" }}>*</span>
           </Typography>
-          <Typography
-            sx={(theme) => ({
-              fontWeight: 700,
-              fontSize: "18px",
-              lineHeight: 1.364,
-              color: theme.palette.primary.main,
-            })}
-          >
-            {statusDisplayName}
-          </Typography>
+          <FormControl fullWidth>
+            <Select
+              value={selectedValue}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              displayEmpty
+              disabled={isLoading || sortedStatuses.length === 0}
+              renderValue={(value) => {
+                if (!value) return "Select a status";
+                const statusObj = sortedStatuses.find((status) => status.value === value);
+                return statusObj?.displayName || getStatusDisplayName(normalizeTaskStatus(value)) || value;
+              }}
+              sx={{
+                borderRadius: "14px",
+                backgroundColor: "#fff",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#E0E0E0",
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#3F8CFF",
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#3F8CFF",
+                },
+                "& .MuiSelect-select": {
+                  padding: "12px 20px",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    borderRadius: "14px",
+                    marginTop: "8px",
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                    maxHeight: "300px",
+                  },
+                },
+              }}
+            >
+              {sortedStatuses.length > 0 ? (
+                sortedStatuses.map((status) => (
+                  <MenuItem 
+                    key={status.id || status.value} 
+                    value={status.value}
+                    sx={{
+                      padding: "12px 20px",
+                      fontSize: "16px",
+                      "&:hover": {
+                        backgroundColor: "#F4F9FD",
+                      },
+                      "&.Mui-selected": {
+                        backgroundColor: "#E8F4FD",
+                        "&:hover": {
+                          backgroundColor: "#E8F4FD",
+                        },
+                      },
+                    }}
+                  >
+                    {status.displayName || status.value}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="" disabled>
+                  {currentStatusObj?.displayName || currentStatus || "No statuses available"}
+                </MenuItem>
+              )}
+            </Select>
+          </FormControl>
         </Box>
 
         {/* Remark Text Field */}
@@ -183,7 +287,7 @@ const UpdateTaskStatusModal = ({
           <Button
             variant="contained"
             onClick={handleUpdate}
-            disabled={isLoading || !remark.trim()}
+            disabled={isLoading || !remark.trim() || !selectedStatus}
             sx={(theme) => ({
               backgroundColor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,

@@ -111,6 +111,22 @@ const TypesList = ({
           borderRadius: "24px",
           boxShadow: (theme) => theme.shadows[1],
           overflowX: "auto",
+          maxHeight: { xs: "none", sm: "calc(100vh - 300px)" },
+          overflowY: { xs: "visible", sm: "auto" },
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(0,0,0,0.2)",
+            borderRadius: "4px",
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.3)",
+            },
+          },
         }}
       >
         <Table>

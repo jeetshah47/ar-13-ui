@@ -1,6 +1,5 @@
 import { http } from "../../config/http";
 import { API_BASE_URL } from "../../config/api";
-import { filebrowserHttp } from "../../config/filebrowserHttp";
 
 export interface StorageObject {
   name: string;
@@ -46,11 +45,12 @@ export interface UploadFileResponse {
 
 /**
  * List files and folders in NAS storage through backend API
+ * Uses direct filesystem access when backend is deployed on NAS
  * @param path - Optional path prefix (e.g., "/folder/subfolder"). Defaults to "" for root
  * @returns List of files and folders
  */
 export async function listFiles(path: string = ""): Promise<ListFilesResponse> {
-  // Use backend API which proxies to filebrowser service
+  // Use backend API which uses direct filesystem access
   const url = `${API_BASE_URL}/storage/files`;
   const result = await http.get<ListFilesResponse>(url, {
     params: { path: path || "" },
@@ -61,6 +61,7 @@ export async function listFiles(path: string = ""): Promise<ListFilesResponse> {
 
 /**
  * Get a download URL for a file through backend API
+ * Uses direct filesystem access when backend is deployed on NAS
  * @param path - Path to the file in storage
  * @param expiry - Expiry time in seconds (default: 3600)
  * @returns Download URL and metadata
@@ -69,7 +70,7 @@ export async function getFileURL(
   path: string,
   expiry: number = 3600
 ): Promise<FileURLResponse> {
-  // Use backend API which proxies to filebrowser service
+  // Use backend API which uses direct filesystem access
   const url = `${API_BASE_URL}/storage/file-url`;
   const result = await http.get<FileURLResponse>(url, {
     params: { 
@@ -120,16 +121,27 @@ export async function uploadFile(
 }
 
 /**
- * Browse folders and files in NAS storage using FileBrowser service
+ * Browse folders and files in NAS storage through backend API
+ * @deprecated Use listFiles instead - this function is kept for backward compatibility
  * @param path - Optional path prefix (e.g., "/folder/subfolder"). Defaults to "/" for root
  * @returns List of folders and files
  */
 export async function browseNAS(path: string = "/"): Promise<BrowseResponse> {
-  const url = "/api/browse";
-  const result = await filebrowserHttp.get<BrowseResponse>(url, {
-    params: { path: path || "/" },
-  });
-  return result.data;
+  // Use backend API instead of direct FileBrowser service
+  const response = await listFiles(path || "/");
+  
+  // Convert ListFilesResponse to BrowseResponse format for backward compatibility
+  return {
+    path: response.path,
+    files: response.files.map(file => ({
+      name: file.name,
+      path: file.path,
+      isFolder: file.isFolder,
+      size: file.size,
+      modified: file.lastModified,
+      mimeType: file.contentType,
+    })),
+  };
 }
 
 // Backend API response types

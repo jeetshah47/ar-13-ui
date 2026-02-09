@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Box,
   Typography,
@@ -27,18 +27,20 @@ import {
   ArrowUpward,
   Refresh,
   Search,
+  CloudUpload,
 } from "@mui/icons-material";
 import FileExplorer from "./FileExplorer";
 import Breadcrumb from "./Breadcrumb";
 import FolderIcon from "./FolderIcon";
 import type { FileBrowserItem } from "../../../store/apis/storageApi";
 import {
-  browseNAS,
+  listFiles,
   renameItem,
   deleteItem,
   createFolder,
   moveItem,
   downloadFile,
+  uploadFile,
 } from "../../../store/apis/storageApi";
 import { openFileWithDefaultApp } from "../../../services/nas/nasService";
 import toast from "react-hot-toast";
@@ -91,6 +93,10 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
   const [downloadProgressOpen, setDownloadProgressOpen] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadingFilename, setDownloadingFilename] = useState<string>("");
+  
+  // Upload state
+  const [uploading, setUploading] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     loadFolderContents(currentPath);
@@ -101,8 +107,17 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
     setLoading(true);
     setError(null);
     try {
-      const response = await browseNAS(path);
-      setItems(response.files);
+      const response = await listFiles(path);
+      // Convert StorageObject[] to FileBrowserItem[] format
+      const items: FileBrowserItem[] = response.files.map((file) => ({
+        name: file.name,
+        path: file.path,
+        isFolder: file.isFolder,
+        size: file.size,
+        modified: file.lastModified,
+        mimeType: file.contentType,
+      }));
+      setItems(items);
     } catch (err: any) {
       console.error("Failed to load folder contents:", err);
       setError(err.message || "Failed to load folder contents");
@@ -114,7 +129,7 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
 
   const loadFolderTree = async () => {
     try {
-      const response = await browseNAS("/");
+      const response = await listFiles("/");
       const folders = response.files.filter((item) => item.isFolder);
       const tree: FolderTreeNode[] = folders.map((folder) => ({
         path: folder.path,
@@ -366,6 +381,47 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
     }
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const uploadPromises: Promise<void>[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        uploadPromises.push(
+          uploadFile(file, currentPath)
+            .then(() => {
+              toast.success(`Uploaded ${file.name}`);
+            })
+            .catch((error: any) => {
+              console.error(`Failed to upload ${file.name}:`, error);
+              toast.error(`Failed to upload ${file.name}: ${error.message || 'Unknown error'}`);
+            })
+        );
+      }
+
+      await Promise.all(uploadPromises);
+      // Refresh the current folder
+      loadFolderContents(currentPath);
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload files");
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
     const query = searchQuery.toLowerCase();
@@ -460,6 +516,26 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
             }}
           >
             <Refresh fontSize="small" />
+          </IconButton>
+          <Divider orientation="vertical" flexItem sx={{ marginX: "4px" }} />
+          <IconButton
+            size="small"
+            onClick={handleUploadClick}
+            disabled={uploading}
+            title="Upload File"
+            sx={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "4px",
+              "&:hover": {
+                backgroundColor: "#f0f0f0",
+              },
+              "&:disabled": {
+                opacity: 0.5,
+              },
+            }}
+          >
+            <CloudUpload fontSize="small" />
           </IconButton>
           <Divider orientation="vertical" flexItem sx={{ marginX: "4px" }} />
           <TextField
@@ -857,6 +933,15 @@ const WindowsFileExplorer = ({ initialPath = "/", onNavigate }: WindowsFileExplo
             setDownloadProgress(0);
           }
         }}
+      />
+
+      {/* Hidden file input for upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        multiple
+        style={{ display: "none" }}
       />
     </Box>
   );

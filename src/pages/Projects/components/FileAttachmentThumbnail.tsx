@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { useImageWithAuth } from "../../../utils/useImageWithAuth";
 import type { FileAttachment } from "../../../store/types/Task/TaskTypes";
+import { useEffect, useRef, useState } from "react";
 
 interface FileAttachmentThumbnailProps {
   attachment: FileAttachment;
@@ -15,10 +16,42 @@ export function FileAttachmentThumbnail({
   imageUrl,
   onImagePreview,
 }: FileAttachmentThumbnailProps) {
-  const { blobUrl, loading } = useImageWithAuth(imageUrl);
+  const [isInView, setIsInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Use lazy loading - only load image when it's in viewport
+  useEffect(() => {
+    if (!isImage || !imageUrl || !containerRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.disconnect();
+          }
+        });
+      },
+      {
+        rootMargin: "50px", // Start loading 50px before entering viewport
+      }
+    );
+
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isImage, imageUrl]);
+
+  // Only load image if it's in view
+  const { blobUrl, loading } = useImageWithAuth(isInView ? imageUrl : undefined);
 
   return (
     <Box
+      ref={containerRef}
       onClick={() => isImage && imageUrl && onImagePreview(attachment)}
       sx={{
         width: { xs: "calc(50% - 6px)", sm: "156px" },

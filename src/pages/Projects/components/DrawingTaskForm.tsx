@@ -119,7 +119,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
 
   const formik = useFormik({
     initialValues: {
-      status: "todo",
+      status: "pending",
       priority: "high",
       startDate: "",
       endDate: "",
@@ -155,7 +155,7 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
         return {
           subject: drawing.name,
           code: `DWG-${drawing.key.toUpperCase()}`,
-          status: values.status || "todo",
+          status: values.status || "pending",
           startDate: startDateISO,
           endDate: endDateISO,
           deadline: deadlineISO,
@@ -375,10 +375,12 @@ const DrawingTaskForm = ({ onClose }: DrawingTaskFormProps) => {
                 <MenuItem value="">
                   <em>Select Status</em>
                 </MenuItem>
-                <MenuItem value="todo">Todo</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="review">Review</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="in_review">In Review</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="accepted">Accepted</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
               </Select>
             </FormControl>
           </Box>

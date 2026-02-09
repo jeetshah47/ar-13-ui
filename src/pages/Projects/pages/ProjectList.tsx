@@ -460,7 +460,14 @@ const ProjectList = () => {
         {!isMobile && ProjectSidebar}
 
         {/* Main Content Area */}
-        <Box sx={{ width: { xs: "100%", sm: "100%", md: "78%", lg: "80%" }, flex: 1 }}>
+        <Box sx={{ 
+          width: { xs: "100%", sm: "100%", md: "78%", lg: "80%" }, 
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflow: "hidden",
+        }}>
           {projects.length === 0 ? (
             <Box
               sx={{
@@ -501,7 +508,7 @@ const ProjectList = () => {
             <>
               {/* Mobile: Show project selector dropdown */}
               {isMobile && (
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 2, flexShrink: 0 }}>
                   <FormControl fullWidth>
                     <InputLabel>Select Project</InputLabel>
                     <Select
@@ -522,18 +529,39 @@ const ProjectList = () => {
                   </FormControl>
                 </Box>
               )}
-              <TaskHeader
-                currentViewOption={currentView}
-                onChangeViewOptions={(view) => {
-                  // Prevent changing to tile/timeline on mobile
-                  if (isMobile && view !== "list") return;
-                  setCurrentView(view);
-                }}
-                onClickAddButton={handleShowModal}
-                onClickAddDrawing={handleShowDrawingModal}
-                onClickFilterShow={handleShowFilterModal}
-              />
-              <Box sx={{ paddingTop: { xs: "12px", sm: "5px" } }}>
+              <Box sx={{ flexShrink: 0 }}>
+                <TaskHeader
+                  currentViewOption={currentView}
+                  onChangeViewOptions={(view) => {
+                    // Prevent changing to tile/timeline on mobile
+                    if (isMobile && view !== "list") return;
+                    setCurrentView(view);
+                  }}
+                  onClickAddButton={handleShowModal}
+                  onClickAddDrawing={handleShowDrawingModal}
+                  onClickFilterShow={handleShowFilterModal}
+                />
+              </Box>
+              <Box sx={{ 
+                paddingTop: { xs: "12px", sm: "5px" },
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                overflowX: "hidden",
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "transparent",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "rgba(0,0,0,0.2)",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                  },
+                },
+              }}>
                 {projectListState.common.selectedProjectId && 
                  (!taskListState?.data?.tasks || taskListState.data.tasks.length === 0) ? (
                   <NoTaskMessage />

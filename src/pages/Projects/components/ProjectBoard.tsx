@@ -7,7 +7,7 @@ import {
   CardContent,
   Avatar,
 } from "@mui/material";
-import { mapStatusToUnified } from "../constants/taskStatus.constants";
+import { normalizeTaskStatus } from "../constants/taskStatus.constants";
 import { useAppDispatch, useAppSelector, type RootState } from "../../../store/store";
 import { getTaskStatusesAction } from "../../../store/features/task/projectAction";
 import type { TaskResponse } from "../../../store/types/Task/TaskResponse";
@@ -104,22 +104,34 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
         status: "pending",
       },
       {
-        id: "todo",
-        title: "Todo",
+        id: "in_progress",
+        title: "In Progress",
         items: [],
-        status: "todo",
+        status: "in_progress",
       },
       {
-        id: "review",
-        title: "Review",
+        id: "in_review",
+        title: "In Review",
         items: [],
-        status: "review",
+        status: "in_review",
       },
       {
         id: "completed",
         title: "Completed",
         items: [],
         status: "completed",
+      },
+      {
+        id: "accepted",
+        title: "Accepted",
+        items: [],
+        status: "accepted",
+      },
+      {
+        id: "rejected",
+        title: "Rejected",
+        items: [],
+        status: "rejected",
       },
     ];
   }, [taskStatuses]);
@@ -243,10 +255,10 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
             }
           }
           
-          // If no direct match found, try unified mapping as fallback
-          const normalizedTaskStatus = mapStatusToUnified(task.status);
+          // If no direct match found, try normalized matching as fallback
+          const normalizedTaskStatus = normalizeTaskStatus(task.status);
           for (const column of newColumns) {
-            const normalizedColumnStatus = mapStatusToUnified(column.status);
+            const normalizedColumnStatus = normalizeTaskStatus(column.status);
             if (normalizedTaskStatus === normalizedColumnStatus) {
               column.items.push(task);
               return; // Task assigned, move to next task
@@ -307,7 +319,7 @@ const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
             newStatus === columnId ||
             newStatus.toLowerCase() === columnStatus.toLowerCase() ||
             newStatus.toLowerCase() === columnId.toLowerCase() ||
-            mapStatusToUnified(messageData.status) === mapStatusToUnified(column.status);
+            normalizeTaskStatus(messageData.status) === normalizeTaskStatus(column.status);
           
           if (statusMatches) {
             // Find the task in any column to get its details

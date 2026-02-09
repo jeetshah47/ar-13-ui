@@ -22,6 +22,7 @@ import type { ProjectRequest, AgencyContact } from "../../types/Project/ProjectR
 import type { ProjectResponse } from "../../types/Project/ProjectResponse";
 import type { UserRole } from "../../types/RBAC";
 import { filterProjectsByRole } from "../../utils/projectFiltering";
+import { handleActionError, isAdminAccessError } from "../../../utils/errorUtils";
 
 export const getProjectListAction = () => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(getProjectListRequest());
@@ -34,13 +35,18 @@ export const getProjectListAction = () => async (dispatch: AppDispatch, getState
     const searchQuery = state.projectListReducer.common.searchQuery;
     await dispatch(applyProjectSearchFilterAction(searchQuery));
   } catch (error) {
+    const errorMessage = handleActionError(error, false); // Don't show toast if admin access error
     const axiosError = error as AxiosError<ProjectErrorResponse>;
+    
     if (axiosError?.response?.data) {
       dispatch(getProjectListFailed(axiosError.response.data));
-      toast.error(axiosError.response.data.error || "Failed to get projects");
     } else {
-      dispatch(getProjectListFailed({ error: "Unknown Error" }));
-      toast.error("Failed to get projects");
+      dispatch(getProjectListFailed({ error: errorMessage }));
+    }
+    
+    // Only show toast if not an admin access error (handled globally)
+    if (!isAdminAccessError(errorMessage)) {
+      toast.error(errorMessage);
     }
   }
 };
@@ -59,14 +65,17 @@ export const addProjectAction =
           if (cb) cb();
         })
         .catch((error: AxiosError<ProjectErrorResponse>) => {
-          if (error?.response?.data) {
-            dispatch(addProjectFailed(error?.response?.data));
-            toast.error("Failed to add project");
+          const errorMessage = handleActionError(error);
+          const axiosError = error as AxiosError<ProjectErrorResponse>;
+          if (axiosError?.response?.data) {
+            dispatch(addProjectFailed(axiosError.response.data));
+          } else {
+            dispatch(addProjectFailed({ error: errorMessage }));
           }
         });
-    } catch {
-      toast.error("Failed to add project");
-      dispatch(addProjectFailed({ error: "Unkown Error" }));
+    } catch (error) {
+      const errorMessage = handleActionError(error);
+      dispatch(addProjectFailed({ error: errorMessage }));
     }
   };
 
@@ -100,14 +109,17 @@ export const updateProjectAction =
           if (cb) cb();
         })
         .catch((error: AxiosError<ProjectErrorResponse>) => {
-          if (error?.response?.data) {
-            dispatch(updateProjectFailed(error?.response?.data));
-            toast.error("Failed to update project");
+          const errorMessage = handleActionError(error);
+          const axiosError = error as AxiosError<ProjectErrorResponse>;
+          if (axiosError?.response?.data) {
+            dispatch(updateProjectFailed(axiosError.response.data));
+          } else {
+            dispatch(updateProjectFailed({ error: errorMessage }));
           }
         });
-    } catch {
-      toast.error("Failed to update project");
-      dispatch(updateProjectFailed({ error: "Unknown Error" }));
+    } catch (error) {
+      const errorMessage = handleActionError(error);
+      dispatch(updateProjectFailed({ error: errorMessage }));
     }
   };
 
@@ -119,12 +131,7 @@ export const updateAgencyContactAction =
       toast.success("Agency contact updated successfully");
       if (cb) cb();
     } catch (error) {
-      const axiosError = error as AxiosError<ProjectErrorResponse>;
-      if (axiosError?.response?.data) {
-        toast.error("Failed to update agency contact");
-      } else {
-        toast.error("Failed to update agency contact");
-      }
+      handleActionError(error);
     }
   };
 
@@ -138,13 +145,12 @@ export const archiveProjectAction =
       toast.success(isArchived ? "Project archived successfully" : "Project unarchived successfully");
       if (cb) cb();
     } catch (error) {
+      const errorMessage = handleActionError(error);
       const axiosError = error as AxiosError<ProjectErrorResponse>;
       if (axiosError?.response?.data) {
         dispatch(archiveProjectFailed(axiosError.response.data));
-        toast.error("Failed to archive project");
       } else {
-        dispatch(archiveProjectFailed({ error: "Unknown Error" }));
-        toast.error("Failed to archive project");
+        dispatch(archiveProjectFailed({ error: errorMessage }));
       }
     }
   };

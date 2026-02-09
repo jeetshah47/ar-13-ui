@@ -229,15 +229,18 @@ const DrawingListPage = () => {
     <Box
       sx={{
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
         backgroundColor: { xs: "#F4F9FD", sm: "transparent" },
-        minHeight: "100vh",
-        paddingBottom: { xs: "100px", sm: "0" },
+        minHeight: 0,
+        overflow: "hidden",
       }}
     >
       <Box
         sx={{
           padding: { xs: "20px", sm: "0 0 20px 0", md: "0 0 20px 0", lg: "0 0 20px 0" },
           paddingX: { xs: "20px", sm: 0, md: 0, lg: 0 },
+          flexShrink: 0,
         }}
       >
         <PageHeader
@@ -265,7 +268,7 @@ const DrawingListPage = () => {
 
       {/* Error Display */}
       {categoriesError && currentTab === "Categories" && (
-        <Box sx={{ padding: { xs: "0 20px", sm: "0" } }}>
+        <Box sx={{ padding: { xs: "0 20px", sm: "0" }, flexShrink: 0 }}>
           <Alert
             severity="error"
             sx={{
@@ -284,7 +287,7 @@ const DrawingListPage = () => {
       )}
 
       {typesError && (currentTab === "Types" || currentTab === "Combined View") && (
-        <Box sx={{ padding: { xs: "0 20px", sm: "0" } }}>
+        <Box sx={{ padding: { xs: "0 20px", sm: "0" }, flexShrink: 0 }}>
           <Alert
             severity="error"
             sx={{
@@ -302,37 +305,58 @@ const DrawingListPage = () => {
         </Box>
       )}
 
-      {/* Tab Content */}
-      {currentTab === "Categories" && !categoriesError && (
-        <CategoriesList
-          categories={categories}
-          loading={categoriesLoading}
-          onEdit={handleEditCategory}
-          onDelete={handleDeleteCategory}
-        />
-      )}
+      {/* Tab Content - Scrollable */}
+      <Box sx={{ 
+        flex: 1, 
+        minHeight: 0, 
+        overflowY: "auto", 
+        overflowX: "hidden",
+        paddingBottom: { xs: "100px", sm: "0" },
+        "&::-webkit-scrollbar": {
+          width: "8px",
+        },
+        "&::-webkit-scrollbar-track": {
+          backgroundColor: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: "rgba(0,0,0,0.2)",
+          borderRadius: "4px",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.3)",
+          },
+        },
+      }}>
+        {currentTab === "Categories" && !categoriesError && (
+          <CategoriesList
+            categories={categories}
+            loading={categoriesLoading}
+            onEdit={handleEditCategory}
+            onDelete={handleDeleteCategory}
+          />
+        )}
 
-      {currentTab === "Types" && !typesError && (
-        <TypesList
-          types={types}
-          categories={categories}
-          loading={typesLoading}
-          onEdit={handleEditType}
-          onDelete={handleDeleteType}
-        />
-      )}
+        {currentTab === "Types" && !typesError && (
+          <TypesList
+            types={types}
+            categories={categories}
+            loading={typesLoading}
+            onEdit={handleEditType}
+            onDelete={handleDeleteType}
+          />
+        )}
 
-      {currentTab === "Combined View" && !categoriesError && !typesError && (
-        <CombinedView
-          categories={categories}
-          types={types}
-          loading={categoriesLoading || typesLoading}
-          onEditCategory={handleEditCategory}
-          onDeleteCategory={handleDeleteCategory}
-          onEditType={handleEditType}
-          onDeleteType={handleDeleteType}
-        />
-      )}
+        {currentTab === "Combined View" && !categoriesError && !typesError && (
+          <CombinedView
+            categories={categories}
+            types={types}
+            loading={categoriesLoading || typesLoading}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
+            onEditType={handleEditType}
+            onDeleteType={handleDeleteType}
+          />
+        )}
+      </Box>
 
       {getFloatingActionButton()}
 
